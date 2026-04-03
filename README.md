@@ -1,12 +1,12 @@
 <div align="center">
 
-# ViewTouch v2
+# ViewTouchF
 
-**A modern, open-source Point of Sale system for restaurants**
+**ViewTouch Food Truck — A modern, open-source Point of Sale system for food trucks & restaurants**
 
 Built with **Flutter** (Linux) + **C++17** + **gRPC**
 
-[![License](https://img.shields.io/badge/license-TBD-blue.svg)]()
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)]()
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B.svg?logo=flutter)]()
 [![gRPC](https://img.shields.io/badge/gRPC-protobuf-4285F4.svg)]()
@@ -17,7 +17,7 @@ Built with **Flutter** (Linux) + **C++17** + **gRPC**
 
 ## Overview
 
-ViewTouch v2 is a full-stack POS system designed for high-volume restaurants and food service. A **C++17 daemon** handles all business logic, ticket management, and thermal printing, while a **Flutter touch-first frontend** provides the register interface, admin panel, and reporting — connected over **gRPC** through a Unix domain socket.
+ViewTouchF is a full-stack POS system designed for food trucks, high-volume restaurants, and food service. A **C++17 daemon** handles all business logic, ticket management, and thermal printing, while a **Flutter touch-first frontend** provides the register interface, admin panel, and reporting — connected over **gRPC** through a Unix domain socket.
 
 ### Key Features
 
@@ -259,4 +259,4 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed list of all changes.
 
 ## License
 
-Open source — license TBD.
+This project is licensed under the **GNU General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
