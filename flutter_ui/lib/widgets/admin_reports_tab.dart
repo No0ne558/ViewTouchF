@@ -127,13 +127,16 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
         date = _fmt(_selectedDate);
         break;
       case _ReportRange.weekly:
-        type = 'WEEKLY';
-        break;
       case _ReportRange.monthly:
-        type = 'MONTHLY';
-        break;
       case _ReportRange.yearly:
-        type = 'YEARLY';
+        type = _range == _ReportRange.weekly
+            ? 'WEEKLY'
+            : _range == _ReportRange.monthly
+                ? 'MONTHLY'
+                : 'YEARLY';
+        final r = _computeDateRange();
+        startDate = _fmt(r.start);
+        endDate = _fmt(r.end);
         break;
       case _ReportRange.custom:
         type = 'CUSTOM';

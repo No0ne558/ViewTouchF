@@ -1,5 +1,6 @@
 #include "server/pos_service_impl.h"
 
+#include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <sstream>
@@ -580,32 +581,49 @@ grpc::Status PosServiceImpl::PrintReport(grpc::ServerContext* /*ctx*/,
 
     core::DailyReport rpt;
     std::string title;
+    std::string date_range;
+    std::vector<core::DailyReport> daily_breakdown;
 
     if (req->report_type() == "DAILY" || req->report_type() == "ZREPORT") {
         rpt = mgr_->get_daily_report(req->date());
         title = req->report_type() == "ZREPORT" ? "Z-REPORT" : "DAILY REPORT";
-    } else if (req->report_type() == "CUSTOM") {
+    } else if (req->report_type() == "CUSTOM" ||
+               req->report_type() == "WEEKLY"  ||
+               req->report_type() == "MONTHLY" ||
+               req->report_type() == "YEARLY"  ||
+               req->report_type() == "XREPORT") {
         rpt = mgr_->get_date_range_report(req->start_date(), req->end_date());
-        title = "CUSTOM REPORT";
-    } else if (req->report_type() == "WEEKLY") {
-        // Last 7 days from today (or specified date).
-        // Approximate: use date range.
-        rpt = mgr_->get_date_range_report(req->start_date(), req->end_date());
-        title = "WEEKLY REPORT";
-    } else if (req->report_type() == "MONTHLY") {
-        rpt = mgr_->get_date_range_report(req->start_date(), req->end_date());
-        title = "MONTHLY REPORT";
-    } else if (req->report_type() == "YEARLY") {
-        rpt = mgr_->get_date_range_report(req->start_date(), req->end_date());
-        title = "YEARLY REPORT";
+        date_range = req->start_date() + " to " + req->end_date();
+        // Gather daily breakdown for range reports
+        auto history = mgr_->get_report_history(365);
+        for (const auto& r : history) {
+            if (r.date >= req->start_date() && r.date <= req->end_date()) {
+                daily_breakdown.push_back(r);
+            }
+        }
+        // Sort by date ascending
+        std::sort(daily_breakdown.begin(), daily_breakdown.end(),
+                  [](const auto& a, const auto& b) { return a.date < b.date; });
+
+        if (req->report_type() == "XREPORT") {
+            title = "X-REPORT";
+        } else if (req->report_type() == "WEEKLY") {
+            title = "WEEKLY REPORT";
+        } else if (req->report_type() == "MONTHLY") {
+            title = "MONTHLY REPORT";
+        } else if (req->report_type() == "YEARLY") {
+            title = "YEARLY REPORT";
+        } else {
+            title = "CUSTOM REPORT";
+        }
     } else {
         resp->set_success(false);
         resp->set_error("Unknown report type: " + req->report_type());
         return grpc::Status::OK;
     }
 
-    auto text = format_report_text(rpt, title);
-    auto pr = printer_->print_report(text, receipt_printer);
+    auto pr = printer_->print_formatted_report(rpt, title, date_range,
+                                                daily_breakdown, receipt_printer);
     resp->set_success(pr.success);
     resp->set_error(pr.error);
     resp->set_job_id(pr.job_id);
@@ -621,11 +639,11 @@ grpc::Status PosServiceImpl::EndDay(grpc::ServerContext* /*ctx*/,
     resp->set_success(true);
     fill_proto_report(zrpt, resp->mutable_z_report());
 
-    // Attempt to print the Z-report to receipt printer.
+    // Print the Z-report to receipt printer with ESC/POS formatting.
     std::string receipt_printer = mgr_->get_receipt_printer_name();
     if (!receipt_printer.empty() && mgr_->get_receipt_printer_enabled()) {
-        auto text = format_report_text(zrpt, "Z-REPORT (END OF DAY)");
-        printer_->print_report(text, receipt_printer);
+        printer_->print_formatted_report(zrpt, "Z-REPORT (END OF DAY)",
+                                          "", {}, receipt_printer);
     }
 
     return grpc::Status::OK;

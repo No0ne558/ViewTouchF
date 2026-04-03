@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/ticket.h"
+#include "core/pos_manager.h"
 
 #include <cstdint>
 #include <string>
@@ -58,6 +59,14 @@ public:
     PrintResult print_report(const std::string& report_text,
                              const std::string& printer_name = "");
 
+    /// Print a nicely ESC/POS-formatted report (bold headers, columns, sections).
+    /// For range reports, pass the per-day breakdown in daily_breakdown.
+    PrintResult print_formatted_report(const DailyReport& report,
+                                       const std::string& title,
+                                       const std::string& date_range = "",
+                                       const std::vector<DailyReport>& daily_breakdown = {},
+                                       const std::string& printer_name = "");
+
     /// Query CUPS for the status of a previously submitted job.
     PrintJobStatus query_job(int job_id);
 
@@ -71,6 +80,12 @@ private:
     std::vector<uint8_t> build_kitchen_payload(const Ticket& ticket,
                                                 const std::string& customer_name = "",
                                                 const std::string& comment = "") const;
+
+    /// Build an ESC/POS-formatted report payload (bold headers, sections, columns).
+    std::vector<uint8_t> build_report_payload(const DailyReport& report,
+                                               const std::string& title,
+                                               const std::string& date_range,
+                                               const std::vector<DailyReport>& daily_breakdown) const;
 
     /// Send a raw byte buffer to a specific CUPS printer queue.
     PrintResult send_raw(const std::vector<uint8_t>& data,

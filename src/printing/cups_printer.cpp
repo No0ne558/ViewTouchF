@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <ctime>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -284,6 +285,189 @@ PrintResult CupsPrinter::print_report(const std::string& report_text,
     append(buf, escpos::LF);
     append(buf, escpos::FEED_CUT);
     return send_raw(buf, printer_name);
+}
+
+PrintResult CupsPrinter::print_formatted_report(const DailyReport& report,
+                                                  const std::string& title,
+                                                  const std::string& date_range,
+                                                  const std::vector<DailyReport>& daily_breakdown,
+                                                  const std::string& printer_name) {
+    auto payload = build_report_payload(report, title, date_range, daily_breakdown);
+    return send_raw(payload, printer_name);
+}
+
+std::vector<uint8_t> CupsPrinter::build_report_payload(
+        const DailyReport& rpt,
+        const std::string& title,
+        const std::string& date_range,
+        const std::vector<DailyReport>& daily_breakdown) const {
+    constexpr int W = 42;  // 42-column 80mm thermal paper
+
+    std::vector<uint8_t> buf;
+    buf.reserve(4096);
+
+    append(buf, escpos::INIT);
+
+    // ── Store name header ──
+    append(buf, escpos::ALIGN_CENTER);
+    append(buf, escpos::DOUBLE_ON);
+    append_text(buf, store_name_);
+    append(buf, escpos::LF);
+    append(buf, escpos::DOUBLE_OFF);
+    append_text(buf, std::string(W, '-'));
+    append(buf, escpos::LF);
+
+    // ── Report title ──
+    append(buf, escpos::DOUBLE_ON);
+    append(buf, escpos::BOLD_ON);
+    append_text(buf, title);
+    append(buf, escpos::LF);
+    append(buf, escpos::DOUBLE_OFF);
+    append(buf, escpos::BOLD_OFF);
+
+    // Date or date range
+    if (!date_range.empty()) {
+        append_text(buf, date_range);
+    } else {
+        append_text(buf, rpt.date);
+    }
+    append(buf, escpos::LF);
+    append_text(buf, std::string(W, '='));
+    append(buf, escpos::LF);
+
+    // ── Sales Summary ──
+    append(buf, escpos::ALIGN_LEFT);
+    append(buf, escpos::BOLD_ON);
+    append_text(buf, "SALES SUMMARY");
+    append(buf, escpos::LF);
+    append(buf, escpos::BOLD_OFF);
+    append_text(buf, std::string(W, '-'));
+    append(buf, escpos::LF);
+
+    auto row = [&](const std::string& label, const std::string& value) {
+        append_text(buf, pad_right(label, W - 12) + pad_left(value, 12));
+        append(buf, escpos::LF);
+    };
+
+    row("Total Tickets", std::to_string(rpt.total_tickets));
+    row("Gross Revenue", fmt_money(rpt.total_revenue_cents));
+    row("Tax Collected", fmt_money(rpt.total_tax_cents));
+    append(buf, escpos::BOLD_ON);
+    row("Net Revenue", fmt_money(rpt.net_revenue_cents));
+    append(buf, escpos::BOLD_OFF);
+
+    // ── Payment Breakdown ──
+    append_text(buf, std::string(W, '-'));
+    append(buf, escpos::LF);
+    append(buf, escpos::BOLD_ON);
+    append_text(buf, "PAYMENTS");
+    append(buf, escpos::LF);
+    append(buf, escpos::BOLD_OFF);
+    append_text(buf, std::string(W, '-'));
+    append(buf, escpos::LF);
+
+    {
+        std::string cash_label = "Cash:  " + std::to_string(rpt.cash_count) + " txns";
+        row(cash_label, fmt_money(rpt.cash_total_cents));
+        std::string card_label = "Card:  " + std::to_string(rpt.card_count) + " txns";
+        row(card_label, fmt_money(rpt.card_total_cents));
+    }
+
+    // ── Adjustments ──
+    append_text(buf, std::string(W, '-'));
+    append(buf, escpos::LF);
+    append(buf, escpos::BOLD_ON);
+    append_text(buf, "ADJUSTMENTS");
+    append(buf, escpos::LF);
+    append(buf, escpos::BOLD_OFF);
+    append_text(buf, std::string(W, '-'));
+    append(buf, escpos::LF);
+
+    row("Voided", std::to_string(rpt.voided_count));
+    {
+        std::string comp_label = "Comped:  " + std::to_string(rpt.comped_count);
+        row(comp_label, fmt_money(rpt.comped_total_cents));
+        std::string ref_label = "Refunds:  " + std::to_string(rpt.refunded_count);
+        row(ref_label, fmt_money(rpt.refunded_total_cents));
+    }
+
+    // ── Item Sales ──
+    if (!rpt.item_sales.empty()) {
+        append_text(buf, std::string(W, '-'));
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, "ITEM SALES");
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+        append_text(buf, std::string(W, '-'));
+        append(buf, escpos::LF);
+
+        // Column header
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, pad_right("Item", 22) + pad_left("Qty", 8) + pad_left("Revenue", 12));
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+        append_text(buf, std::string(W, '-'));
+        append(buf, escpos::LF);
+
+        for (const auto& e : rpt.item_sales) {
+            append_text(buf, pad_right(e.item_name, 22)
+                           + pad_left(std::to_string(e.quantity_sold), 8)
+                           + pad_left(fmt_money(e.revenue_cents), 12));
+            append(buf, escpos::LF);
+        }
+    }
+
+    // ── Daily Breakdown (for range reports) ──
+    if (!daily_breakdown.empty()) {
+        append_text(buf, std::string(W, '='));
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, "DAILY BREAKDOWN");
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+        append_text(buf, std::string(W, '-'));
+        append(buf, escpos::LF);
+
+        // Column header
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, pad_right("Date", 14) + pad_left("Tickets", 8) + pad_left("Net Rev", 20));
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+        append_text(buf, std::string(W, '-'));
+        append(buf, escpos::LF);
+
+        for (const auto& d : daily_breakdown) {
+            append_text(buf, pad_right(d.date, 14)
+                           + pad_left(std::to_string(d.total_tickets), 8)
+                           + pad_left(fmt_money(d.net_revenue_cents), 20));
+            append(buf, escpos::LF);
+        }
+    }
+
+    // ── Footer ──
+    append_text(buf, std::string(W, '='));
+    append(buf, escpos::LF);
+
+    // Print timestamp
+    {
+        auto now = std::time(nullptr);
+        auto* tm = std::localtime(&now);
+        std::ostringstream ts;
+        ts << "Printed: "
+           << (tm->tm_year + 1900) << '-'
+           << std::setw(2) << std::setfill('0') << (tm->tm_mon + 1) << '-'
+           << std::setw(2) << std::setfill('0') << tm->tm_mday << ' '
+           << std::setw(2) << std::setfill('0') << tm->tm_hour << ':'
+           << std::setw(2) << std::setfill('0') << tm->tm_min;
+        append(buf, escpos::ALIGN_CENTER);
+        append_text(buf, ts.str());
+        append(buf, escpos::LF);
+    }
+
+    append(buf, escpos::LF);
+    append(buf, escpos::FEED_CUT);
+    return buf;
 }
 
 // ── Enumerate CUPS printers ──────────────────────────────────

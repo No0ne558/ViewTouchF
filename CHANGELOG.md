@@ -5,6 +5,16 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] — 2026-04-03
+
+### Added
+- **X Report**: monthly report accessible from End Day tab — select any year and month from a calendar grid, prints full-month summary with daily breakdown to receipt printer
+- **ESC/POS formatted reports**: all printed reports (Z-Report, Daily, Weekly, Monthly, Yearly, Custom, X-Report) now use proper thermal receipt formatting — bold section headers, aligned columns, item sales table, daily breakdown table, and print timestamp
+- Year selector with left/right arrows and dropdown in the X Report month picker (2020–present)
+
+### Fixed
+- Weekly, Monthly, and Yearly report printing now correctly sends date ranges to the backend (was sending empty start/end dates)
+
 ## [2.1.0] — 2026-04-03
 
 ### Added
@@ -105,5 +115,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.gitignore` for C++ build artifacts, Flutter build/ephemeral, IDE files
 - `RobotoMono` font bundled for monospaced keypad display
 
+[2.2.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.0
 [2.1.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.1.0
 [2.0.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.0.0
