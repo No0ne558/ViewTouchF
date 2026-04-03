@@ -1,0 +1,154 @@
+#include "core/pos_manager.h"
+#include "printing/cups_printer.h"
+#include "server/pos_service_impl.h"
+
+#include <grpcpp/grpcpp.h>
+
+#include <csignal>
+#include <iostream>
+#include <memory>
+
+namespace {
+    std::unique_ptr<grpc::Server> g_server;
+
+    void signal_handler(int /*sig*/) {
+        if (g_server) {
+            std::cerr << "\n[vt_daemon] shutting down...\n";
+            g_server->Shutdown();
+        }
+    }
+}  // namespace
+
+int main(int argc, char* argv[]) {
+    // ── Parse optional args ──────────────────────────────────
+    std::string listen_addr = "unix:///tmp/viewtouch/pos.sock";
+    std::string printer_name;  // empty = CUPS default
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--listen" && i + 1 < argc) {
+            listen_addr = argv[++i];
+        } else if (arg == "--printer" && i + 1 < argc) {
+            printer_name = argv[++i];
+        }
+    }
+
+    // ── Bootstrap core objects ───────────────────────────────
+    auto mgr     = std::make_shared<viewtouch::PosManager>(
+        /*tax_rate_bps=*/825, /*restaurant_name=*/"El Mirador Express");
+    auto printer = std::make_shared<viewtouch::CupsPrinter>(
+        printer_name, mgr->get_restaurant_name());
+
+    // Load a demo menu (in production, load from JSON/DB).
+    std::vector<viewtouch::MenuItem> demo_menu;
+
+    // ── Entrees (with modifier groups) ───────────────────────
+    {
+        viewtouch::MenuItem item;
+        item.id = "BUR01"; item.name = "Classic Burger";
+        item.price_cents = 1299; item.category = "Entrees";
+        item.modifier_groups = {
+            {"MG01", "Toppings", {
+                {"MOD01", "Lettuce",    0, true},
+                {"MOD02", "Tomato",     0, true},
+                {"MOD03", "Onion",      0, true},
+                {"MOD04", "Pickles",    0, true},
+                {"MOD05", "Cheese",     0, true},
+                {"MOD06", "Bacon",    199, false},
+                {"MOD07", "Jalapeños",  50, false},
+                {"MOD08", "Avocado",   150, false},
+            }, 0, 0},
+            {"MG02", "Cooking Temp", {
+                {"MOD10", "Rare",        0, false},
+                {"MOD11", "Medium Rare", 0, true},
+                {"MOD12", "Medium",      0, false},
+                {"MOD13", "Well Done",   0, false},
+            }, 1, 1},
+        };
+        demo_menu.push_back(std::move(item));
+    }
+    {
+        viewtouch::MenuItem item;
+        item.id = "BUR02"; item.name = "Cheese Burger";
+        item.price_cents = 1499; item.category = "Entrees";
+        item.modifier_groups = {
+            {"MG03", "Toppings", {
+                {"MOD01", "Lettuce",    0, true},
+                {"MOD02", "Tomato",     0, true},
+                {"MOD03", "Onion",      0, true},
+                {"MOD04", "Pickles",    0, true},
+                {"MOD20", "Extra Cheese", 100, false},
+                {"MOD06", "Bacon",      199, false},
+                {"MOD07", "Jalapeños",   50, false},
+            }, 0, 0},
+        };
+        demo_menu.push_back(std::move(item));
+    }
+    {
+        viewtouch::MenuItem item;
+        item.id = "TAC01"; item.name = "Street Tacos (3)";
+        item.price_cents = 999; item.category = "Entrees";
+        item.modifier_groups = {
+            {"MG04", "Protein", {
+                {"MOD30", "Carne Asada", 0, true},
+                {"MOD31", "Pollo",       0, false},
+                {"MOD32", "Al Pastor",   0, false},
+                {"MOD33", "Carnitas",    0, false},
+            }, 1, 1},
+            {"MG05", "Extras", {
+                {"MOD34", "Cilantro",    0, true},
+                {"MOD35", "Onion",       0, true},
+                {"MOD36", "Salsa Verde", 0, true},
+                {"MOD37", "Guacamole", 150, false},
+                {"MOD38", "Sour Cream",  75, false},
+            }, 0, 0},
+        };
+        demo_menu.push_back(std::move(item));
+    }
+
+    // ── Beverages & Sides (no modifiers) ─────────────────────
+    {
+        viewtouch::MenuItem bev1;
+        bev1.id = "BEV01"; bev1.name = "Iced Tea";
+        bev1.price_cents = 299; bev1.category = "Beverages";
+        bev1.send_to_kitchen = false;
+        demo_menu.push_back(std::move(bev1));
+    }
+    {
+        viewtouch::MenuItem bev2;
+        bev2.id = "BEV02"; bev2.name = "Horchata";
+        bev2.price_cents = 399; bev2.category = "Beverages";
+        bev2.send_to_kitchen = false;
+        demo_menu.push_back(std::move(bev2));
+    }
+    demo_menu.push_back({"SID01", "Fries",          499, "Sides",     {}, true});
+    demo_menu.push_back({"SID02", "Rice & Beans",   399, "Sides",     {}, true});
+
+    mgr->load_menu(std::move(demo_menu));
+
+    // ── Build and start gRPC server ──────────────────────────
+    PosServiceImpl service(mgr, printer);
+
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(listen_addr, grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+
+    // Tune for low-memory POS terminal:
+    builder.SetMaxReceiveMessageSize(1 * 1024 * 1024);   // 1 MB
+    builder.SetMaxSendMessageSize(1 * 1024 * 1024);
+
+    g_server = builder.BuildAndStart();
+    if (!g_server) {
+        std::cerr << "[vt_daemon] Failed to start server on " << listen_addr << "\n";
+        return 1;
+    }
+
+    std::cout << "[vt_daemon] listening on " << listen_addr << "\n";
+
+    // Graceful shutdown on SIGINT / SIGTERM
+    std::signal(SIGINT,  signal_handler);
+    std::signal(SIGTERM, signal_handler);
+
+    g_server->Wait();
+    return 0;
+}

@@ -1,0 +1,27 @@
+name: viewtouch_ui
+description: ViewTouch v2 POS Flutter frontend
+publish_to: 'none'
+
+version: 2.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  grpc: ^5.1.0
+  protobuf: ^6.0.0
+  fixnum: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: fonts/RobotoMono-Regular.ttf

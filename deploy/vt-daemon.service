@@ -1,0 +1,19 @@
+[Unit]
+Description=ViewTouch POS Daemon
+After=cups.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /run/viewtouch
+ExecStart=/opt/viewtouch/vt_daemon --listen unix:///run/viewtouch/pos.sock
+Restart=always
+RestartSec=2
+# Run as a dedicated service user (create with: useradd -r -s /sbin/nologin vt)
+User=vt
+Group=lp
+# Allow access to CUPS and the socket directory
+RuntimeDirectory=viewtouch
+RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=multi-user.target

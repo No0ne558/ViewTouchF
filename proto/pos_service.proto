@@ -1,0 +1,325 @@
+syntax = "proto3";
+
+package vt_proto;
+
+option java_package = "com.orderpi.viewtouch";
+
+// ─── Modifier Types ─────────────────────────────────────────
+
+enum ModifierAction {
+    MOD_NONE   = 0;
+    MOD_NO     = 1;   // remove a default item
+    MOD_ADD    = 2;   // add a non-default item
+    MOD_EXTRA  = 3;   // extra of something
+    MOD_LIGHT  = 4;   // less of something
+    MOD_SIDE   = 5;   // serve on the side
+    MOD_DOUBLE = 6;   // double — 2× the modifier price
+}
+
+message Modifier {
+    string id          = 1;
+    string name        = 2;
+    int32  price_cents = 3;  // extra cost when added (0 for free mods)
+    bool   is_default  = 4;  // comes on the plate by default
+}
+
+message ModifierGroup {
+    string            id         = 1;
+    string            name       = 2;
+    repeated Modifier modifiers  = 3;
+    int32             min_select = 4;  // 0 = optional
+    int32             max_select = 5;  // 0 = unlimited
+}
+
+message AppliedModifier {
+    string         modifier_id            = 1;
+    string         modifier_name          = 2;
+    ModifierAction action                 = 3;
+    int32          price_adjustment_cents  = 4;
+}
+
+// ─── Data Types ──────────────────────────────────────────────
+
+message MenuItem {
+    string                  id              = 1;
+    string                  name            = 2;
+    int32                   price_cents     = 3;  // price in cents
+    string                  category        = 4;
+    repeated ModifierGroup  modifier_groups = 5;
+    bool                    send_to_kitchen = 6;  // true = print on kitchen ticket
+}
+
+message TicketItem {
+    MenuItem                item      = 1;
+    int32                   quantity  = 2;
+    string                  line_key  = 3;
+    repeated AppliedModifier modifiers = 4;
+}
+
+message Ticket {
+    string              id          = 1;
+    repeated TicketItem items       = 2;
+    int32               subtotal    = 3;  // cents
+    int32               tax         = 4;  // cents
+    int32               total       = 5;  // cents
+    string              status      = 6;  // OPEN, CLOSED, VOIDED, COMPED, REFUNDED
+    int64               created_at  = 7;  // unix epoch ms
+    repeated Payment    payments    = 8;  // partial / split payments
+    int32               amount_paid = 9;  // total paid so far (cents)
+    int32               change_due  = 10; // change returned to customer (cents)
+}
+
+message Payment {
+    string payment_type  = 1;  // CASH or CARD
+    int32  amount_cents  = 2;  // amount for this leg
+}
+
+// ─── Requests / Responses ────────────────────────────────────
+
+message AddItemRequest {
+    string ticket_id    = 1;
+    string menu_item_id = 2;
+    int32  quantity     = 3;
+    repeated AppliedModifier modifiers = 4;
+}
+
+message AddItemResponse {
+    Ticket ticket = 1;
+}
+
+message RemoveItemRequest {
+    string ticket_id    = 1;
+    string menu_item_id = 2;
+    string line_key     = 3;
+}
+
+message RemoveItemResponse {
+    Ticket ticket = 1;
+}
+
+message DecreaseItemRequest {
+    string ticket_id    = 1;
+    string menu_item_id = 2;
+    string line_key     = 3;
+}
+
+message DecreaseItemResponse {
+    Ticket ticket = 1;
+}
+
+message GetTicketRequest {
+    string ticket_id = 1;
+}
+
+message GetTicketResponse {
+    Ticket ticket = 1;
+}
+
+message NewTicketRequest {}
+
+message NewTicketResponse {
+    Ticket ticket = 1;
+}
+
+message CheckoutRequest {
+    string ticket_id      = 1;
+    repeated Payment payments = 2;  // one or more payment legs
+}
+
+message CheckoutResponse {
+    bool   success      = 1;
+    Ticket ticket       = 2;
+    string error        = 3;
+}
+
+// ─── Ticket History / Actions ────────────────────────────────
+
+message ListTicketsRequest {
+    string date   = 1;  // "YYYY-MM-DD", empty = today
+    string status = 2;  // filter: "CLOSED","VOIDED","COMPED","REFUNDED", empty = all
+}
+
+message ListTicketsResponse {
+    repeated Ticket tickets = 1;
+}
+
+message TicketActionRequest {
+    string ticket_id = 1;
+    string action    = 2;  // "VOID", "COMP", "REFUND"
+    string reason    = 3;  // optional reason text
+}
+
+message TicketActionResponse {
+    bool   success = 1;
+    Ticket ticket  = 2;
+    string error   = 3;
+}
+
+message PrintReceiptRequest {
+    string ticket_id = 1;
+}
+
+message PrintReceiptResponse {
+    bool   success = 1;
+    string error   = 2;
+    int32  job_id  = 3;
+}
+
+message PrintStatusEvent {
+    int32  job_id     = 1;
+    string status     = 2;  // QUEUED, PRINTING, COMPLETE, ERROR
+    string message    = 3;
+}
+
+message GetMenuRequest {}
+
+message GetMenuResponse {
+    repeated MenuItem items = 1;
+}
+
+// ─── Admin: Settings ─────────────────────────────────────────
+
+message Settings {
+    string restaurant_name        = 1;
+    int32  tax_rate_bps           = 2;  // basis points: 825 = 8.25%
+    string receipt_printer_name   = 3;
+    bool   receipt_printer_enabled = 4;
+    string kitchen_printer_name   = 5;
+    bool   kitchen_printer_enabled = 6;
+}
+
+message GetSettingsRequest {}
+message GetSettingsResponse  { Settings settings = 1; }
+message UpdateSettingsRequest  { Settings settings = 1; }
+message UpdateSettingsResponse { Settings settings = 1; }
+
+// ─── Printer Discovery ───────────────────────────────────────
+
+message PrinterInfo {
+    string name        = 1;  // CUPS queue name
+    string description = 2;  // human-readable description
+    string uri         = 3;  // device URI
+    bool   is_default  = 4;
+}
+
+message ListPrintersRequest {}
+message ListPrintersResponse { repeated PrinterInfo printers = 1; }
+
+message PrintKitchenRequest  { string ticket_id = 1; }
+message PrintKitchenResponse {
+    bool   success = 1;
+    string error   = 2;
+    int32  job_id  = 3;
+}
+
+// ─── Admin: Menu CRUD ────────────────────────────────────────
+
+message AddMenuItemRequest    { MenuItem item = 1; }
+message AddMenuItemResponse   { MenuItem item = 1; }
+message UpdateMenuItemRequest { MenuItem item = 1; }
+message UpdateMenuItemResponse{ MenuItem item = 1; }
+message DeleteMenuItemRequest { string item_id = 1; }
+message DeleteMenuItemResponse{ bool success = 1; }
+
+// ─── Reporting ───────────────────────────────────────────────
+
+message ItemSalesEntry {
+    string item_name      = 1;
+    int32  quantity_sold   = 2;
+    int32  revenue_cents   = 3;
+}
+
+message DailyReport {
+    string date                    = 1;  // YYYY-MM-DD
+    int32  total_tickets           = 2;
+    int32  total_revenue_cents     = 3;
+    int32  total_tax_cents         = 4;
+    int32  cash_count              = 5;
+    int32  card_count              = 6;
+    int32  voided_count            = 7;
+    repeated ItemSalesEntry item_sales = 8;
+    int32  comped_count            = 9;
+    int32  refunded_count          = 10;
+    int32  cash_total_cents        = 11; // total cash collected
+    int32  card_total_cents        = 12; // total card collected
+    int32  comped_total_cents      = 13; // total comped value
+    int32  refunded_total_cents    = 14; // total refunded value
+    int32  net_revenue_cents       = 15; // revenue - refunds - comps
+}
+
+message DailyReportRequest { string date = 1; }  // empty = today
+message DailyReportResponse { DailyReport report = 1; }
+
+message ReportHistoryRequest { int32 days_back = 1; }  // default 30
+message ReportHistoryResponse { repeated DailyReport reports = 1; }
+
+message DateRangeReportRequest {
+    string start_date = 1;  // YYYY-MM-DD
+    string end_date   = 2;  // YYYY-MM-DD
+}
+
+message DateRangeReportResponse {
+    DailyReport summary = 1;                // aggregated totals
+    repeated DailyReport daily_reports = 2;  // per-day breakdown
+}
+
+message PrintReportRequest {
+    string report_type = 1;  // "DAILY", "WEEKLY", "MONTHLY", "YEARLY", "CUSTOM", "ZREPORT"
+    string date        = 2;  // for DAILY/ZREPORT: specific date (empty=today)
+    string start_date  = 3;  // for CUSTOM range
+    string end_date    = 4;  // for CUSTOM range
+}
+
+message PrintReportResponse {
+    bool   success = 1;
+    string error   = 2;
+    int32  job_id  = 3;
+}
+
+message EndDayRequest {}
+message EndDayResponse {
+    bool        success = 1;
+    DailyReport z_report = 2;  // the Z-report for the day
+    string      error   = 3;
+}
+
+// ─── Service ─────────────────────────────────────────────────
+
+service PosService {
+    // Register
+    rpc GetMenu      (GetMenuRequest)      returns (GetMenuResponse);
+    rpc NewTicket    (NewTicketRequest)     returns (NewTicketResponse);
+    rpc AddItem      (AddItemRequest)       returns (AddItemResponse);
+    rpc RemoveItem   (RemoveItemRequest)    returns (RemoveItemResponse);
+    rpc DecreaseItem (DecreaseItemRequest)  returns (DecreaseItemResponse);
+    rpc GetTicket    (GetTicketRequest)     returns (GetTicketResponse);
+    rpc Checkout     (CheckoutRequest)      returns (CheckoutResponse);
+    rpc PrintReceipt (PrintReceiptRequest)  returns (PrintReceiptResponse);
+    rpc WatchPrintStatus (PrintReceiptRequest) returns (stream PrintStatusEvent);
+
+    // Ticket history & actions
+    rpc ListTickets   (ListTicketsRequest)   returns (ListTicketsResponse);
+    rpc TicketAction  (TicketActionRequest)  returns (TicketActionResponse);
+
+    // Admin — settings
+    rpc GetSettings    (GetSettingsRequest)    returns (GetSettingsResponse);
+    rpc UpdateSettings (UpdateSettingsRequest) returns (UpdateSettingsResponse);
+
+    // Printer discovery & kitchen printing
+    rpc ListPrinters   (ListPrintersRequest)   returns (ListPrintersResponse);
+    rpc PrintKitchen   (PrintKitchenRequest)   returns (PrintKitchenResponse);
+
+    // Admin — menu CRUD
+    rpc AddMenuItem    (AddMenuItemRequest)    returns (AddMenuItemResponse);
+    rpc UpdateMenuItem (UpdateMenuItemRequest) returns (UpdateMenuItemResponse);
+    rpc DeleteMenuItem (DeleteMenuItemRequest) returns (DeleteMenuItemResponse);
+
+    // Reporting
+    rpc GetDailyReport    (DailyReportRequest)      returns (DailyReportResponse);
+    rpc GetReportHistory  (ReportHistoryRequest)     returns (ReportHistoryResponse);
+    rpc GetDateRangeReport(DateRangeReportRequest)   returns (DateRangeReportResponse);
+    rpc PrintReport       (PrintReportRequest)       returns (PrintReportResponse);
+
+    // End of day
+    rpc EndDay (EndDayRequest) returns (EndDayResponse);
+}
