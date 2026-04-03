@@ -387,9 +387,10 @@ class _ModifierDialogState extends State<_ModifierDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.item.name),
+      title: Text(widget.item.name,
+          style: Theme.of(context).textTheme.headlineSmall),
       content: SizedBox(
-        width: 480,
+        width: 700,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,10 +398,10 @@ class _ModifierDialogState extends State<_ModifierDialog> {
             children: [
               for (final group in widget.item.modifierGroups) ...[
                 Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 4),
+                  padding: const EdgeInsets.only(top: 16, bottom: 8),
                   child: Text(
                     group.name,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -414,13 +415,20 @@ class _ModifierDialogState extends State<_ModifierDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+        SizedBox(
+          height: 48,
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+          ),
         ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _buildModifiers()),
-          child: const Text('Add to Order'),
+        SizedBox(
+          height: 48,
+          width: 180,
+          child: FilledButton(
+            onPressed: () => Navigator.pop(context, _buildModifiers()),
+            child: const Text('Add to Order', style: TextStyle(fontSize: 16)),
+          ),
         ),
       ],
     );
@@ -432,17 +440,17 @@ class _ModifierDialogState extends State<_ModifierDialog> {
       children: [
         for (final mod in group.modifiers)
           RadioListTile<String>(
-            title: Text(mod.name),
+            title: Text(mod.name, style: const TextStyle(fontSize: 16)),
             subtitle: mod.priceCents > 0
                 ? Text('+${_money(mod.priceCents)}',
-                    style: const TextStyle(color: Colors.green))
+                    style: const TextStyle(color: Colors.green, fontSize: 14))
                 : null,
             secondary: mod.isDefault
-                ? const Chip(label: Text('Default', style: TextStyle(fontSize: 11)))
+                ? const Chip(label: Text('Default', style: TextStyle(fontSize: 12)))
                 : null,
             value: mod.id,
             groupValue: _getRadioValue(group),
-            dense: true,
+            dense: false,
             onChanged: (val) {
               setState(() {
                 // Clear all in group, set selected one.
@@ -472,7 +480,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
       children: [
         for (final mod in group.modifiers)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
               children: [
                 Expanded(
@@ -480,14 +488,14 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(mod.name,
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
                       if (mod.isDefault)
                         const Text('Included',
-                            style: TextStyle(fontSize: 11, color: Colors.grey)),
+                            style: TextStyle(fontSize: 13, color: Colors.grey)),
                       if (!mod.isDefault && mod.priceCents > 0)
                         Text('+${_money(mod.priceCents)}',
                             style: const TextStyle(
-                                fontSize: 11, color: Colors.green)),
+                                fontSize: 13, color: Colors.green)),
                     ],
                   ),
                 ),
@@ -511,13 +519,13 @@ class _ModifierDialogState extends State<_ModifierDialog> {
       Modifier mod, ModifierAction action, String label, Color color) {
     final isSelected = _selections[mod.id] == action;
     return Padding(
-      padding: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.only(left: 6),
       child: ChoiceChip(
-        label: Text(label, style: TextStyle(fontSize: 11,
+        label: Text(label, style: TextStyle(fontSize: 14,
             color: isSelected ? Colors.white : color)),
         selected: isSelected,
         selectedColor: color,
-        visualDensity: VisualDensity.compact,
+        visualDensity: VisualDensity.standard,
         onSelected: (selected) {
           setState(() {
             if (selected) {
@@ -621,23 +629,23 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
+        constraints: const BoxConstraints(maxWidth: 540, maxHeight: 820),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header
-              Text('Checkout', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 8),
+              Text('Checkout', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 12),
               // Amount due
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total:', style: TextStyle(fontSize: 18)),
+                  const Text('Total:', style: TextStyle(fontSize: 22)),
                   Text(_money(_totalDue),
                       style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold)),
+                          fontSize: 32, fontWeight: FontWeight.bold)),
                 ],
               ),
               if (_payments.isNotEmpty) ...[
@@ -681,16 +689,16 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
               Container(
                 width: double.infinity,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   _input.isEmpty ? '0.00' : _input,
                   textAlign: TextAlign.right,
                   style: const TextStyle(
-                      fontSize: 32, fontFamily: 'RobotoMono'),
+                      fontSize: 40, fontFamily: 'RobotoMono'),
                 ),
               ),
               const SizedBox(height: 8),
@@ -704,30 +712,30 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                 children: [
                   Expanded(
                     child: SizedBox(
-                      height: 52,
+                      height: 64,
                       child: FilledButton.icon(
                         onPressed: _remaining > 0
                             ? () => _addPayment('CASH')
                             : null,
-                        icon: const Icon(Icons.payments),
+                        icon: const Icon(Icons.payments, size: 28),
                         label: const Text('CASH',
-                            style: TextStyle(fontSize: 16)),
+                            style: TextStyle(fontSize: 20)),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.green.shade700),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
-                      height: 52,
+                      height: 64,
                       child: FilledButton.icon(
                         onPressed: _remaining > 0
                             ? () => _addPayment('CARD')
                             : null,
-                        icon: const Icon(Icons.credit_card),
+                        icon: const Icon(Icons.credit_card, size: 28),
                         label: const Text('CARD',
-                            style: TextStyle(fontSize: 16)),
+                            style: TextStyle(fontSize: 20)),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.blue.shade700),
                       ),
@@ -735,10 +743,13 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 48,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                ),
               ),
             ],
           ),
@@ -771,7 +782,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
               children: row.map((label) {
                 return Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(3),
+                    padding: const EdgeInsets.all(4),
                     child: SizedBox.expand(
                       child: ElevatedButton(
                         onPressed: () {
@@ -785,10 +796,10 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         },
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(label,
-                            style: const TextStyle(fontSize: 22)),
+                            style: const TextStyle(fontSize: 28)),
                       ),
                     ),
                   ),
@@ -803,9 +814,12 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
 
   Widget _quickBtn(String label, VoidCallback onPressed) {
     return Expanded(
-      child: OutlinedButton(
-        onPressed: onPressed,
-        child: Text(label),
+      child: SizedBox(
+        height: 48,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          child: Text(label, style: const TextStyle(fontSize: 16)),
+        ),
       ),
     );
   }

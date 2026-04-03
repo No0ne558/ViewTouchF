@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modifier groups with configurable `min_select` / `max_select`
 - Per-modifier defaults (`is_default`) and individual pricing
 - Modifier actions: **NO**, **ADD**, **EXTRA**, **LIGHT**, **SIDE**, **DOUBLE**
+- Modifier dialog enlarged (700px wide) with bigger action chips, larger text, and 48px touch-friendly buttons for touchscreen use
 - `send_to_kitchen` flag per menu item for kitchen ticket routing
 
 #### Ticket & Order Management
@@ -35,9 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ticket statuses: `OPEN`, `CLOSED`, `VOIDED`, `COMPED`, `REFUNDED`
 
 #### Checkout & Payments
-- Checkout dialog with on-screen numeric keypad
+- Checkout dialog with on-screen numeric keypad — enlarged for touchscreen (540×820, larger keypad buttons, bigger CASH/CARD pay buttons)
 - Split payment support — combine CASH and CARD in any number of legs
-- Exact-amount and clear quick buttons
+- Exact-amount and clear quick buttons (48px height for easy tapping)
 - Partial payment tracking with undo (remove last payment leg)
 - Automatic change-due calculation for overpayment
 
