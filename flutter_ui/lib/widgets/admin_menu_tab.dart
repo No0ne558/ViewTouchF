@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
+import 'touchscreen_keyboard.dart';
 
 class AdminMenuTab extends StatefulWidget {
   const AdminMenuTab({super.key});
@@ -348,9 +349,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: TouchTextField(
                   controller: _idCtrl,
                   enabled: !_isEdit,
+                  dialogTitle: 'Item ID',
                   decoration: const InputDecoration(
                     labelText: 'Item ID',
                     border: OutlineInputBorder(),
@@ -361,8 +363,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
-                child: TextField(
+                child: TouchTextField(
                   controller: _nameCtrl,
+                  dialogTitle: 'Item Name',
                   decoration: const InputDecoration(
                     labelText: 'Name',
                     border: OutlineInputBorder(),
@@ -375,21 +378,22 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: TouchTextField(
                   controller: _priceCtrl,
+                  dialogTitle: 'Price (\$)',
+                  numericOnly: true,
                   decoration: const InputDecoration(
                     labelText: 'Price (\$)',
                     border: OutlineInputBorder(),
                     hintText: '12.99',
                   ),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: TextField(
+                child: TouchTextField(
                   controller: _catCtrl,
+                  dialogTitle: 'Category',
                   decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -453,8 +457,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: TouchTextField(
                     controller: g.idCtrl,
+                    dialogTitle: 'Group ID',
                     decoration: const InputDecoration(
                       labelText: 'Group ID',
                       border: OutlineInputBorder(),
@@ -465,8 +470,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 2,
-                  child: TextField(
+                  child: TouchTextField(
                     controller: g.nameCtrl,
+                    dialogTitle: 'Group Name',
                     decoration: const InputDecoration(
                       labelText: 'Group Name',
                       border: OutlineInputBorder(),
@@ -478,31 +484,29 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 70,
-                  child: TextField(
+                  child: TouchTextField(
+                    controller: TextEditingController(text: '${g.minSelect}'),
+                    dialogTitle: 'Min Select',
+                    numericOnly: true,
                     decoration: const InputDecoration(
                       labelText: 'Min',
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
-                    keyboardType: TextInputType.number,
-                    controller: TextEditingController(text: '${g.minSelect}'),
-                    onChanged: (v) =>
-                        g.minSelect = int.tryParse(v) ?? 0,
                   ),
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 70,
-                  child: TextField(
+                  child: TouchTextField(
+                    controller: TextEditingController(text: '${g.maxSelect}'),
+                    dialogTitle: 'Max Select',
+                    numericOnly: true,
                     decoration: const InputDecoration(
                       labelText: 'Max',
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
-                    keyboardType: TextInputType.number,
-                    controller: TextEditingController(text: '${g.maxSelect}'),
-                    onChanged: (v) =>
-                        g.maxSelect = int.tryParse(v) ?? 0,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -550,8 +554,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
         children: [
           SizedBox(
             width: 80,
-            child: TextField(
+            child: TouchTextField(
               controller: m.idCtrl,
+              dialogTitle: 'Modifier ID',
               decoration: const InputDecoration(
                 labelText: 'ID',
                 border: OutlineInputBorder(),
@@ -563,8 +568,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(width: 6),
           Expanded(
             flex: 3,
-            child: TextField(
+            child: TouchTextField(
               controller: m.nameCtrl,
+              dialogTitle: 'Modifier Name',
               decoration: const InputDecoration(
                 labelText: 'Name',
                 border: OutlineInputBorder(),
@@ -576,16 +582,16 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(width: 6),
           SizedBox(
             width: 80,
-            child: TextField(
+            child: TouchTextField(
               controller: m.priceCtrl,
+              dialogTitle: 'Modifier Price',
+              numericOnly: true,
               decoration: const InputDecoration(
                 labelText: 'Price',
                 border: OutlineInputBorder(),
                 isDense: true,
                 hintText: '0.00',
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
               style: const TextStyle(fontSize: 13),
             ),
           ),

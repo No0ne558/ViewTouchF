@@ -5,6 +5,19 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] — 2026-04-03
+
+### Added
+- Reusable `TouchscreenKeyboard` widget, `TouchKeyboardDialog`, and `TouchTextField` drop-in replacement for on-screen QWERTY input everywhere
+- On-screen keyboard for VOID/COMP/REFUND reason dialogs, admin settings fields, and admin menu editor fields
+- Customer name and comment printed on receipt tickets (bold "Customer:" and "Note:" lines)
+- Customer name and comment printed on kitchen tickets
+- Kitchen ticket automatically sent when a phone order is created
+
+### Fixed
+- Phone order badge count stuck at 1 after the last phone order is checked out — badge now refreshes correctly to 0
+- Duplicate receipt printing when checking out a phone order — receipt/kitchen prints are now skipped since they were already printed at phone order creation
+
 ## [2.0.0] — 2026-04-03
 
 ### Added
@@ -34,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Swipe-left to decrease quantity (−1)
 - Line-key based item deduplication (same item + same modifiers = same line)
 - Ticket statuses: `OPEN`, `CLOSED`, `VOIDED`, `COMPED`, `REFUNDED`
+- **Phone orders**: place current ticket on hold for phone-in customers with name and comment
+- Phone order QWERTY keyboard dialog (letters, numbers, symbols) for touchscreen text entry
+- Phone order hold list with Checkout and Cancel Order actions per order
+- Phone icon in app bar with orange badge counter showing pending phone orders
+- Automatic receipt printing when a phone order is created (includes customer name/comment)
+- Phone Order button in ticket panel beside Checkout (orange themed)
 
 #### Checkout & Payments
 - Checkout dialog with on-screen numeric keypad — enlarged for touchscreen (540×820, larger keypad buttons, bigger CASH/CARD pay buttons)
@@ -86,4 +105,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.gitignore` for C++ build artifacts, Flutter build/ephemeral, IDE files
 - `RobotoMono` font bundled for monospaced keypad display
 
+[2.1.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.1.0
 [2.0.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.0.0

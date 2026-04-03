@@ -110,6 +110,20 @@ public:
     /// Runs end-of-day: generates Z-report, removes non-OPEN tickets.
     DailyReport               end_day();
 
+    // ── Phone Orders ─────────────────────────────────────────
+    /// Create a phone order from the given ticket (moves it into hold list).
+    std::optional<PhoneOrder> create_phone_order(const std::string& ticket_id,
+                                                  const std::string& customer_name,
+                                                  const std::string& comment);
+    /// List all phone orders with HOLDING status.
+    std::vector<PhoneOrder>   list_phone_orders() const;
+    /// Get count of HOLDING phone orders.
+    int32_t                   phone_order_count() const;
+    /// Perform an action on a phone order (CHECKOUT or CANCEL).
+    /// CHECKOUT: restores ticket as OPEN and returns it; CANCEL: marks cancelled.
+    std::optional<PhoneOrder> phone_order_action(const std::string& phone_order_id,
+                                                  const std::string& action);
+
 private:
     std::string generate_ticket_id() const;
     std::string today_str() const;
@@ -128,6 +142,8 @@ private:
     std::unordered_map<std::string, Ticket>        tickets_;
     std::vector<DailyReport>                       archived_reports_;
     uint64_t                                       ticket_seq_ = 0;
+    std::unordered_map<std::string, PhoneOrder>    phone_orders_;
+    uint64_t                                       phone_order_seq_ = 0;
 };
 
 }  // namespace viewtouch

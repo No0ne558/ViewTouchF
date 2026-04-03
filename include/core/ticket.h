@@ -50,4 +50,17 @@ struct Ticket {
     void recalculate(int32_t tax_rate_bps);
 };
 
+// ── Phone Order ──────────────────────────────────────────────
+
+enum class PhoneOrderStatus { HOLDING, COMPLETED, CANCELLED };
+
+struct PhoneOrder {
+    std::string   id;              // e.g. "PH-000001"
+    Ticket        ticket;          // snapshot at creation
+    std::string   customer_name;
+    std::string   comment;
+    PhoneOrderStatus status = PhoneOrderStatus::HOLDING;
+    int64_t       created_at_ms = 0;
+};
+
 }  // namespace viewtouch

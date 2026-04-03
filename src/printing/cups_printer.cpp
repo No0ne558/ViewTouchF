@@ -91,7 +91,9 @@ std::string CupsPrinter::resolve_printer() const {
 
 // ── Build ESC/POS receipt payload ────────────────────────────
 
-std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket) const {
+std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket,
+                                                         const std::string& customer_name,
+                                                         const std::string& comment) const {
     constexpr int LINE_WIDTH = 42;  // 42 columns for 80mm paper, standard
 
     std::vector<uint8_t> buf;
@@ -108,6 +110,24 @@ std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket) co
     append(buf, escpos::DOUBLE_OFF);
     append_text(buf, std::string(LINE_WIDTH, '-'));
     append(buf, escpos::LF);
+
+    // 2b. Customer info (for phone orders)
+    if (!customer_name.empty()) {
+        append(buf, escpos::ALIGN_LEFT);
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, "Customer: " + customer_name);
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+    }
+    if (!comment.empty()) {
+        append(buf, escpos::ALIGN_LEFT);
+        append_text(buf, "Note: " + comment);
+        append(buf, escpos::LF);
+    }
+    if (!customer_name.empty() || !comment.empty()) {
+        append_text(buf, std::string(LINE_WIDTH, '-'));
+        append(buf, escpos::LF);
+    }
 
     // 3. Ticket info
     append(buf, escpos::ALIGN_LEFT);
@@ -240,14 +260,18 @@ PrintResult CupsPrinter::send_raw(const std::vector<uint8_t>& data,
     return result;
 }
 
-PrintResult CupsPrinter::print_receipt(const Ticket& ticket) {
-    auto payload = build_receipt_payload(ticket);
+PrintResult CupsPrinter::print_receipt(const Ticket& ticket,
+                                        const std::string& customer_name,
+                                        const std::string& comment) {
+    auto payload = build_receipt_payload(ticket, customer_name, comment);
     return send_raw(payload);
 }
 
 PrintResult CupsPrinter::print_kitchen(const Ticket& ticket,
-                                        const std::string& printer_name) {
-    auto payload = build_kitchen_payload(ticket);
+                                        const std::string& printer_name,
+                                        const std::string& customer_name,
+                                        const std::string& comment) {
+    auto payload = build_kitchen_payload(ticket, customer_name, comment);
     return send_raw(payload, printer_name);
 }
 
@@ -284,7 +308,9 @@ std::vector<PrinterInfo> CupsPrinter::list_printers() {
 
 // ── Build kitchen ticket payload ─────────────────────────────
 
-std::vector<uint8_t> CupsPrinter::build_kitchen_payload(const Ticket& ticket) const {
+std::vector<uint8_t> CupsPrinter::build_kitchen_payload(const Ticket& ticket,
+                                                          const std::string& customer_name,
+                                                          const std::string& comment) const {
     constexpr int LINE_WIDTH = 42;
 
     std::vector<uint8_t> buf;
@@ -302,7 +328,22 @@ std::vector<uint8_t> CupsPrinter::build_kitchen_payload(const Ticket& ticket) co
     append(buf, escpos::DOUBLE_OFF);
     append(buf, escpos::BOLD_OFF);
 
+    // Customer info (for phone orders)
+    if (!customer_name.empty()) {
+        append(buf, escpos::ALIGN_LEFT);
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, "Customer: " + customer_name);
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+    }
+    if (!comment.empty()) {
+        append(buf, escpos::ALIGN_LEFT);
+        append_text(buf, "Note: " + comment);
+        append(buf, escpos::LF);
+    }
+
     // Ticket ID
+    append(buf, escpos::ALIGN_CENTER);
     append_text(buf, "Ticket: " + ticket.id);
     append(buf, escpos::LF);
     append_text(buf, std::string(LINE_WIDTH, '='));

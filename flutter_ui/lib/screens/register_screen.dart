@@ -4,6 +4,7 @@ import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
 import '../widgets/menu_grid.dart';
 import '../widgets/ticket_panel.dart';
+import '../widgets/touchscreen_keyboard.dart';
 import 'admin_screen.dart';
 
 /// The main register screen — split into a menu grid (left) and the
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _error;
   String _restaurantName = 'ViewTouch POS';
   bool _isFullscreen = true;
+  int _phoneOrderCount = 0;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final menuResp = await PosClient.instance.stub.getMenu(GetMenuRequest());
       final ticketResp = await PosClient.instance.stub.newTicket(NewTicketRequest());
       final settingsResp = await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      final phoneCountResp = await PosClient.instance.stub.getPhoneOrderCount(PhoneOrderCountRequest());
       if (!mounted) return;
       setState(() {
         _menu = menuResp.items;
@@ -41,6 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
             ? settingsResp.settings.restaurantName
             : 'ViewTouchF';
+        _phoneOrderCount = phoneCountResp.count;
         _loading = false;
       });
     } catch (e) {
@@ -56,13 +60,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final menuResp = await PosClient.instance.stub.getMenu(GetMenuRequest());
       final settingsResp = await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      final phoneCountResp = await PosClient.instance.stub.getPhoneOrderCount(PhoneOrderCountRequest());
       if (!mounted) return;
       setState(() {
         _menu = menuResp.items;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
             ? settingsResp.settings.restaurantName
             : 'ViewTouchF';
+        _phoneOrderCount = phoneCountResp.count;
       });
+    } catch (_) {}
+  }
+
+  Future<void> _refreshPhoneOrderCount() async {
+    try {
+      final resp = await PosClient.instance.stub.getPhoneOrderCount(PhoneOrderCountRequest());
+      if (!mounted) return;
+      setState(() => _phoneOrderCount = resp.count);
     } catch (_) {}
   }
 
@@ -134,7 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _checkout() async {
+  Future<void> _checkout({bool skipPrint = false}) async {
     if (_ticket == null || _ticket!.items.isEmpty) return;
     final result = await showDialog<_CheckoutResult>(
       context: context,
@@ -168,13 +182,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       }
-      // Print receipt
-      _printReceipt(resp.ticket);
-      // Print kitchen ticket (if enabled)
-      _printKitchen(resp.ticket);
+      if (!skipPrint) {
+        // Print receipt
+        _printReceipt(resp.ticket);
+        // Print kitchen ticket (if enabled)
+        _printKitchen(resp.ticket);
+      }
       // Open a new ticket for the next customer.
       final newT = await PosClient.instance.stub.newTicket(NewTicketRequest());
+      if (!mounted) return;
       setState(() => _ticket = newT.ticket);
+      await _refreshPhoneOrderCount();
     } catch (e) {
       _showError('Checkout failed: $e');
     }
@@ -212,6 +230,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context: context,
       builder: (ctx) => const _PastOrdersDialog(),
     );
+  }
+
+  Future<void> _showPhoneOrderDialog() async {
+    if (_ticket == null || _ticket!.items.isEmpty) return;
+    final result = await showDialog<_PhoneOrderInput>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const _PhoneOrderDialog(),
+    );
+    if (result == null) return; // cancelled
+
+    try {
+      final req = CreatePhoneOrderRequest()
+        ..ticketId = _ticket!.id
+        ..customerName = result.name
+        ..comment = result.comment;
+      final resp = await PosClient.instance.stub.createPhoneOrder(req);
+      if (!resp.success) {
+        _showError(resp.error);
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Phone order created for ${result.name.isNotEmpty ? result.name : "customer"}'),
+            backgroundColor: Colors.orange.shade700,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      // Open a new ticket for the next customer.
+      final newT = await PosClient.instance.stub.newTicket(NewTicketRequest());
+      if (!mounted) return;
+      setState(() => _ticket = newT.ticket);
+      _refreshPhoneOrderCount();
+    } catch (e) {
+      _showError('Phone order failed: $e');
+    }
+  }
+
+  Future<void> _showPhoneOrderList() async {
+    final result = await showDialog<_PhoneOrderListResult>(
+      context: context,
+      builder: (ctx) => const _PhoneOrderListDialog(),
+    );
+    if (result == null) return;
+
+    if (result.action == 'CHECKOUT') {
+      // The ticket was restored as OPEN — load it and run checkout.
+      try {
+        final ticketResp = await PosClient.instance.stub.getTicket(
+          GetTicketRequest()..ticketId = result.ticketId,
+        );
+        if (!mounted) return;
+        setState(() => _ticket = ticketResp.ticket);
+        // Skip printing — receipt was already printed when the phone order was created.
+        await _checkout(skipPrint: true);
+        await _refreshPhoneOrderCount();
+      } catch (e) {
+        _showError('Failed to load phone order ticket: $e');
+      }
+    } else {
+      await _refreshPhoneOrderCount();
+    }
   }
 
   void _showError(String msg) {
@@ -272,6 +354,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             tooltip: 'Past Orders',
             onPressed: _showPastOrders,
           ),
+          Badge(
+            isLabelVisible: _phoneOrderCount > 0,
+            label: Text('$_phoneOrderCount',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            backgroundColor: Colors.orange,
+            child: IconButton(
+              icon: const Icon(Icons.phone),
+              tooltip: 'Phone Orders',
+              onPressed: _showPhoneOrderList,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
             tooltip: 'Admin',
@@ -297,6 +390,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: TicketPanel(
               ticket: _ticket,
               onCheckout: _checkout,
+              onPhoneOrder: _showPhoneOrderDialog,
               onDecreaseItem: _decreaseItem,
               onIncreaseItem: _increaseItem,
             ),
@@ -1149,27 +1243,448 @@ class _ReasonDialogState extends State<_ReasonDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('${widget.action} Ticket #${widget.ticketId}'),
-      content: TextField(
-        controller: _controller,
-        decoration: const InputDecoration(
-          labelText: 'Reason (optional)',
-          hintText: 'e.g. Customer complaint',
+    return Dialog(
+      insetPadding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 620),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${widget.action} Ticket #${widget.ticketId}',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _controller,
+                readOnly: true,
+                showCursor: true,
+                decoration: InputDecoration(
+                  labelText: 'Reason (optional)',
+                  hintText: 'e.g. Customer complaint',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                style: const TextStyle(fontSize: 22),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: TouchscreenKeyboard(controller: _controller),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel',
+                            style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: FilledButton(
+                        onPressed: () =>
+                            Navigator.pop(context, _controller.text),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: Colors.red.shade700),
+                        child: Text(widget.action,
+                            style: const TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        autofocus: true,
-        onSubmitted: (_) => Navigator.pop(context, _controller.text),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+    );
+  }
+}
+
+// ── Phone Order Input Dialog ──────────────────────────────────
+
+class _PhoneOrderInput {
+  final String name;
+  final String comment;
+  _PhoneOrderInput(this.name, this.comment);
+}
+
+class _PhoneOrderDialog extends StatefulWidget {
+  const _PhoneOrderDialog();
+
+  @override
+  State<_PhoneOrderDialog> createState() => _PhoneOrderDialogState();
+}
+
+class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
+  final _nameController = TextEditingController();
+  final _commentController = TextEditingController();
+  bool _nameActive = true; // which field the keyboard targets
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  TextEditingController get _activeController =>
+      _nameActive ? _nameController : _commentController;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 820),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Phone Order',
+                  style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 16),
+              // Name field
+              GestureDetector(
+                onTap: () => setState(() => _nameActive = true),
+                child: TextField(
+                  controller: _nameController,
+                  readOnly: true,
+                  showCursor: true,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    labelStyle: const TextStyle(fontSize: 18),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    filled: _nameActive,
+                    fillColor: _nameActive
+                        ? Colors.orange.withAlpha(30)
+                        : null,
+                  ),
+                  style: const TextStyle(fontSize: 22),
+                  onTap: () => setState(() => _nameActive = true),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Comment field
+              GestureDetector(
+                onTap: () => setState(() => _nameActive = false),
+                child: TextField(
+                  controller: _commentController,
+                  readOnly: true,
+                  showCursor: true,
+                  decoration: InputDecoration(
+                    labelText: 'Comment',
+                    labelStyle: const TextStyle(fontSize: 18),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    filled: !_nameActive,
+                    fillColor: !_nameActive
+                        ? Colors.orange.withAlpha(30)
+                        : null,
+                  ),
+                  style: const TextStyle(fontSize: 22),
+                  onTap: () => setState(() => _nameActive = false),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // QWERTY Keyboard
+              Expanded(
+                child: TouchscreenKeyboard(controller: _activeController),
+              ),
+              const SizedBox(height: 12),
+              // Done / Cancel
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel',
+                            style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: SizedBox(
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(
+                          context,
+                          _PhoneOrderInput(
+                            _nameController.text.trim(),
+                            _commentController.text.trim(),
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: Colors.orange.shade700),
+                        child: const Text('Done',
+                            style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _controller.text),
-          child: Text(widget.action),
+      ),
+    );
+  }
+
+}
+
+// ── Phone Order List Dialog ───────────────────────────────────
+
+class _PhoneOrderListResult {
+  final String action;   // 'CHECKOUT' or 'CANCEL'
+  final String ticketId; // ticket ID for checkout
+  _PhoneOrderListResult(this.action, this.ticketId);
+}
+
+class _PhoneOrderListDialog extends StatefulWidget {
+  const _PhoneOrderListDialog();
+
+  @override
+  State<_PhoneOrderListDialog> createState() => _PhoneOrderListDialogState();
+}
+
+class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
+  List<PhoneOrder> _orders = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final resp = await PosClient.instance.stub.listPhoneOrders(
+        ListPhoneOrdersRequest(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _orders = resp.orders;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+
+  String _time(dynamic epochMs) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(
+        epochMs is int ? epochMs : (epochMs as dynamic).toInt());
+    final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    return '${h.toString()}:${dt.minute.toString().padLeft(2, '0')} $ampm';
+  }
+
+  Future<void> _doAction(PhoneOrder order, String action) async {
+    try {
+      final resp = await PosClient.instance.stub.phoneOrderAction(
+        PhoneOrderActionRequest()
+          ..phoneOrderId = order.id
+          ..action = action,
+      );
+      if (!resp.success) {
+        _showMsg('$action failed: ${resp.error}', Colors.red);
+        return;
+      }
+      if (action == 'CHECKOUT') {
+        if (mounted) {
+          Navigator.pop(context,
+              _PhoneOrderListResult('CHECKOUT', order.ticket.id));
+        }
+      } else {
+        _showMsg('Order cancelled', Colors.orange);
+        _loadOrders();
+      }
+    } catch (e) {
+      _showMsg('$action failed: $e', Colors.red);
+    }
+  }
+
+  void _showMsg(String msg, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: color),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 600),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  const Icon(Icons.phone, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Text('Phone Orders',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _loadOrders,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              // Order list
+              Expanded(
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? Center(child: Text('Error: $_error'))
+                        : _orders.isEmpty
+                            ? const Center(
+                                child: Text('No phone orders on hold',
+                                    style: TextStyle(
+                                        color: Colors.grey, fontSize: 16)))
+                            : ListView.builder(
+                                itemCount: _orders.length,
+                                itemBuilder: (ctx, i) =>
+                                    _buildOrderTile(_orders[i]),
+                              ),
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildOrderTile(PhoneOrder order) {
+    final itemSummary = order.ticket.items
+        .map((i) => '${i.quantity}x ${i.item.name}')
+        .join(', ');
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.orange.shade100,
+          child: Icon(Icons.phone, color: Colors.orange.shade700),
+        ),
+        title: Text(
+          order.customerName.isNotEmpty
+              ? order.customerName
+              : 'Phone Order',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${_time(order.createdAt)}  ${_money(order.ticket.total)}',
+                style: const TextStyle(fontSize: 14)),
+            Text(itemSummary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            if (order.comment.isNotEmpty)
+              Text('Note: ${order.comment}',
+                  style: const TextStyle(
+                      fontSize: 13, fontStyle: FontStyle.italic)),
+          ],
+        ),
+        children: [
+          // Full item breakdown
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final item in order.ticket.items)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text('${item.quantity}x ${item.item.name}'),
+                      ),
+                      Text(_money(item.item.priceCents * item.quantity)),
+                    ],
+                  ),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(_money(order.ticket.total),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          // Action buttons
+          Padding(
+            padding: const EdgeInsets.only(
+                left: 16, right: 16, bottom: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () => _doAction(order, 'CANCEL'),
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red),
+                      child: const Text('Cancel Order',
+                          style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: () => _doAction(order, 'CHECKOUT'),
+                      style: FilledButton.styleFrom(
+                          backgroundColor: Colors.green.shade700),
+                      child: const Text('Checkout',
+                          style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

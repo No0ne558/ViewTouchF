@@ -630,3 +630,98 @@ grpc::Status PosServiceImpl::EndDay(grpc::ServerContext* /*ctx*/,
 
     return grpc::Status::OK;
 }
+
+// ── Phone Orders ─────────────────────────────────────────────
+
+static std::string phone_order_status_str(core::PhoneOrderStatus s) {
+    switch (s) {
+        case core::PhoneOrderStatus::HOLDING:   return "HOLDING";
+        case core::PhoneOrderStatus::COMPLETED: return "COMPLETED";
+        case core::PhoneOrderStatus::CANCELLED: return "CANCELLED";
+    }
+    return "UNKNOWN";
+}
+
+static void fill_proto_phone_order(const core::PhoneOrder& src,
+                                    pb::PhoneOrder* dst) {
+    dst->set_id(src.id);
+    dst->set_customer_name(src.customer_name);
+    dst->set_comment(src.comment);
+    dst->set_status(phone_order_status_str(src.status));
+    dst->set_created_at(src.created_at_ms);
+}
+
+grpc::Status PosServiceImpl::CreatePhoneOrder(grpc::ServerContext* /*ctx*/,
+                                              const pb::CreatePhoneOrderRequest* req,
+                                              pb::CreatePhoneOrderResponse* resp) {
+    auto result = mgr_->create_phone_order(
+        req->ticket_id(), req->customer_name(), req->comment());
+    if (!result) {
+        resp->set_success(false);
+        resp->set_error("Ticket not found, not open, or empty");
+        return grpc::Status::OK;
+    }
+    resp->set_success(true);
+    auto* po = resp->mutable_phone_order();
+    fill_proto_phone_order(*result, po);
+    fill_proto_ticket(result->ticket, po->mutable_ticket());
+
+    // Print a receipt for the phone order (with customer name/comment).
+    if (mgr_->get_receipt_printer_enabled()) {
+        printer_->print_receipt(result->ticket,
+                                req->customer_name(),
+                                req->comment());
+    }
+
+    // Send to kitchen like a normal order.
+    std::string kitchen_printer = mgr_->get_kitchen_printer_name();
+    if (!kitchen_printer.empty() && mgr_->get_kitchen_printer_enabled()) {
+        printer_->print_kitchen(result->ticket, kitchen_printer,
+                                req->customer_name(),
+                                req->comment());
+    }
+
+    return grpc::Status::OK;
+}
+
+grpc::Status PosServiceImpl::ListPhoneOrders(grpc::ServerContext* /*ctx*/,
+                                             const pb::ListPhoneOrdersRequest* /*req*/,
+                                             pb::ListPhoneOrdersResponse* resp) {
+    auto orders = mgr_->list_phone_orders();
+    for (const auto& order : orders) {
+        auto* po = resp->add_orders();
+        fill_proto_phone_order(order, po);
+        fill_proto_ticket(order.ticket, po->mutable_ticket());
+    }
+    return grpc::Status::OK;
+}
+
+grpc::Status PosServiceImpl::PhoneOrderAction(grpc::ServerContext* /*ctx*/,
+                                              const pb::PhoneOrderActionRequest* req,
+                                              pb::PhoneOrderActionResponse* resp) {
+    auto result = mgr_->phone_order_action(req->phone_order_id(), req->action());
+    if (!result) {
+        resp->set_success(false);
+        resp->set_error("Phone order not found, not HOLDING, or invalid action");
+        return grpc::Status::OK;
+    }
+    resp->set_success(true);
+    auto* po = resp->mutable_phone_order();
+    fill_proto_phone_order(*result, po);
+    fill_proto_ticket(result->ticket, po->mutable_ticket());
+    // On checkout, also return the restored ticket so the UI can run checkout flow.
+    if (req->action() == "CHECKOUT") {
+        auto ticket = mgr_->get_ticket(result->ticket.id);
+        if (ticket) {
+            fill_proto_ticket(*ticket, resp->mutable_ticket());
+        }
+    }
+    return grpc::Status::OK;
+}
+
+grpc::Status PosServiceImpl::GetPhoneOrderCount(grpc::ServerContext* /*ctx*/,
+                                                const pb::PhoneOrderCountRequest* /*req*/,
+                                                pb::PhoneOrderCountResponse* resp) {
+    resp->set_count(mgr_->phone_order_count());
+    return grpc::Status::OK;
+}

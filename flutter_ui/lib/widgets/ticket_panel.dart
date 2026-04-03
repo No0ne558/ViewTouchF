@@ -6,6 +6,7 @@ import '../generated/pos_service.pb.dart';
 class TicketPanel extends StatelessWidget {
   final Ticket? ticket;
   final VoidCallback onCheckout;
+  final VoidCallback onPhoneOrder;
   final ValueChanged<TicketItem> onDecreaseItem;
   final ValueChanged<TicketItem> onIncreaseItem;
 
@@ -13,6 +14,7 @@ class TicketPanel extends StatelessWidget {
     super.key,
     required this.ticket,
     required this.onCheckout,
+    required this.onPhoneOrder,
     required this.onDecreaseItem,
     required this.onIncreaseItem,
   });
@@ -164,14 +166,34 @@ class TicketPanel extends StatelessWidget {
                 fontSize: 22,
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  onPressed: t.items.isEmpty ? null : onCheckout,
-                  icon: const Icon(Icons.payment),
-                  label: const Text('CHECKOUT', style: TextStyle(fontSize: 18)),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 56,
+                      child: FilledButton.icon(
+                        onPressed: t.items.isEmpty ? null : onPhoneOrder,
+                        icon: const Icon(Icons.phone),
+                        label: const Text('PHONE ORDER',
+                            style: TextStyle(fontSize: 16)),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: Colors.orange.shade700),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 56,
+                      child: FilledButton.icon(
+                        onPressed: t.items.isEmpty ? null : onCheckout,
+                        icon: const Icon(Icons.payment),
+                        label: const Text('CHECKOUT',
+                            style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

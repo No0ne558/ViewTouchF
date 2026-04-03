@@ -117,6 +117,23 @@ public:
                         const pb::EndDayRequest* req,
                         pb::EndDayResponse* resp) override;
 
+    // ── Phone orders ─────────────────────────────────────────
+    grpc::Status CreatePhoneOrder(grpc::ServerContext* ctx,
+                                  const pb::CreatePhoneOrderRequest* req,
+                                  pb::CreatePhoneOrderResponse* resp) override;
+
+    grpc::Status ListPhoneOrders(grpc::ServerContext* ctx,
+                                 const pb::ListPhoneOrdersRequest* req,
+                                 pb::ListPhoneOrdersResponse* resp) override;
+
+    grpc::Status PhoneOrderAction(grpc::ServerContext* ctx,
+                                  const pb::PhoneOrderActionRequest* req,
+                                  pb::PhoneOrderActionResponse* resp) override;
+
+    grpc::Status GetPhoneOrderCount(grpc::ServerContext* ctx,
+                                    const pb::PhoneOrderCountRequest* req,
+                                    pb::PhoneOrderCountResponse* resp) override;
+
 private:
     /// Convert a core Ticket struct into the protobuf Ticket message.
     static void fill_proto_ticket(const core::Ticket& src, pb::Ticket* dst);

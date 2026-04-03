@@ -559,4 +559,88 @@ DailyReport PosManager::end_day() {
     return zrpt;
 }
 
+// ── Phone Orders ─────────────────────────────────────────────
+
+std::optional<PhoneOrder> PosManager::create_phone_order(
+        const std::string& ticket_id,
+        const std::string& customer_name,
+        const std::string& comment) {
+    std::lock_guard lock(mu_);
+
+    auto tit = tickets_.find(ticket_id);
+    if (tit == tickets_.end()) return std::nullopt;
+    auto& ticket = tit->second;
+    if (ticket.status != TicketStatus::OPEN) return std::nullopt;
+    if (ticket.items.empty()) return std::nullopt;
+
+    ++phone_order_seq_;
+    std::ostringstream os;
+    os << "PH-" << std::setw(6) << std::setfill('0') << phone_order_seq_;
+
+    PhoneOrder po;
+    po.id            = os.str();
+    po.ticket        = ticket;  // snapshot
+    po.customer_name = customer_name;
+    po.comment       = comment;
+    po.status        = PhoneOrderStatus::HOLDING;
+    po.created_at_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+
+    phone_orders_[po.id] = po;
+
+    // Remove the original ticket (it's now in the hold list).
+    tickets_.erase(tit);
+
+    return po;
+}
+
+std::vector<PhoneOrder> PosManager::list_phone_orders() const {
+    std::lock_guard lock(mu_);
+    std::vector<PhoneOrder> result;
+    for (const auto& [_, po] : phone_orders_) {
+        if (po.status == PhoneOrderStatus::HOLDING) {
+            result.push_back(po);
+        }
+    }
+    // Sort by created_at ascending (oldest first — FIFO).
+    std::sort(result.begin(), result.end(),
+        [](const auto& a, const auto& b) { return a.created_at_ms < b.created_at_ms; });
+    return result;
+}
+
+int32_t PosManager::phone_order_count() const {
+    std::lock_guard lock(mu_);
+    int32_t count = 0;
+    for (const auto& [_, po] : phone_orders_) {
+        if (po.status == PhoneOrderStatus::HOLDING) ++count;
+    }
+    return count;
+}
+
+std::optional<PhoneOrder> PosManager::phone_order_action(
+        const std::string& phone_order_id,
+        const std::string& action) {
+    std::lock_guard lock(mu_);
+
+    auto it = phone_orders_.find(phone_order_id);
+    if (it == phone_orders_.end()) return std::nullopt;
+    auto& po = it->second;
+    if (po.status != PhoneOrderStatus::HOLDING) return std::nullopt;
+
+    if (action == "CHECKOUT") {
+        // Restore the ticket as OPEN so the UI can run a normal checkout flow.
+        Ticket t = po.ticket;
+        t.status = TicketStatus::OPEN;
+        t.recalculate(tax_rate_bps_);
+        tickets_[t.id] = t;
+        po.status = PhoneOrderStatus::COMPLETED;
+        return po;
+    } else if (action == "CANCEL") {
+        po.status = PhoneOrderStatus::CANCELLED;
+        return po;
+    }
+
+    return std::nullopt;
+}
+
 }  // namespace viewtouch

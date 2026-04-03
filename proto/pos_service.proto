@@ -283,6 +283,53 @@ message EndDayResponse {
     string      error   = 3;
 }
 
+// ─── Phone Orders ────────────────────────────────────────────
+
+message PhoneOrder {
+    string id              = 1;  // e.g. "PH-000001"
+    Ticket ticket          = 2;  // snapshot of the ticket at creation
+    string customer_name   = 3;
+    string comment         = 4;
+    string status          = 5;  // HOLDING, COMPLETED, CANCELLED
+    int64  created_at      = 6;  // unix epoch ms
+}
+
+message CreatePhoneOrderRequest {
+    string ticket_id      = 1;
+    string customer_name  = 2;
+    string comment        = 3;
+}
+
+message CreatePhoneOrderResponse {
+    bool       success     = 1;
+    PhoneOrder phone_order = 2;
+    string     error       = 3;
+}
+
+message ListPhoneOrdersRequest {}
+
+message ListPhoneOrdersResponse {
+    repeated PhoneOrder orders = 1;
+}
+
+message PhoneOrderActionRequest {
+    string phone_order_id = 1;
+    string action         = 2;  // "CHECKOUT" or "CANCEL"
+}
+
+message PhoneOrderActionResponse {
+    bool       success     = 1;
+    PhoneOrder phone_order = 2;
+    Ticket     ticket      = 3;  // returned on CHECKOUT for the checkout flow
+    string     error       = 4;
+}
+
+message PhoneOrderCountRequest {}
+
+message PhoneOrderCountResponse {
+    int32 count = 1;
+}
+
 // ─── Service ─────────────────────────────────────────────────
 
 service PosService {
@@ -322,4 +369,10 @@ service PosService {
 
     // End of day
     rpc EndDay (EndDayRequest) returns (EndDayResponse);
+
+    // Phone orders
+    rpc CreatePhoneOrder  (CreatePhoneOrderRequest)  returns (CreatePhoneOrderResponse);
+    rpc ListPhoneOrders   (ListPhoneOrdersRequest)   returns (ListPhoneOrdersResponse);
+    rpc PhoneOrderAction  (PhoneOrderActionRequest)  returns (PhoneOrderActionResponse);
+    rpc GetPhoneOrderCount(PhoneOrderCountRequest)   returns (PhoneOrderCountResponse);
 }

@@ -45,10 +45,14 @@ public:
     static std::vector<PrinterInfo> list_printers();
 
     /// Build an ESC/POS byte buffer for the given ticket and send it to CUPS.
-    PrintResult print_receipt(const Ticket& ticket);
+    PrintResult print_receipt(const Ticket& ticket,
+                              const std::string& customer_name = "",
+                              const std::string& comment = "");
 
     /// Build a kitchen-friendly ticket and send to the specified printer.
-    PrintResult print_kitchen(const Ticket& ticket, const std::string& printer_name);
+    PrintResult print_kitchen(const Ticket& ticket, const std::string& printer_name,
+                              const std::string& customer_name = "",
+                              const std::string& comment = "");
 
     /// Print a Z-report / daily summary to the receipt printer.
     PrintResult print_report(const std::string& report_text,
@@ -59,10 +63,14 @@ public:
 
 private:
     /// Build the raw ESC/POS byte sequence for a receipt (paid modifiers only).
-    std::vector<uint8_t> build_receipt_payload(const Ticket& ticket) const;
+    std::vector<uint8_t> build_receipt_payload(const Ticket& ticket,
+                                               const std::string& customer_name = "",
+                                               const std::string& comment = "") const;
 
     /// Build a kitchen-friendly ESC/POS ticket (items + all modifiers, no totals).
-    std::vector<uint8_t> build_kitchen_payload(const Ticket& ticket) const;
+    std::vector<uint8_t> build_kitchen_payload(const Ticket& ticket,
+                                                const std::string& customer_name = "",
+                                                const std::string& comment = "") const;
 
     /// Send a raw byte buffer to a specific CUPS printer queue.
     PrintResult send_raw(const std::vector<uint8_t>& data,

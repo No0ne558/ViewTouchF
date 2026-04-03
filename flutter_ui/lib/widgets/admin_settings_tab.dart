@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
 import '../generated/pos_service.pbgrpc.dart';
 import '../services/pos_client.dart';
+import 'touchscreen_keyboard.dart';
 
 class AdminSettingsTab extends StatefulWidget {
   const AdminSettingsTab({super.key});
@@ -179,8 +180,9 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             Text('Restaurant Settings',
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 24),
-            TextField(
+            TouchTextField(
               controller: _nameCtrl,
+              dialogTitle: 'Restaurant Name',
               decoration: const InputDecoration(
                 labelText: 'Restaurant Name',
                 border: OutlineInputBorder(),
@@ -188,16 +190,16 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
+            TouchTextField(
               controller: _taxCtrl,
+              dialogTitle: 'Tax Rate (%)',
+              numericOnly: true,
               decoration: const InputDecoration(
                 labelText: 'Tax Rate (%)',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.percent),
                 hintText: '8.25',
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 32),
 
