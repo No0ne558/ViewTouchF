@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full-stack POS system with C++17 backend daemon (`vt_daemon`) and Flutter Linux frontend
 - gRPC service contract (`pos_service.proto`) over Unix domain socket (`/tmp/viewtouch/pos.sock`)
 - CMake build system with automatic protobuf/gRPC C++ code generation
+- **UI scaling**: base design resolution of 1920×1080 with automatic proportional scale-up on higher-resolution displays via `FittedBox` in `MaterialApp.builder`
+- GTK window default size set to 1920×1080; fullscreen kiosk mode
+- `mounted` guards on all async `setState` calls to prevent crashes during widget rebuilds
 - `build.sh` one-command build script (daemon, proto-dart, flutter, or all)
 - systemd service unit (`vt-daemon.service`) for production deployment
 

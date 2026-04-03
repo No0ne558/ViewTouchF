@@ -34,15 +34,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final menuResp = await PosClient.instance.stub.getMenu(GetMenuRequest());
       final ticketResp = await PosClient.instance.stub.newTicket(NewTicketRequest());
       final settingsResp = await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      if (!mounted) return;
       setState(() {
         _menu = menuResp.items;
         _ticket = ticketResp.ticket;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
             ? settingsResp.settings.restaurantName
-            : 'ViewTouch POS';
+            : 'ViewTouchF';
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -54,11 +56,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final menuResp = await PosClient.instance.stub.getMenu(GetMenuRequest());
       final settingsResp = await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      if (!mounted) return;
       setState(() {
         _menu = menuResp.items;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
             ? settingsResp.settings.restaurantName
-            : 'ViewTouch POS';
+            : 'ViewTouchF';
       });
     } catch (_) {}
   }
