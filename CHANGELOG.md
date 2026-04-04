@@ -5,6 +5,13 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] — 2026-04-04
+
+### Changed
+- Custom date range picker replaced with a full calendar dialog — year dropdown (2020–present), month dropdown, arrow navigation, and day grid with range highlighting
+- Daily report date picker replaced with matching calendar dialog for consistent UX
+- Future dates grayed out and disabled in both pickers
+
 ## [2.2.1] — 2026-04-04
 
 ### Changed
@@ -122,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.gitignore` for C++ build artifacts, Flutter build/ephemeral, IDE files
 - `RobotoMono` font bundled for monospaced keypad display
 
+[2.2.2]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.2
 [2.2.1]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.1
 [2.2.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.0
 [2.1.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.1.0
