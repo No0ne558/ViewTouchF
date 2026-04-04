@@ -5,6 +5,13 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] — 2026-04-04
+
+### Changed
+- Keyboard dialog widened from 900px to 1100px with increased button spacing for easier touchscreen use
+- Space bar and Backspace keys now use dark blueGrey backgrounds with white text for better contrast
+- Replaced `-` key with `:` on the keyboard bottom row
+
 ## [2.2.0] — 2026-04-03
 
 ### Added
@@ -115,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.gitignore` for C++ build artifacts, Flutter build/ephemeral, IDE files
 - `RobotoMono` font bundled for monospaced keypad display
 
+[2.2.1]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.1
 [2.2.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.0
 [2.1.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.1.0
 [2.0.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.0.0

@@ -49,14 +49,14 @@ class TouchscreenKeyboard extends StatelessWidget {
             ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
             ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
             ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫'],
-            ['-', '.', ',', '␣', '@', '#', '!'],
+            [':', '.', ',', '␣', '@', '#', '!'],
           ];
 
     return Column(
       children: rows.map((row) {
         return Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.symmetric(vertical: 3),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: row.map((key) {
@@ -64,7 +64,7 @@ class TouchscreenKeyboard extends StatelessWidget {
                 return Expanded(
                   flex: isSpace ? 3 : 1,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: SizedBox.expand(
                       child: ElevatedButton(
                         onPressed: () => _onKey(key),
@@ -73,15 +73,18 @@ class TouchscreenKeyboard extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                           backgroundColor: key == '⌫'
-                              ? Colors.red.shade100
+                              ? Colors.blueGrey.shade700
                               : isSpace
-                                  ? Colors.grey.shade200
+                                  ? Colors.blueGrey.shade600
                                   : null,
+                          foregroundColor: (key == '⌫' || isSpace)
+                              ? Colors.white
+                              : null,
                         ),
                         child: Text(
                           isSpace ? 'SPACE' : key,
                           style: TextStyle(
-                            fontSize: isSpace ? 14 : 18,
+                            fontSize: isSpace ? 16 : 18,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -141,8 +144,8 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: widget.numericOnly ? 400 : 700,
-          maxHeight: widget.numericOnly ? 520 : 620,
+          maxWidth: widget.numericOnly ? 400 : 1100,
+          maxHeight: widget.numericOnly ? 520 : 640,
         ),
         child: Padding(
           padding: const EdgeInsets.all(24),
