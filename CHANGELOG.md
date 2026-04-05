@@ -5,6 +5,15 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] — 2026-04-04
+
+### Changed
+- `build.sh` now handles full zero-to-running setup — auto-detects distro (Fedora, Debian/Ubuntu, Arch), installs system packages, Flutter SDK, and Dart protoc plugin
+- New `./build.sh setup` command for dependency installation only
+- New `./build.sh run` command starts daemon + UI together (UI exit stops daemon)
+- Flutter PATH automatically added to shell profile (~/.bashrc / ~/.zshrc)
+- Correct architecture detection (x64/arm64) for Flutter build output paths
+
 ## [2.3.0] — 2026-04-04
 
 ### Added
