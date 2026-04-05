@@ -34,6 +34,69 @@ ViewTouchF is a full-stack POS system designed for food trucks, high-volume rest
 
 ---
 
+## Screenshots
+
+### Register — Order Screen
+Menu grid with categorized items and live ticket panel.
+
+![Order Page](img/OrderPage.png)
+
+### Modifier Popup
+Per-modifier actions (NO / EXTRA / LIGHT / SIDE / DBL) with cooking temp radio group.
+
+![Modifier Popup](img/ModifierPopup.png)
+
+### Special Instructions
+On-screen keyboard for per-item notes — no external keyboard needed.
+
+![Special Instructions](img/SpecialInstructions.png)
+
+### Checkout
+Numeric keypad with split payment (Cash + Card), exact-amount shortcut, and change calculation.
+
+![Checkout](img/CheckoutPopup.png)
+
+### Order History
+Filterable past-orders dialog — Closed, Voided, Comped, Refunded — with reprint/void/comp/refund actions.
+
+![Order History](img/CheckOrderHistory.png)
+
+### Phone Orders
+Create phone orders with customer name and notes, then checkout, edit, or cancel when they arrive.
+
+| Create | List | Manage |
+|:---:|:---:|:---:|
+| ![Phone Order Name](img/PhoneOrderName%26Comment.png) | ![Phone Order List](img/PhoneOrderList.png) | ![Phone Order Manage](img/ModifiePhoneOrder.png) |
+
+### Admin — Settings
+Restaurant name, tax rate, dual printer discovery (receipt + kitchen) with enable toggles.
+
+![Settings](img/AdminPanelSettings.png)
+
+### Admin — Menu Management
+Full menu CRUD with category badges, modifier group counts, edit/delete per item.
+
+![Menu List](img/MenuList.png)
+
+### Menu Item Editor
+Create or edit items with ID, name, price, category, send-to-kitchen toggle, and nested modifier groups.
+
+| New Item | Edit with Modifiers |
+|:---:|:---:|
+| ![New Item](img/MenuCreation.png) | ![Edit Item](img/MenuItemModifierEditor.png) |
+
+### Admin — Reports
+Daily / Weekly / Monthly / Yearly / Custom range with revenue cards and item-sales breakdown.
+
+![Reports](img/Reports.png)
+
+### Admin — End of Day
+Z-Report generation with automatic receipt print, plus monthly X-Report.
+
+![End of Day](img/EndDay%26Report.png)
+
+---
+
 ## Architecture
 
 ```
