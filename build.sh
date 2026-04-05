@@ -59,7 +59,8 @@ install_system_deps() {
             sudo apt update
             sudo apt install -y \
                 cmake g++ libgrpc++-dev protobuf-compiler-grpc \
-                libcups2-dev git pkg-config clang ninja-build unzip curl wget \
+                libcups2-dev libgnutls28-dev libavahi-client-dev \
+                git pkg-config clang ninja-build unzip curl wget \
                 libgtk-3-dev libx11-dev libxrandr-dev libxinerama-dev \
                 libxcursor-dev libgl-dev libegl-dev
             ;;
