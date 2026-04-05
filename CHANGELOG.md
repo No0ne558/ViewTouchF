@@ -5,6 +5,15 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-04-04
+
+### Added
+- **Install to `/opt/viewtouchf`**: new `./build.sh install` command copies daemon and Flutter UI to `/opt/viewtouchf/bin/` and creates the directory structure for persistent data
+- **Data directory structure**: `/opt/viewtouchf/{data,menu,config,logs,run}` — daemon auto-creates subdirectories on startup
+- **`--data-dir` daemon flag**: daemon accepts `--data-dir <path>` to override the install root (defaults to `/opt/viewtouchf`)
+- Socket file now lives at `/opt/viewtouchf/run/pos.sock` (was `/tmp/viewtouch/pos.sock`)
+- `./build.sh run` auto-detects installed location and runs from `/opt/viewtouchf` if present, otherwise falls back to build tree
+
 ## [2.4.0] — 2026-04-04
 
 ### Added

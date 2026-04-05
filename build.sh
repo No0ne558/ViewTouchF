@@ -7,7 +7,8 @@
 #   ./build.sh daemon       # build C++ daemon only
 #   ./build.sh flutter      # build Flutter UI only
 #   ./build.sh proto-dart   # regenerate Dart proto stubs
-#   ./build.sh run          # start daemon + UI
+#   ./build.sh install      # install to /opt/viewtouchf
+#   ./build.sh run          # start daemon + UI (from /opt/viewtouchf if installed)
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -183,14 +184,64 @@ build_flutter() {
 }
 
 # ── Run (start daemon + UI) ──────────────────────────────────
-run() {
+INSTALL_DIR="/opt/viewtouchf"
+
+install_app() {
     export PATH="$FLUTTER_DIR/bin:$FLUTTER_DIR/bin/cache/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
     local arch
     arch=$(uname -m)
     [[ "$arch" == "aarch64" ]] && arch="arm64" || arch="x64"
 
     local daemon="$BUILD_DIR/vt_daemon"
-    local ui="$ROOT/flutter_ui/build/linux/$arch/release/bundle/viewtouch_ui"
+    local ui_bundle="$ROOT/flutter_ui/build/linux/$arch/release/bundle"
+
+    if [[ ! -x "$daemon" ]] || [[ ! -d "$ui_bundle" ]]; then
+        red "==> Build first with: ./build.sh all"
+        exit 1
+    fi
+
+    green "==> Installing ViewTouchF to $INSTALL_DIR ..."
+
+    # Create directory structure
+    sudo mkdir -p "$INSTALL_DIR"/{bin,data,menu,logs,config,run}
+    sudo chown -R "$(id -u):$(id -g)" "$INSTALL_DIR"
+
+    # Copy daemon binary
+    cp "$daemon" "$INSTALL_DIR/bin/vt_daemon"
+
+    # Copy Flutter UI bundle (entire directory)
+    rm -rf "$INSTALL_DIR/bin/ui"
+    cp -r "$ui_bundle" "$INSTALL_DIR/bin/ui"
+
+    green "==> Installed directory layout:"
+    echo "    $INSTALL_DIR/"
+    echo "    ├── bin/          daemon + Flutter UI"
+    echo "    ├── data/         tickets, reports, phone orders"
+    echo "    ├── menu/         menu definitions (JSON)"
+    echo "    ├── config/       settings"
+    echo "    ├── logs/         log files"
+    echo "    └── run/          socket file (pos.sock)"
+    green "==> Installation complete!"
+}
+
+run() {
+    export PATH="$FLUTTER_DIR/bin:$FLUTTER_DIR/bin/cache/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
+    local arch
+    arch=$(uname -m)
+    [[ "$arch" == "aarch64" ]] && arch="arm64" || arch="x64"
+
+    local daemon ui
+
+    # Prefer installed location, fall back to build tree
+    if [[ -x "$INSTALL_DIR/bin/vt_daemon" ]]; then
+        daemon="$INSTALL_DIR/bin/vt_daemon"
+        ui="$INSTALL_DIR/bin/ui/viewtouch_ui"
+        green "==> Running from $INSTALL_DIR"
+    else
+        daemon="$BUILD_DIR/vt_daemon"
+        ui="$ROOT/flutter_ui/build/linux/$arch/release/bundle/viewtouch_ui"
+        yellow "==> Not installed — running from build tree"
+    fi
 
     if [[ ! -x "$daemon" ]]; then
         red "==> Daemon not built. Run: ./build.sh all"
@@ -201,14 +252,17 @@ run() {
         exit 1
     fi
 
+    # Ensure data directories exist
+    mkdir -p "$INSTALL_DIR"/{data,menu,logs,config,run} 2>/dev/null || true
     mkdir -p /tmp/viewtouch
+
     green "==> Starting daemon..."
-    "$daemon" &
+    "$daemon" --data-dir "$INSTALL_DIR" &
     local daemon_pid=$!
     sleep 1
 
     green "==> Starting UI..."
-    VT_SOCKET=/tmp/viewtouch/pos.sock "$ui"
+    VT_SOCKET="$INSTALL_DIR/run/pos.sock" "$ui"
 
     # When UI exits, stop daemon
     kill "$daemon_pid" 2>/dev/null || true
@@ -221,6 +275,7 @@ case "${1:-all}" in
     daemon)     build_daemon ;;
     flutter)    build_flutter ;;
     proto-dart) build_proto_dart ;;
+    install)    install_app ;;
     run)        run ;;
     all)
         setup
@@ -229,11 +284,13 @@ case "${1:-all}" in
         build_flutter
         green ""
         green "============================================"
-        green "  Build complete! Run with: ./build.sh run"
+        green "  Build complete!"
+        green "  Install with: ./build.sh install"
+        green "  Run with:     ./build.sh run"
         green "============================================"
         ;;
     *)
-        echo "Usage: $0 {setup|daemon|flutter|proto-dart|run|all}"
+        echo "Usage: $0 {setup|daemon|flutter|proto-dart|install|run|all}"
         exit 1
         ;;
 esac

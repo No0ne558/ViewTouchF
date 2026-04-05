@@ -8,9 +8,9 @@ import 'screens/register_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Allow override via env var for dev; default to systemd RuntimeDirectory.
+  // Allow override via env var; default to /opt/viewtouchf install path.
   final socketPath = Platform.environment['VT_SOCKET']
-      ?? '/tmp/viewtouch/pos.sock';
+      ?? '/opt/viewtouchf/run/pos.sock';
   PosClient.init(socketPath: socketPath);
 
   runApp(const ViewTouchApp());

@@ -5,6 +5,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <csignal>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 
@@ -21,7 +22,8 @@ namespace {
 
 int main(int argc, char* argv[]) {
     // ── Parse optional args ──────────────────────────────────
-    std::string listen_addr = "unix:///tmp/viewtouch/pos.sock";
+    std::string data_dir    = "/opt/viewtouchf";
+    std::string listen_addr;                     // set after args
     std::string printer_name;  // empty = CUPS default
 
     for (int i = 1; i < argc; ++i) {
@@ -30,8 +32,23 @@ int main(int argc, char* argv[]) {
             listen_addr = argv[++i];
         } else if (arg == "--printer" && i + 1 < argc) {
             printer_name = argv[++i];
+        } else if (arg == "--data-dir" && i + 1 < argc) {
+            data_dir = argv[++i];
         }
     }
+
+    // Ensure data directories exist
+    namespace fs = std::filesystem;
+    for (const auto& sub : {"data", "menu", "logs", "config", "run"}) {
+        fs::create_directories(fs::path(data_dir) / sub);
+    }
+
+    // Default socket lives under the data dir
+    if (listen_addr.empty()) {
+        listen_addr = "unix://" + data_dir + "/run/pos.sock";
+    }
+
+    std::cout << "[vt_daemon] data directory: " << data_dir << "\n";
 
     // ── Bootstrap core objects ───────────────────────────────
     auto mgr     = std::make_shared<viewtouch::PosManager>(
