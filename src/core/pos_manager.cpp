@@ -1,9 +1,11 @@
 #include "core/pos_manager.h"
+#include "core/database.h"
 
 #include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 namespace viewtouch {
@@ -11,6 +13,60 @@ namespace viewtouch {
 PosManager::PosManager(int32_t tax_rate_bps, std::string restaurant_name)
     : tax_rate_bps_(tax_rate_bps),
       restaurant_name_(std::move(restaurant_name)) {}
+
+void PosManager::set_database(Database* db) {
+    std::lock_guard lock(mu_);
+    db_ = db;
+}
+
+void PosManager::load_from_database() {
+    if (!db_) return;
+    std::lock_guard lock(mu_);
+
+    // Restore sequences.
+    ticket_seq_      = db_->load_seq("ticket");
+    phone_order_seq_ = db_->load_seq("phone_order");
+
+    // Restore menu.
+    auto saved_menu = db_->load_menu();
+    if (!saved_menu.empty()) {
+        menu_ = std::move(saved_menu);
+        menu_index_.clear();
+        menu_index_.reserve(menu_.size());
+        for (const auto& m : menu_) {
+            menu_index_[m.id] = m;
+        }
+    }
+
+    // Restore tickets.
+    auto saved_tickets = db_->load_all_tickets();
+    for (auto& t : saved_tickets) {
+        tickets_[t.id] = std::move(t);
+    }
+
+    // Restore phone orders.
+    auto saved_orders = db_->load_all_phone_orders();
+    for (auto& po : saved_orders) {
+        phone_orders_[po.id] = std::move(po);
+    }
+
+    // Restore archived reports.
+    archived_reports_ = db_->load_all_reports();
+
+    // Restore settings.
+    auto saved_name = db_->load_setting("restaurant_name");
+    if (!saved_name.empty()) restaurant_name_ = saved_name;
+    auto saved_tax = db_->load_setting("tax_rate_bps");
+    if (!saved_tax.empty()) tax_rate_bps_ = std::stoi(saved_tax);
+    receipt_printer_name_    = db_->load_setting("receipt_printer_name");
+    receipt_printer_enabled_ = db_->load_setting("receipt_printer_enabled") == "1";
+    kitchen_printer_name_    = db_->load_setting("kitchen_printer_name");
+    kitchen_printer_enabled_ = db_->load_setting("kitchen_printer_enabled") == "1";
+
+    std::cout << "[vt_daemon] restored " << tickets_.size() << " tickets, "
+              << phone_orders_.size() << " phone orders, "
+              << archived_reports_.size() << " reports from database\n";
+}
 
 // ── Settings ─────────────────────────────────────────────────
 
@@ -27,11 +83,13 @@ int32_t PosManager::get_tax_rate_bps() const {
 void PosManager::set_restaurant_name(const std::string& name) {
     std::lock_guard lock(mu_);
     restaurant_name_ = name;
+    if (db_) db_->save_setting("restaurant_name", name);
 }
 
 void PosManager::set_tax_rate_bps(int32_t bps) {
     std::lock_guard lock(mu_);
     tax_rate_bps_ = bps;
+    if (db_) db_->save_setting("tax_rate_bps", std::to_string(bps));
 }
 
 // ── Printer settings ─────────────────────────────────────────
@@ -55,18 +113,22 @@ bool PosManager::get_kitchen_printer_enabled() const {
 void PosManager::set_receipt_printer_name(const std::string& n) {
     std::lock_guard lock(mu_);
     receipt_printer_name_ = n;
+    if (db_) db_->save_setting("receipt_printer_name", n);
 }
 void PosManager::set_receipt_printer_enabled(bool e) {
     std::lock_guard lock(mu_);
     receipt_printer_enabled_ = e;
+    if (db_) db_->save_setting("receipt_printer_enabled", e ? "1" : "0");
 }
 void PosManager::set_kitchen_printer_name(const std::string& n) {
     std::lock_guard lock(mu_);
     kitchen_printer_name_ = n;
+    if (db_) db_->save_setting("kitchen_printer_name", n);
 }
 void PosManager::set_kitchen_printer_enabled(bool e) {
     std::lock_guard lock(mu_);
     kitchen_printer_enabled_ = e;
+    if (db_) db_->save_setting("kitchen_printer_enabled", e ? "1" : "0");
 }
 
 // ── Menu ─────────────────────────────────────────────────────
@@ -79,6 +141,7 @@ void PosManager::load_menu(std::vector<MenuItem> items) {
     for (const auto& m : menu_) {
         menu_index_[m.id] = m;
     }
+    if (db_) db_->save_menu(menu_);
 }
 
 std::vector<MenuItem> PosManager::get_menu() const {
@@ -99,6 +162,7 @@ bool PosManager::add_menu_item(const MenuItem& item) {
     if (menu_index_.count(item.id)) return false;  // duplicate
     menu_.push_back(item);
     menu_index_[item.id] = item;
+    if (db_) db_->save_menu(menu_);
     return true;
 }
 
@@ -110,6 +174,7 @@ bool PosManager::update_menu_item(const MenuItem& item) {
     for (auto& m : menu_) {
         if (m.id == item.id) { m = item; break; }
     }
+    if (db_) db_->save_menu(menu_);
     return true;
 }
 
@@ -118,6 +183,7 @@ bool PosManager::delete_menu_item(const std::string& item_id) {
     if (!menu_index_.erase(item_id)) return false;
     menu_.erase(std::remove_if(menu_.begin(), menu_.end(),
         [&](const MenuItem& m) { return m.id == item_id; }), menu_.end());
+    if (db_) db_->save_menu(menu_);
     return true;
 }
 
@@ -183,6 +249,10 @@ Ticket PosManager::new_ticket() {
         std::chrono::system_clock::now().time_since_epoch()).count();
 
     tickets_[t.id] = t;
+    if (db_) {
+        db_->save_ticket(t);
+        db_->save_seq("ticket", ticket_seq_);
+    }
     return t;
 }
 
@@ -229,6 +299,7 @@ std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
     }
 
     ticket.recalculate(tax_rate_bps_);
+    if (db_) db_->save_ticket(ticket);
     return ticket;
 }
 
@@ -251,6 +322,7 @@ std::optional<Ticket> PosManager::remove_item(const std::string& ticket_id,
 
     ticket.items.erase(it);
     ticket.recalculate(tax_rate_bps_);
+    if (db_) db_->save_ticket(ticket);
     return ticket;
 }
 
@@ -277,6 +349,7 @@ std::optional<Ticket> PosManager::decrease_item(const std::string& ticket_id,
         ticket.items.erase(it);
     }
     ticket.recalculate(tax_rate_bps_);
+    if (db_) db_->save_ticket(ticket);
     return ticket;
 }
 
@@ -303,6 +376,7 @@ std::optional<Ticket> PosManager::checkout(const std::string& ticket_id,
     // Derive primary payment type from first leg.
     if (!payments.empty()) ticket.payment_type = payments[0].payment_type;
     ticket.closed_date = today_str();
+    if (db_) db_->save_ticket(ticket);
     return ticket;
 }
 
@@ -315,6 +389,7 @@ bool PosManager::void_ticket(const std::string& ticket_id) {
         return false;
     t.status = TicketStatus::VOIDED;
     if (t.closed_date.empty()) t.closed_date = today_str();
+    if (db_) db_->save_ticket(t);
     return true;
 }
 
@@ -325,6 +400,7 @@ std::optional<Ticket> PosManager::comp_ticket(const std::string& ticket_id) {
     auto& t = it->second;
     if (t.status != TicketStatus::CLOSED) return std::nullopt;
     t.status = TicketStatus::COMPED;
+    if (db_) db_->save_ticket(t);
     return t;
 }
 
@@ -335,6 +411,7 @@ std::optional<Ticket> PosManager::refund_ticket(const std::string& ticket_id) {
     auto& t = it->second;
     if (t.status != TicketStatus::CLOSED) return std::nullopt;
     t.status = TicketStatus::REFUNDED;
+    if (db_) db_->save_ticket(t);
     return t;
 }
 
@@ -556,12 +633,14 @@ DailyReport PosManager::end_day() {
     // 3. Remove all non-OPEN tickets (clear history).
     for (auto it = tickets_.begin(); it != tickets_.end(); ) {
         if (it->second.status != TicketStatus::OPEN) {
+            if (db_) db_->delete_ticket(it->second.id);
             it = tickets_.erase(it);
         } else {
             ++it;
         }
     }
 
+    if (db_) db_->save_report(zrpt);
     return zrpt;
 }
 
@@ -595,7 +674,13 @@ std::optional<PhoneOrder> PosManager::create_phone_order(
     phone_orders_[po.id] = po;
 
     // Remove the original ticket (it's now in the hold list).
+    if (db_) db_->delete_ticket(ticket.id);
     tickets_.erase(tit);
+
+    if (db_) {
+        db_->save_phone_order(po);
+        db_->save_seq("phone_order", phone_order_seq_);
+    }
 
     return po;
 }
@@ -644,6 +729,7 @@ std::optional<Ticket> PosManager::update_item(const std::string& ticket_id,
     it->line_key             = compute_line_key(it->item.id, modifiers, special_instructions);
 
     ticket.recalculate(tax_rate_bps_);
+    if (db_) db_->save_ticket(ticket);
     return ticket;
 }
 
@@ -664,9 +750,14 @@ std::optional<PhoneOrder> PosManager::phone_order_action(
         t.recalculate(tax_rate_bps_);
         tickets_[t.id] = t;
         po.status = PhoneOrderStatus::COMPLETED;
+        if (db_) {
+            db_->save_ticket(t);
+            db_->save_phone_order(po);
+        }
         return po;
     } else if (action == "CANCEL") {
         po.status = PhoneOrderStatus::CANCELLED;
+        if (db_) db_->save_phone_order(po);
         return po;
     } else if (action == "EDIT") {
         // Restore the ticket as OPEN for editing, but keep phone order as HOLDING.
@@ -674,6 +765,7 @@ std::optional<PhoneOrder> PosManager::phone_order_action(
         t.status = TicketStatus::OPEN;
         t.recalculate(tax_rate_bps_);
         tickets_[t.id] = t;
+        if (db_) db_->save_ticket(t);
         return po;
     }
 

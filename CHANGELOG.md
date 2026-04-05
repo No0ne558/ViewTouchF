@@ -5,6 +5,15 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] — 2026-04-04
+
+### Added
+- **SQLite persistence**: all POS state (menu, tickets, phone orders, archived reports, settings, sequences) now persists across daemon restarts via a WAL-mode SQLite database at `<data-dir>/data/viewtouchf.db`
+- New `Database` class (`include/core/database.h`, `src/core/database.cpp`) — RAII SQLite wrapper with prepared-statement CRUD for 12 tables
+- `PosManager::set_database()` / `load_from_database()` — wires DB at startup and restores all state
+- Demo menu is only seeded on first run (empty DB); subsequent restarts reload from the database
+- `build.sh` installs `sqlite-devel` / `libsqlite3-dev` / `sqlite` for Fedora / Ubuntu / Arch
+
 ## [2.5.0] — 2026-04-04
 
 ### Added

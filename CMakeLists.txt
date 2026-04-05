@@ -16,6 +16,7 @@ if(NOT gRPC_FOUND)
 endif()
 
 pkg_check_modules(CUPS REQUIRED cups)
+pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 
 # ── Protobuf / gRPC code generation ──────────────────────────
 set(PROTO_SRC_DIR ${CMAKE_SOURCE_DIR}/proto)
@@ -49,13 +50,15 @@ add_library(vt_core STATIC
     src/core/pos_manager.cpp
     src/core/ticket.cpp
     src/core/menu_item.cpp
+    src/core/database.cpp
     src/printing/cups_printer.cpp
 )
 target_include_directories(vt_core PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     ${CUPS_INCLUDE_DIRS}
+    ${SQLITE3_INCLUDE_DIRS}
 )
-target_link_libraries(vt_core PUBLIC ${CUPS_LIBRARIES})
+target_link_libraries(vt_core PUBLIC ${CUPS_LIBRARIES} ${SQLITE3_LIBRARIES})
 
 # ── gRPC server daemon ───────────────────────────────────────
 add_executable(vt_daemon

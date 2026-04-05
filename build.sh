@@ -51,7 +51,7 @@ install_system_deps() {
             green "==> Installing system packages (dnf)..."
             sudo dnf install -y \
                 cmake gcc-c++ grpc-devel protobuf-devel protobuf-compiler \
-                cups-devel git pkg-config clang ninja-build unzip curl wget \
+                cups-devel sqlite-devel git pkg-config clang ninja-build unzip curl wget \
                 gtk3-devel libX11-devel libXrandr-devel libXinerama-devel \
                 libXcursor-devel mesa-libGL-devel mesa-libEGL-devel
             ;;
@@ -60,7 +60,7 @@ install_system_deps() {
             sudo apt update
             sudo apt install -y \
                 cmake g++ libgrpc++-dev protobuf-compiler-grpc \
-                libcups2-dev libgnutls28-dev libavahi-client-dev \
+                libcups2-dev libgnutls28-dev libavahi-client-dev libsqlite3-dev \
                 git pkg-config clang ninja-build unzip curl wget \
                 libgtk-3-dev libx11-dev libxrandr-dev libxinerama-dev \
                 libxcursor-dev libgl-dev libegl-dev
@@ -68,7 +68,7 @@ install_system_deps() {
         arch|manjaro)
             green "==> Installing system packages (pacman)..."
             sudo pacman -S --needed --noconfirm \
-                cmake gcc grpc protobuf cups git pkgconf clang ninja unzip \
+                cmake gcc grpc protobuf cups sqlite git pkgconf clang ninja unzip \
                 gtk3 libx11 libxrandr libxinerama libxcursor mesa
             ;;
         *)

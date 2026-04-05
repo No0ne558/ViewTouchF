@@ -12,6 +12,8 @@
 
 namespace viewtouch {
 
+class Database;  // forward declaration
+
 /// Lightweight aggregate for item-level sales data in reports.
 struct ItemSalesEntry {
     std::string item_name;
@@ -44,6 +46,12 @@ public:
     /// @param tax_rate_bps  Tax rate in basis points (825 = 8.25%).
     explicit PosManager(int32_t tax_rate_bps = 825,
                         std::string restaurant_name = "ViewTouch Restaurant");
+
+    /// Attach a database for persistence.  Called once at startup.
+    void set_database(Database* db);
+
+    /// Restore in-memory state from an attached database.
+    void load_from_database();
 
     // ── Settings ─────────────────────────────────────────────
     std::string get_restaurant_name() const;
@@ -138,6 +146,7 @@ private:
                                         const std::string& special_instructions = "");
 
     mutable std::mutex                             mu_;
+    Database*                                      db_ = nullptr;
     int32_t                                        tax_rate_bps_;
     std::string                                    restaurant_name_;
     std::string                                    receipt_printer_name_;

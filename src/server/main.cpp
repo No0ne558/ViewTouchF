@@ -1,3 +1,4 @@
+#include "core/database.h"
 #include "core/pos_manager.h"
 #include "printing/cups_printer.h"
 #include "server/pos_service_impl.h"
@@ -51,12 +52,18 @@ int main(int argc, char* argv[]) {
     std::cout << "[vt_daemon] data directory: " << data_dir << "\n";
 
     // ── Bootstrap core objects ───────────────────────────────
+    viewtouch::Database db(data_dir + "/data/viewtouchf.db");
+
     auto mgr     = std::make_shared<viewtouch::PosManager>(
         /*tax_rate_bps=*/825, /*restaurant_name=*/"El Mirador Express");
+    mgr->set_database(&db);
+    mgr->load_from_database();
+
     auto printer = std::make_shared<viewtouch::CupsPrinter>(
         printer_name, mgr->get_restaurant_name());
 
-    // Load a demo menu (in production, load from JSON/DB).
+    // Seed demo menu only on first run (DB has no menu yet).
+    if (mgr->get_menu().empty()) {
     std::vector<viewtouch::MenuItem> demo_menu;
 
     // ── Entrees (with modifier groups) ───────────────────────
@@ -142,6 +149,8 @@ int main(int argc, char* argv[]) {
     demo_menu.push_back({"SID02", "Rice & Beans",   399, "Sides",     {}, true});
 
     mgr->load_menu(std::move(demo_menu));
+    std::cout << "[vt_daemon] seeded demo menu (" << mgr->get_menu().size() << " items)\n";
+    } // end first-run seed
 
     // ── Build and start gRPC server ──────────────────────────
     PosServiceImpl service(mgr, printer);
