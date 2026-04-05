@@ -53,8 +53,13 @@ public:
     void        save_setting(const std::string& key, const std::string& val);
 
 private:
-    void create_tables();
+    void migrate();           ///< Run pending schema migrations.
+    void migrate_to_1();      ///< v2.6.0 — initial 12-table schema.
+    // Future migrations:
+    // void migrate_to_2();   ///< v2.7.0 — example future change.
     void exec(const char* sql);
+    int  get_user_version();
+    void set_user_version(int v);
     sqlite3* db_ = nullptr;
 };
 

@@ -87,7 +87,7 @@ Database::Database(const std::string& path) {
     // Enable WAL mode for better concurrent read/write.
     exec("PRAGMA journal_mode=WAL");
     exec("PRAGMA foreign_keys=ON");
-    create_tables();
+    migrate();
 }
 
 Database::~Database() {
@@ -103,9 +103,64 @@ void Database::exec(const char* sql) {
     }
 }
 
-// ── Schema ───────────────────────────────────────────────────
+// ── Schema migrations ────────────────────────────────────────
+//
+// Each migrate_to_N() brings the DB from version N-1 → N.
+// To add a new migration:
+//   1. Add migrate_to_N() declaration in database.h
+//   2. Implement it below (ALTER TABLE, CREATE TABLE, etc.)
+//   3. Bump kLatestVersion to N
+//   4. Add the case in migrate()
+//
+// Migrations run inside a transaction; if one fails the DB is
+// left at the last successful version.
 
-void Database::create_tables() {
+static constexpr int kLatestVersion = 1;
+
+int Database::get_user_version() {
+    sqlite3_stmt* stmt = nullptr;
+    sqlite3_prepare_v2(db_, "PRAGMA user_version", -1, &stmt, nullptr);
+    int v = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+        v = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return v;
+}
+
+void Database::set_user_version(int v) {
+    // PRAGMA doesn't support parameter binding, so use snprintf.
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "PRAGMA user_version = %d", v);
+    exec(buf);
+}
+
+void Database::migrate() {
+    int current = get_user_version();
+    if (current >= kLatestVersion) return;
+
+    std::cout << "[database] schema v" << current
+              << " → v" << kLatestVersion << " — running migrations\n";
+
+    // Dispatch table — add new cases as the schema evolves.
+    for (int v = current + 1; v <= kLatestVersion; ++v) {
+        exec("BEGIN TRANSACTION");
+        switch (v) {
+            case 1: migrate_to_1(); break;
+            // case 2: migrate_to_2(); break;
+            // case 3: migrate_to_3(); break;
+            default:
+                exec("ROLLBACK");
+                throw std::runtime_error(
+                    "Unknown migration version " + std::to_string(v));
+        }
+        set_user_version(v);
+        exec("COMMIT");
+        std::cout << "[database] applied migration v" << v << "\n";
+    }
+}
+
+// Migration 1 — initial 12-table schema (v2.6.0).
+void Database::migrate_to_1() {
     exec(R"(
         CREATE TABLE IF NOT EXISTS settings (
             key   TEXT PRIMARY KEY,

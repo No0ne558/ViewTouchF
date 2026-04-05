@@ -5,6 +5,14 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] — 2026-04-04
+
+### Added
+- **Versioned schema migrations**: `Database` now tracks schema version via SQLite `PRAGMA user_version` and runs numbered migrations on startup — safe incremental upgrades across any number of releases
+- Migration dispatch loop in `Database::migrate()` with per-version functions (`migrate_to_1()`, …); new migrations just add a function and bump `kLatestVersion`
+- Migrations are transactional: each version applied in its own `BEGIN … COMMIT` so a failure leaves the DB at the last good version
+- Startup log shows `schema vN → vM — running migrations` or silently skips when already current
+
 ## [2.6.0] — 2026-04-04
 
 ### Added
