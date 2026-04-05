@@ -21,6 +21,14 @@ green() { printf '\033[1;32m%s\033[0m\n' "$*"; }
 yellow() { printf '\033[1;33m%s\033[0m\n' "$*"; }
 red() { printf '\033[1;31m%s\033[0m\n' "$*"; }
 
+# ── Ensure the repo directory is writable ─────────────────────
+if [[ ! -w "$ROOT" ]]; then
+    red "==> No write permission on $ROOT"
+    yellow "    Fixing ownership (requires sudo)..."
+    sudo chown -R "$(id -u):$(id -g)" "$ROOT"
+    green "==> Ownership fixed."
+fi
+
 # ── Detect distro ────────────────────────────────────────────
 detect_distro() {
     if [ -f /etc/os-release ]; then
