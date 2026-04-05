@@ -156,6 +156,13 @@ const TicketItem$json = {
       '6': '.vt_proto.AppliedModifier',
       '10': 'modifiers'
     },
+    {
+      '1': 'special_instructions',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '10': 'specialInstructions'
+    },
   ],
 };
 
@@ -163,7 +170,8 @@ const TicketItem$json = {
 final $typed_data.Uint8List ticketItemDescriptor = $convert.base64Decode(
     'CgpUaWNrZXRJdGVtEiYKBGl0ZW0YASABKAsyEi52dF9wcm90by5NZW51SXRlbVIEaXRlbRIaCg'
     'hxdWFudGl0eRgCIAEoBVIIcXVhbnRpdHkSGQoIbGluZV9rZXkYAyABKAlSB2xpbmVLZXkSNwoJ'
-    'bW9kaWZpZXJzGAQgAygLMhkudnRfcHJvdG8uQXBwbGllZE1vZGlmaWVyUgltb2RpZmllcnM=');
+    'bW9kaWZpZXJzGAQgAygLMhkudnRfcHJvdG8uQXBwbGllZE1vZGlmaWVyUgltb2RpZmllcnMSMQ'
+    'oUc3BlY2lhbF9pbnN0cnVjdGlvbnMYBSABKAlSE3NwZWNpYWxJbnN0cnVjdGlvbnM=');
 
 @$core.Deprecated('Use ticketDescriptor instead')
 const Ticket$json = {
@@ -234,6 +242,13 @@ const AddItemRequest$json = {
       '6': '.vt_proto.AppliedModifier',
       '10': 'modifiers'
     },
+    {
+      '1': 'special_instructions',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '10': 'specialInstructions'
+    },
   ],
 };
 
@@ -241,7 +256,8 @@ const AddItemRequest$json = {
 final $typed_data.Uint8List addItemRequestDescriptor = $convert.base64Decode(
     'Cg5BZGRJdGVtUmVxdWVzdBIbCgl0aWNrZXRfaWQYASABKAlSCHRpY2tldElkEiAKDG1lbnVfaX'
     'RlbV9pZBgCIAEoCVIKbWVudUl0ZW1JZBIaCghxdWFudGl0eRgDIAEoBVIIcXVhbnRpdHkSNwoJ'
-    'bW9kaWZpZXJzGAQgAygLMhkudnRfcHJvdG8uQXBwbGllZE1vZGlmaWVyUgltb2RpZmllcnM=');
+    'bW9kaWZpZXJzGAQgAygLMhkudnRfcHJvdG8uQXBwbGllZE1vZGlmaWVyUgltb2RpZmllcnMSMQ'
+    'oUc3BlY2lhbF9pbnN0cnVjdGlvbnMYBSABKAlSE3NwZWNpYWxJbnN0cnVjdGlvbnM=');
 
 @$core.Deprecated('Use addItemResponseDescriptor instead')
 const AddItemResponse$json = {
@@ -296,6 +312,57 @@ const RemoveItemResponse$json = {
 /// Descriptor for `RemoveItemResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List removeItemResponseDescriptor = $convert.base64Decode(
     'ChJSZW1vdmVJdGVtUmVzcG9uc2USKAoGdGlja2V0GAEgASgLMhAudnRfcHJvdG8uVGlja2V0Ug'
+    'Z0aWNrZXQ=');
+
+@$core.Deprecated('Use updateItemRequestDescriptor instead')
+const UpdateItemRequest$json = {
+  '1': 'UpdateItemRequest',
+  '2': [
+    {'1': 'ticket_id', '3': 1, '4': 1, '5': 9, '10': 'ticketId'},
+    {'1': 'line_key', '3': 2, '4': 1, '5': 9, '10': 'lineKey'},
+    {
+      '1': 'modifiers',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.vt_proto.AppliedModifier',
+      '10': 'modifiers'
+    },
+    {
+      '1': 'special_instructions',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '10': 'specialInstructions'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateItemRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateItemRequestDescriptor = $convert.base64Decode(
+    'ChFVcGRhdGVJdGVtUmVxdWVzdBIbCgl0aWNrZXRfaWQYASABKAlSCHRpY2tldElkEhkKCGxpbm'
+    'Vfa2V5GAIgASgJUgdsaW5lS2V5EjcKCW1vZGlmaWVycxgDIAMoCzIZLnZ0X3Byb3RvLkFwcGxp'
+    'ZWRNb2RpZmllclIJbW9kaWZpZXJzEjEKFHNwZWNpYWxfaW5zdHJ1Y3Rpb25zGAQgASgJUhNzcG'
+    'VjaWFsSW5zdHJ1Y3Rpb25z');
+
+@$core.Deprecated('Use updateItemResponseDescriptor instead')
+const UpdateItemResponse$json = {
+  '1': 'UpdateItemResponse',
+  '2': [
+    {
+      '1': 'ticket',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.vt_proto.Ticket',
+      '10': 'ticket'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateItemResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateItemResponseDescriptor = $convert.base64Decode(
+    'ChJVcGRhdGVJdGVtUmVzcG9uc2USKAoGdGlja2V0GAEgASgLMhAudnRfcHJvdG8uVGlja2V0Ug'
     'Z0aWNrZXQ=');
 
 @$core.Deprecated('Use decreaseItemRequestDescriptor instead')

@@ -9,6 +9,7 @@ class TicketPanel extends StatelessWidget {
   final VoidCallback onPhoneOrder;
   final ValueChanged<TicketItem> onDecreaseItem;
   final ValueChanged<TicketItem> onIncreaseItem;
+  final ValueChanged<TicketItem>? onItemTap;
 
   const TicketPanel({
     super.key,
@@ -17,6 +18,7 @@ class TicketPanel extends StatelessWidget {
     required this.onPhoneOrder,
     required this.onDecreaseItem,
     required this.onIncreaseItem,
+    this.onItemTap,
   });
 
   String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
@@ -118,6 +120,7 @@ class TicketPanel extends StatelessWidget {
                       },
                       child: ListTile(
                         dense: true,
+                        onTap: onItemTap != null ? () => onItemTap!(ti) : null,
                         title: Text(ti.item.name),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,6 +141,16 @@ class TicketPanel extends StatelessWidget {
                                   ),
                                 );
                               }),
+                            if (ti.specialInstructions.isNotEmpty)
+                              Text(
+                                '  \u{1F4DD} ${ti.specialInstructions}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.deepPurple,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                           ],
                         ),
                         trailing: Text(

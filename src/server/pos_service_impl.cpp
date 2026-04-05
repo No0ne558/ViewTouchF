@@ -105,6 +105,9 @@ void PosServiceImpl::fill_proto_ticket(const core::Ticket& src, pb::Ticket* dst)
             pm->set_action(to_proto_action(am.action));
             pm->set_price_adjustment_cents(am.price_adjustment_cents);
         }
+        if (!ti.special_instructions.empty()) {
+            proto_item->set_special_instructions(ti.special_instructions);
+        }
     }
 }
 
@@ -147,9 +150,32 @@ grpc::Status PosServiceImpl::AddItem(grpc::ServerContext* /*ctx*/,
         mods.push_back(std::move(am));
     }
     auto result = mgr_->add_item(req->ticket_id(), req->menu_item_id(),
-                                  req->quantity(), mods);
+                                  req->quantity(), mods,
+                                  req->special_instructions());
     if (!result) {
         return grpc::Status(grpc::INVALID_ARGUMENT, "Ticket or menu item not found, or ticket not open");
+    }
+    fill_proto_ticket(*result, resp->mutable_ticket());
+    return grpc::Status::OK;
+}
+
+grpc::Status PosServiceImpl::UpdateItem(grpc::ServerContext* /*ctx*/,
+                                        const pb::UpdateItemRequest* req,
+                                        pb::UpdateItemResponse* resp) {
+    std::vector<core::AppliedModifier> mods;
+    mods.reserve(req->modifiers_size());
+    for (const auto& pm : req->modifiers()) {
+        core::AppliedModifier am;
+        am.modifier_id            = pm.modifier_id();
+        am.modifier_name          = pm.modifier_name();
+        am.action                 = parse_modifier_action(pm.action());
+        am.price_adjustment_cents = pm.price_adjustment_cents();
+        mods.push_back(std::move(am));
+    }
+    auto result = mgr_->update_item(req->ticket_id(), req->line_key(),
+                                     mods, req->special_instructions());
+    if (!result) {
+        return grpc::Status(grpc::INVALID_ARGUMENT, "Ticket or item not found, or ticket not open");
     }
     fill_proto_ticket(*result, resp->mutable_ticket());
     return grpc::Status::OK;
@@ -727,8 +753,8 @@ grpc::Status PosServiceImpl::PhoneOrderAction(grpc::ServerContext* /*ctx*/,
     auto* po = resp->mutable_phone_order();
     fill_proto_phone_order(*result, po);
     fill_proto_ticket(result->ticket, po->mutable_ticket());
-    // On checkout, also return the restored ticket so the UI can run checkout flow.
-    if (req->action() == "CHECKOUT") {
+    // On checkout or edit, also return the restored ticket so the UI can use it.
+    if (req->action() == "CHECKOUT" || req->action() == "EDIT") {
         auto ticket = mgr_->get_ticket(result->ticket.id);
         if (ticket) {
             fill_proto_ticket(*ticket, resp->mutable_ticket());

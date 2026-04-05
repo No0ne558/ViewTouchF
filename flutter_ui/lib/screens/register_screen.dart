@@ -92,17 +92,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // If the item has modifier groups, show the modifier dialog first.
     List<AppliedModifier> mods = [];
+    String specialInstructions = '';
     if (item.modifierGroups.isNotEmpty) {
       final result = await _showModifierDialog(item);
       if (result == null) return; // user cancelled
-      mods = result;
+      mods = result.modifiers;
+      specialInstructions = result.specialInstructions;
     }
 
     try {
       final req = AddItemRequest()
         ..ticketId = _ticket!.id
         ..menuItemId = item.id
-        ..quantity = 1;
+        ..quantity = 1
+        ..specialInstructions = specialInstructions;
       req.modifiers.addAll(mods);
       final resp = await PosClient.instance.stub.addItem(req);
       setState(() => _ticket = resp.ticket);
@@ -117,7 +120,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final req = AddItemRequest()
         ..ticketId = _ticket!.id
         ..menuItemId = ti.item.id
-        ..quantity = 1;
+        ..quantity = 1
+        ..specialInstructions = ti.specialInstructions;
       // Pass same modifiers so it matches the same line_key.
       req.modifiers.addAll(ti.modifiers);
       final resp = await PosClient.instance.stub.addItem(req);
@@ -127,11 +131,68 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<List<AppliedModifier>?> _showModifierDialog(MenuItem item) async {
-    return showDialog<List<AppliedModifier>>(
+  Future<_ModifierResult?> _showModifierDialog(
+    MenuItem item, {
+    Map<String, ModifierAction>? initialSelections,
+    String? initialSpecialInstructions,
+    String confirmLabel = 'Add to Order',
+  }) async {
+    return showDialog<_ModifierResult>(
       context: context,
-      builder: (ctx) => _ModifierDialog(item: item),
+      builder: (ctx) => _ModifierDialog(
+        item: item,
+        initialSelections: initialSelections,
+        initialSpecialInstructions: initialSpecialInstructions,
+        confirmLabel: confirmLabel,
+      ),
     );
+  }
+
+  Future<void> _editItem(TicketItem ti) async {
+    if (_ticket == null) return;
+
+    // Look up the full menu item (with modifier groups) from the loaded menu.
+    final fullItem = _menu.cast<MenuItem?>().firstWhere(
+      (m) => m!.id == ti.item.id,
+      orElse: () => null,
+    );
+    if (fullItem == null || fullItem.modifierGroups.isEmpty) return;
+
+    // Build initial selections from current modifiers.
+    final initialSelections = <String, ModifierAction>{};
+    for (final m in ti.modifiers) {
+      initialSelections[m.modifierId] = m.action;
+    }
+    // Also restore default selections for single-select groups.
+    for (final group in fullItem.modifierGroups) {
+      if (group.maxSelect == 1) {
+        for (final mod in group.modifiers) {
+          if (mod.isDefault && !initialSelections.containsKey(mod.id)) {
+            initialSelections[mod.id] = ModifierAction.MOD_ADD;
+          }
+        }
+      }
+    }
+
+    final result = await _showModifierDialog(
+      fullItem,
+      initialSelections: initialSelections,
+      initialSpecialInstructions: ti.specialInstructions,
+      confirmLabel: 'Update Item',
+    );
+    if (result == null) return; // cancelled
+
+    try {
+      final req = UpdateItemRequest()
+        ..ticketId = _ticket!.id
+        ..lineKey = ti.lineKey
+        ..specialInstructions = result.specialInstructions;
+      req.modifiers.addAll(result.modifiers);
+      final resp = await PosClient.instance.stub.updateItem(req);
+      setState(() => _ticket = resp.ticket);
+    } catch (e) {
+      _showError('Failed to update item: $e');
+    }
   }
 
   Future<void> _decreaseItem(TicketItem ti) async {
@@ -291,6 +352,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } catch (e) {
         _showError('Failed to load phone order ticket: $e');
       }
+    } else if (result.action == 'EDIT') {
+      // The ticket was restored as OPEN — load it for editing.
+      try {
+        final ticketResp = await PosClient.instance.stub.getTicket(
+          GetTicketRequest()..ticketId = result.ticketId,
+        );
+        if (!mounted) return;
+        setState(() => _ticket = ticketResp.ticket);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Phone order loaded for editing'),
+              backgroundColor: Colors.blue.shade700,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        _showError('Failed to load phone order ticket: $e');
+      }
     } else {
       await _refreshPhoneOrderCount();
     }
@@ -393,6 +474,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onPhoneOrder: _showPhoneOrderDialog,
               onDecreaseItem: _decreaseItem,
               onIncreaseItem: _increaseItem,
+              onItemTap: _editItem,
             ),
           ),
         ],
@@ -403,9 +485,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
 // ── Modifier Selection Dialog ─────────────────────────────────
 
+class _ModifierResult {
+  final List<AppliedModifier> modifiers;
+  final String specialInstructions;
+  _ModifierResult({required this.modifiers, this.specialInstructions = ''});
+}
+
 class _ModifierDialog extends StatefulWidget {
   final MenuItem item;
-  const _ModifierDialog({required this.item});
+  final Map<String, ModifierAction>? initialSelections;
+  final String? initialSpecialInstructions;
+  final String confirmLabel;
+  const _ModifierDialog({
+    required this.item,
+    this.initialSelections,
+    this.initialSpecialInstructions,
+    this.confirmLabel = 'Add to Order',
+  });
 
   @override
   State<_ModifierDialog> createState() => _ModifierDialogState();
@@ -415,17 +511,23 @@ class _ModifierDialogState extends State<_ModifierDialog> {
   // Tracks the chosen action for each modifier by modifier id.
   // null / absent = no action (keep default as-is, skip non-default).
   final Map<String, ModifierAction> _selections = {};
+  String _specialInstructions = '';
 
   @override
   void initState() {
     super.initState();
-    // Pre-select defaults: for single-select groups with a default,
-    // set the default modifier to MOD_ADD so the user sees it selected.
-    for (final group in widget.item.modifierGroups) {
-      if (group.maxSelect == 1) {
-        for (final mod in group.modifiers) {
-          if (mod.isDefault) {
-            _selections[mod.id] = ModifierAction.MOD_ADD;
+    _specialInstructions = widget.initialSpecialInstructions ?? '';
+    if (widget.initialSelections != null) {
+      _selections.addAll(widget.initialSelections!);
+    } else {
+      // Pre-select defaults: for single-select groups with a default,
+      // set the default modifier to MOD_ADD so the user sees it selected.
+      for (final group in widget.item.modifierGroups) {
+        if (group.maxSelect == 1) {
+          for (final mod in group.modifiers) {
+            if (mod.isDefault) {
+              _selections[mod.id] = ModifierAction.MOD_ADD;
+            }
           }
         }
       }
@@ -478,6 +580,19 @@ class _ModifierDialogState extends State<_ModifierDialog> {
     return result;
   }
 
+  Future<void> _showSpecialInstructions() async {
+    final text = await showDialog<String>(
+      context: context,
+      builder: (ctx) => TouchKeyboardDialog(
+        title: 'Special Instructions',
+        initialValue: _specialInstructions,
+      ),
+    );
+    if (text != null) {
+      setState(() => _specialInstructions = text);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -518,10 +633,36 @@ class _ModifierDialogState extends State<_ModifierDialog> {
         ),
         SizedBox(
           height: 48,
+          width: 200,
+          child: OutlinedButton.icon(
+            onPressed: _showSpecialInstructions,
+            icon: Icon(_specialInstructions.isEmpty
+                ? Icons.edit_note
+                : Icons.check_circle,
+                size: 20,
+                color: _specialInstructions.isEmpty
+                    ? null
+                    : Colors.green),
+            label: Text(
+              _specialInstructions.isEmpty
+                  ? 'Special Instructions'
+                  : 'Instructions \u2713',
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 48,
           width: 180,
           child: FilledButton(
-            onPressed: () => Navigator.pop(context, _buildModifiers()),
-            child: const Text('Add to Order', style: TextStyle(fontSize: 16)),
+            onPressed: () => Navigator.pop(
+              context,
+              _ModifierResult(
+                modifiers: _buildModifiers(),
+                specialInstructions: _specialInstructions,
+              ),
+            ),
+            child: Text(widget.confirmLabel, style: const TextStyle(fontSize: 16)),
           ),
         ),
       ],
@@ -998,7 +1139,10 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
   Future<void> _ticketAction(Ticket t, String action) async {
     final reason = await showDialog<String>(
       context: context,
-      builder: (ctx) => _ReasonDialog(action: action, ticketId: t.id),
+      builder: (ctx) => TouchKeyboardDialog(
+        title: '$action Ticket #${t.id}',
+        hintText: 'Reason (optional)',
+      ),
     );
     if (reason == null) return; // cancelled
 
@@ -1222,91 +1366,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
 }
 
 // ── Reason Dialog (for VOID / COMP / REFUND) ──────────────────
-
-class _ReasonDialog extends StatefulWidget {
-  final String action;
-  final String ticketId;
-  const _ReasonDialog({required this.action, required this.ticketId});
-
-  @override
-  State<_ReasonDialog> createState() => _ReasonDialogState();
-}
-
-class _ReasonDialogState extends State<_ReasonDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 620),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${widget.action} Ticket #${widget.ticketId}',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _controller,
-                readOnly: true,
-                showCursor: true,
-                decoration: InputDecoration(
-                  labelText: 'Reason (optional)',
-                  hintText: 'e.g. Customer complaint',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                style: const TextStyle(fontSize: 22),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: TouchscreenKeyboard(controller: _controller),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel',
-                            style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: FilledButton(
-                        onPressed: () =>
-                            Navigator.pop(context, _controller.text),
-                        style: FilledButton.styleFrom(
-                            backgroundColor: Colors.red.shade700),
-                        child: Text(widget.action,
-                            style: const TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Now uses TouchKeyboardDialog directly — see _ticketAction().
 
 // ── Phone Order Input Dialog ──────────────────────────────────
 
@@ -1324,26 +1384,28 @@ class _PhoneOrderDialog extends StatefulWidget {
 }
 
 class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
-  final _nameController = TextEditingController();
-  final _commentController = TextEditingController();
-  bool _nameActive = true; // which field the keyboard targets
+  String _name = '';
+  String _comment = '';
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _commentController.dispose();
-    super.dispose();
+  Future<void> _editField(String title, String current, ValueChanged<String> onDone) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => TouchKeyboardDialog(
+        title: title,
+        initialValue: current,
+      ),
+    );
+    if (result != null) {
+      setState(() => onDone(result));
+    }
   }
-
-  TextEditingController get _activeController =>
-      _nameActive ? _nameController : _commentController;
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 820),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 380),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -1351,56 +1413,43 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
             children: [
               Text('Phone Order',
                   style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 16),
-              // Name field
-              GestureDetector(
-                onTap: () => setState(() => _nameActive = true),
-                child: TextField(
-                  controller: _nameController,
-                  readOnly: true,
-                  showCursor: true,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    labelStyle: const TextStyle(fontSize: 18),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    filled: _nameActive,
-                    fillColor: _nameActive
-                        ? Colors.orange.withAlpha(30)
-                        : null,
+              const SizedBox(height: 24),
+              // Name field — tap to open keyboard
+              ListTile(
+                leading: const Icon(Icons.person, size: 28),
+                title: Text(
+                  _name.isEmpty ? 'Name' : _name,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: _name.isEmpty ? Colors.grey : null,
                   ),
-                  style: const TextStyle(fontSize: 22),
-                  onTap: () => setState(() => _nameActive = true),
                 ),
+                trailing: const Icon(Icons.edit),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+                onTap: () => _editField('Customer Name', _name, (v) => _name = v),
               ),
               const SizedBox(height: 12),
-              // Comment field
-              GestureDetector(
-                onTap: () => setState(() => _nameActive = false),
-                child: TextField(
-                  controller: _commentController,
-                  readOnly: true,
-                  showCursor: true,
-                  decoration: InputDecoration(
-                    labelText: 'Comment',
-                    labelStyle: const TextStyle(fontSize: 18),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    filled: !_nameActive,
-                    fillColor: !_nameActive
-                        ? Colors.orange.withAlpha(30)
-                        : null,
+              // Comment field — tap to open keyboard
+              ListTile(
+                leading: const Icon(Icons.comment, size: 28),
+                title: Text(
+                  _comment.isEmpty ? 'Comment' : _comment,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: _comment.isEmpty ? Colors.grey : null,
                   ),
-                  style: const TextStyle(fontSize: 22),
-                  onTap: () => setState(() => _nameActive = false),
                 ),
+                trailing: const Icon(Icons.edit),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+                onTap: () => _editField('Comment', _comment, (v) => _comment = v),
               ),
-              const SizedBox(height: 12),
-              // QWERTY Keyboard
-              Expanded(
-                child: TouchscreenKeyboard(controller: _activeController),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
               // Done / Cancel
               Row(
                 children: [
@@ -1422,8 +1471,8 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
                         onPressed: () => Navigator.pop(
                           context,
                           _PhoneOrderInput(
-                            _nameController.text.trim(),
-                            _commentController.text.trim(),
+                            _name.trim(),
+                            _comment.trim(),
                           ),
                         ),
                         style: FilledButton.styleFrom(
@@ -1515,6 +1564,11 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
         if (mounted) {
           Navigator.pop(context,
               _PhoneOrderListResult('CHECKOUT', order.ticket.id));
+        }
+      } else if (action == 'EDIT') {
+        if (mounted) {
+          Navigator.pop(context,
+              _PhoneOrderListResult('EDIT', order.ticket.id));
         }
       } else {
         _showMsg('Order cancelled', Colors.orange);
@@ -1663,6 +1717,19 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                       style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red),
                       child: const Text('Cancel Order',
+                          style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: () => _doAction(order, 'EDIT'),
+                      style: FilledButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700),
+                      child: const Text('Edit Order',
                           style: TextStyle(fontSize: 16)),
                     ),
                   ),

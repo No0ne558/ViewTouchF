@@ -5,6 +5,20 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] — 2026-04-04
+
+### Added
+- **Tap cart item to re-modify**: tapping a line item in the ticket panel opens the modifier dialog pre-populated with its current selections, allowing in-place editing of modifiers and special instructions via the new `UpdateItem` RPC
+- **Special Instructions**: new button in modifier dialog (left of Add to Order / Update Item) opens the touchscreen keyboard to type per-item special instructions — displayed in the cart with a memo icon, printed bold on receipts and kitchen tickets
+- **Edit Order for phone orders**: new blue "Edit Order" button in the phone order list restores the ticket for editing while keeping the phone order on hold, so staff can add/remove items before checkout
+
+### Changed
+- Reason dialog (VOID/COMP/REFUND) now uses `TouchKeyboardDialog` popup instead of an embedded keyboard
+- Phone Order dialog replaced embedded keyboard with tap-to-edit fields — tapping Name or Comment opens a full `TouchKeyboardDialog` popup for a consistent keyboard experience across the app
+
+### Fixed
+- Tapping a cart item to edit modifiers now works correctly — modifier groups are looked up from the full menu instead of the slim ticket copy which lacked them
+
 ## [2.2.2] — 2026-04-04
 
 ### Changed

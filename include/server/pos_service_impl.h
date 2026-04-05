@@ -31,6 +31,10 @@ public:
                          const pb::AddItemRequest* req,
                          pb::AddItemResponse* resp) override;
 
+    grpc::Status UpdateItem(grpc::ServerContext* ctx,
+                            const pb::UpdateItemRequest* req,
+                            pb::UpdateItemResponse* resp) override;
+
     grpc::Status RemoveItem(grpc::ServerContext* ctx,
                             const pb::RemoveItemRequest* req,
                             pb::RemoveItemResponse* resp) override;

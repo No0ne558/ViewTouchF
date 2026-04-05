@@ -61,6 +61,13 @@ class PosServiceClient extends $grpc.Client {
     return $createUnaryCall(_$removeItem, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.UpdateItemResponse> updateItem(
+    $0.UpdateItemRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$updateItem, request, options: options);
+  }
+
   $grpc.ResponseFuture<$0.DecreaseItemResponse> decreaseItem(
     $0.DecreaseItemRequest request, {
     $grpc.CallOptions? options,
@@ -253,6 +260,11 @@ class PosServiceClient extends $grpc.Client {
           '/vt_proto.PosService/RemoveItem',
           ($0.RemoveItemRequest value) => value.writeToBuffer(),
           $0.RemoveItemResponse.fromBuffer);
+  static final _$updateItem =
+      $grpc.ClientMethod<$0.UpdateItemRequest, $0.UpdateItemResponse>(
+          '/vt_proto.PosService/UpdateItem',
+          ($0.UpdateItemRequest value) => value.writeToBuffer(),
+          $0.UpdateItemResponse.fromBuffer);
   static final _$decreaseItem =
       $grpc.ClientMethod<$0.DecreaseItemRequest, $0.DecreaseItemResponse>(
           '/vt_proto.PosService/DecreaseItem',
@@ -403,6 +415,13 @@ abstract class PosServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.RemoveItemRequest.fromBuffer(value),
         ($0.RemoveItemResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UpdateItemRequest, $0.UpdateItemResponse>(
+        'UpdateItem',
+        updateItem_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.UpdateItemRequest.fromBuffer(value),
+        ($0.UpdateItemResponse value) => value.writeToBuffer()));
     $addMethod(
         $grpc.ServiceMethod<$0.DecreaseItemRequest, $0.DecreaseItemResponse>(
             'DecreaseItem',
@@ -636,6 +655,14 @@ abstract class PosServiceBase extends $grpc.Service {
 
   $async.Future<$0.RemoveItemResponse> removeItem(
       $grpc.ServiceCall call, $0.RemoveItemRequest request);
+
+  $async.Future<$0.UpdateItemResponse> updateItem_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.UpdateItemRequest> $request) async {
+    return updateItem($call, await $request);
+  }
+
+  $async.Future<$0.UpdateItemResponse> updateItem(
+      $grpc.ServiceCall call, $0.UpdateItemRequest request);
 
   $async.Future<$0.DecreaseItemResponse> decreaseItem_Pre(
       $grpc.ServiceCall $call,

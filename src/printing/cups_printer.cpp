@@ -177,6 +177,13 @@ std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket,
             append_text(buf, mod_line);
             append(buf, escpos::LF);
         }
+        // Print special instructions if present
+        if (!ti.special_instructions.empty()) {
+            append(buf, escpos::BOLD_ON);
+            append_text(buf, "  ** " + ti.special_instructions);
+            append(buf, escpos::LF);
+            append(buf, escpos::BOLD_OFF);
+        }
     }
 
     // 6. Totals
@@ -561,6 +568,13 @@ std::vector<uint8_t> CupsPrinter::build_kitchen_payload(const Ticket& ticket,
             }
             append_text(buf, "   >> " + action_str + m.modifier_name);
             append(buf, escpos::LF);
+        }
+        // Print special instructions if present
+        if (!ti.special_instructions.empty()) {
+            append(buf, escpos::BOLD_ON);
+            append_text(buf, "   ** " + ti.special_instructions);
+            append(buf, escpos::LF);
+            append(buf, escpos::BOLD_OFF);
         }
         append_text(buf, std::string(LINE_WIDTH, '-'));
         append(buf, escpos::LF);

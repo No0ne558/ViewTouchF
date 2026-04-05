@@ -75,7 +75,13 @@ public:
     std::optional<Ticket>     add_item(const std::string& ticket_id,
                                        const std::string& menu_item_id,
                                        int32_t quantity = 1,
-                                       const std::vector<AppliedModifier>& modifiers = {});
+                                       const std::vector<AppliedModifier>& modifiers = {},
+                                       const std::string& special_instructions = "");
+    /// Update an existing item's modifiers and special instructions in-place.
+    std::optional<Ticket>     update_item(const std::string& ticket_id,
+                                          const std::string& line_key,
+                                          const std::vector<AppliedModifier>& modifiers,
+                                          const std::string& special_instructions = "");
     std::optional<Ticket>     remove_item(const std::string& ticket_id,
                                           const std::string& menu_item_id,
                                           const std::string& line_key = "");
@@ -128,7 +134,8 @@ private:
     std::string generate_ticket_id() const;
     std::string today_str() const;
     static std::string compute_line_key(const std::string& menu_item_id,
-                                        const std::vector<AppliedModifier>& modifiers);
+                                        const std::vector<AppliedModifier>& modifiers,
+                                        const std::string& special_instructions = "");
 
     mutable std::mutex                             mu_;
     int32_t                                        tax_rate_bps_;

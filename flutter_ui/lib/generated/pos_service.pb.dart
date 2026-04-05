@@ -413,12 +413,15 @@ class TicketItem extends $pb.GeneratedMessage {
     $core.int? quantity,
     $core.String? lineKey,
     $core.Iterable<AppliedModifier>? modifiers,
+    $core.String? specialInstructions,
   }) {
     final result = create();
     if (item != null) result.item = item;
     if (quantity != null) result.quantity = quantity;
     if (lineKey != null) result.lineKey = lineKey;
     if (modifiers != null) result.modifiers.addAll(modifiers);
+    if (specialInstructions != null)
+      result.specialInstructions = specialInstructions;
     return result;
   }
 
@@ -441,6 +444,7 @@ class TicketItem extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'lineKey')
     ..pPM<AppliedModifier>(4, _omitFieldNames ? '' : 'modifiers',
         subBuilder: AppliedModifier.create)
+    ..aOS(5, _omitFieldNames ? '' : 'specialInstructions')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -492,6 +496,15 @@ class TicketItem extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(4)
   $pb.PbList<AppliedModifier> get modifiers => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $core.String get specialInstructions => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set specialInstructions($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSpecialInstructions() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSpecialInstructions() => $_clearField(5);
 }
 
 class Ticket extends $pb.GeneratedMessage {
@@ -716,12 +729,15 @@ class AddItemRequest extends $pb.GeneratedMessage {
     $core.String? menuItemId,
     $core.int? quantity,
     $core.Iterable<AppliedModifier>? modifiers,
+    $core.String? specialInstructions,
   }) {
     final result = create();
     if (ticketId != null) result.ticketId = ticketId;
     if (menuItemId != null) result.menuItemId = menuItemId;
     if (quantity != null) result.quantity = quantity;
     if (modifiers != null) result.modifiers.addAll(modifiers);
+    if (specialInstructions != null)
+      result.specialInstructions = specialInstructions;
     return result;
   }
 
@@ -743,6 +759,7 @@ class AddItemRequest extends $pb.GeneratedMessage {
     ..aI(3, _omitFieldNames ? '' : 'quantity')
     ..pPM<AppliedModifier>(4, _omitFieldNames ? '' : 'modifiers',
         subBuilder: AppliedModifier.create)
+    ..aOS(5, _omitFieldNames ? '' : 'specialInstructions')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -793,6 +810,15 @@ class AddItemRequest extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(4)
   $pb.PbList<AppliedModifier> get modifiers => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $core.String get specialInstructions => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set specialInstructions($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSpecialInstructions() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSpecialInstructions() => $_clearField(5);
 }
 
 class AddItemResponse extends $pb.GeneratedMessage {
@@ -972,6 +998,148 @@ class RemoveItemResponse extends $pb.GeneratedMessage {
   static RemoveItemResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<RemoveItemResponse>(create);
   static RemoveItemResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  Ticket get ticket => $_getN(0);
+  @$pb.TagNumber(1)
+  set ticket(Ticket value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTicket() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTicket() => $_clearField(1);
+  @$pb.TagNumber(1)
+  Ticket ensureTicket() => $_ensure(0);
+}
+
+class UpdateItemRequest extends $pb.GeneratedMessage {
+  factory UpdateItemRequest({
+    $core.String? ticketId,
+    $core.String? lineKey,
+    $core.Iterable<AppliedModifier>? modifiers,
+    $core.String? specialInstructions,
+  }) {
+    final result = create();
+    if (ticketId != null) result.ticketId = ticketId;
+    if (lineKey != null) result.lineKey = lineKey;
+    if (modifiers != null) result.modifiers.addAll(modifiers);
+    if (specialInstructions != null)
+      result.specialInstructions = specialInstructions;
+    return result;
+  }
+
+  UpdateItemRequest._();
+
+  factory UpdateItemRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateItemRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateItemRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'vt_proto'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'ticketId')
+    ..aOS(2, _omitFieldNames ? '' : 'lineKey')
+    ..pPM<AppliedModifier>(3, _omitFieldNames ? '' : 'modifiers',
+        subBuilder: AppliedModifier.create)
+    ..aOS(4, _omitFieldNames ? '' : 'specialInstructions')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateItemRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateItemRequest copyWith(void Function(UpdateItemRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdateItemRequest))
+          as UpdateItemRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateItemRequest create() => UpdateItemRequest._();
+  @$core.override
+  UpdateItemRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateItemRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateItemRequest>(create);
+  static UpdateItemRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get ticketId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set ticketId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTicketId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTicketId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get lineKey => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set lineKey($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLineKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLineKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<AppliedModifier> get modifiers => $_getList(2);
+
+  @$pb.TagNumber(4)
+  $core.String get specialInstructions => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set specialInstructions($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSpecialInstructions() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSpecialInstructions() => $_clearField(4);
+}
+
+class UpdateItemResponse extends $pb.GeneratedMessage {
+  factory UpdateItemResponse({
+    Ticket? ticket,
+  }) {
+    final result = create();
+    if (ticket != null) result.ticket = ticket;
+    return result;
+  }
+
+  UpdateItemResponse._();
+
+  factory UpdateItemResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateItemResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateItemResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'vt_proto'),
+      createEmptyInstance: create)
+    ..aOM<Ticket>(1, _omitFieldNames ? '' : 'ticket', subBuilder: Ticket.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateItemResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateItemResponse copyWith(void Function(UpdateItemResponse) updates) =>
+      super.copyWith((message) => updates(message as UpdateItemResponse))
+          as UpdateItemResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateItemResponse create() => UpdateItemResponse._();
+  @$core.override
+  UpdateItemResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateItemResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateItemResponse>(create);
+  static UpdateItemResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   Ticket get ticket => $_getN(0);

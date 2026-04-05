@@ -124,8 +124,9 @@ bool PosManager::delete_menu_item(const std::string& item_id) {
 // ── Tickets ──────────────────────────────────────────────────
 
 std::string PosManager::compute_line_key(const std::string& menu_item_id,
-                                          const std::vector<AppliedModifier>& modifiers) {
-    if (modifiers.empty()) return menu_item_id;
+                                          const std::vector<AppliedModifier>& modifiers,
+                                          const std::string& special_instructions) {
+    if (modifiers.empty() && special_instructions.empty()) return menu_item_id;
 
     std::vector<std::string> parts;
     parts.reserve(modifiers.size());
@@ -148,6 +149,9 @@ std::string PosManager::compute_line_key(const std::string& menu_item_id,
     for (size_t i = 0; i < parts.size(); ++i) {
         if (i > 0) key += ",";
         key += parts[i];
+    }
+    if (!special_instructions.empty()) {
+        key += "|SI:" + special_instructions;
     }
     return key;
 }
@@ -193,7 +197,8 @@ std::optional<Ticket> PosManager::get_ticket(const std::string& ticket_id) const
 std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
                                             const std::string& menu_item_id,
                                             int32_t quantity,
-                                            const std::vector<AppliedModifier>& modifiers) {
+                                            const std::vector<AppliedModifier>& modifiers,
+                                            const std::string& special_instructions) {
     if (quantity <= 0) return std::nullopt;
 
     std::lock_guard lock(mu_);
@@ -206,7 +211,7 @@ std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
     auto mit = menu_index_.find(menu_item_id);
     if (mit == menu_index_.end()) return std::nullopt;
 
-    auto lk = compute_line_key(menu_item_id, modifiers);
+    auto lk = compute_line_key(menu_item_id, modifiers, special_instructions);
 
     auto existing = std::find_if(ticket.items.begin(), ticket.items.end(),
         [&](const TicketItem& ti) { return ti.line_key == lk; });
@@ -215,10 +220,11 @@ std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
         existing->quantity += quantity;
     } else {
         TicketItem ti;
-        ti.item      = mit->second;
-        ti.quantity   = quantity;
-        ti.line_key   = lk;
-        ti.modifiers  = modifiers;
+        ti.item                 = mit->second;
+        ti.quantity             = quantity;
+        ti.line_key             = lk;
+        ti.modifiers            = modifiers;
+        ti.special_instructions = special_instructions;
         ticket.items.push_back(std::move(ti));
     }
 
@@ -617,6 +623,30 @@ int32_t PosManager::phone_order_count() const {
     return count;
 }
 
+std::optional<Ticket> PosManager::update_item(const std::string& ticket_id,
+                                               const std::string& line_key,
+                                               const std::vector<AppliedModifier>& modifiers,
+                                               const std::string& special_instructions) {
+    std::lock_guard lock(mu_);
+
+    auto tit = tickets_.find(ticket_id);
+    if (tit == tickets_.end()) return std::nullopt;
+    auto& ticket = tit->second;
+    if (ticket.status != TicketStatus::OPEN) return std::nullopt;
+
+    auto it = std::find_if(ticket.items.begin(), ticket.items.end(),
+        [&](const TicketItem& ti) { return ti.line_key == line_key; });
+    if (it == ticket.items.end()) return std::nullopt;
+
+    // Update modifiers, special instructions, and recompute line key.
+    it->modifiers            = modifiers;
+    it->special_instructions = special_instructions;
+    it->line_key             = compute_line_key(it->item.id, modifiers, special_instructions);
+
+    ticket.recalculate(tax_rate_bps_);
+    return ticket;
+}
+
 std::optional<PhoneOrder> PosManager::phone_order_action(
         const std::string& phone_order_id,
         const std::string& action) {
@@ -637,6 +667,13 @@ std::optional<PhoneOrder> PosManager::phone_order_action(
         return po;
     } else if (action == "CANCEL") {
         po.status = PhoneOrderStatus::CANCELLED;
+        return po;
+    } else if (action == "EDIT") {
+        // Restore the ticket as OPEN for editing, but keep phone order as HOLDING.
+        Ticket t = po.ticket;
+        t.status = TicketStatus::OPEN;
+        t.recalculate(tax_rate_bps_);
+        tickets_[t.id] = t;
         return po;
     }
 

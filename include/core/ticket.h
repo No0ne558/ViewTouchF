@@ -22,6 +22,7 @@ struct TicketItem {
     int32_t                       quantity = 1;
     std::string                   line_key;   // identifies unique item+modifier combo
     std::vector<AppliedModifier>  modifiers;
+    std::string                   special_instructions;
 };
 
 enum class TicketStatus { OPEN, CLOSED, VOIDED, COMPED, REFUNDED };
