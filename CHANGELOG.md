@@ -5,6 +5,18 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] — 2026-04-04
+
+### Added
+- **Cart item +/− buttons**: replaced swipe-left/right gestures with explicit minus (−), plus (+), and trash icon buttons per cart item for clearer touch interaction
+- **Tappable quantity counter**: tap the quantity number between +/− to open a numeric keypad for entering a custom quantity
+- **Trash icon with confirmation**: trash button removes an item immediately if quantity ≤ 2, or shows a confirmation dialog for larger quantities
+- **Drag-to-scroll on check**: cart list now supports finger/mouse/trackpad drag scrolling on Linux desktop via `ScrollConfiguration` with all pointer device kinds
+- **Auto-scroll to bottom**: cart automatically scrolls to the newest item when an item is added
+
+### Changed
+- Dollar amounts now display with commas for thousands (e.g. `$1,234.56`) via shared `formatMoney()` utility used across all screens
+
 ## [2.3.1] — 2026-04-04
 
 ### Changed

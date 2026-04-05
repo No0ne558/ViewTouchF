@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
+import '../utils/money.dart';
 
 class AdminEndDayTab extends StatefulWidget {
   const AdminEndDayTab({super.key});
@@ -14,7 +15,7 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
   DailyReport? _zReport;
   bool _xPrinting = false;
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  String _money(int cents) => formatMoney(cents);
 
   Future<void> _endDay() async {
     // Confirmation dialog

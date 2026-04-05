@@ -1,14 +1,19 @@
+import 'dart:ui' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
+import '../utils/money.dart';
+import 'touchscreen_keyboard.dart';
 
 /// Right-side panel showing the current ticket's line items,
 /// subtotal, tax, total, and a checkout button.
-class TicketPanel extends StatelessWidget {
+class TicketPanel extends StatefulWidget {
   final Ticket? ticket;
   final VoidCallback onCheckout;
   final VoidCallback onPhoneOrder;
   final ValueChanged<TicketItem> onDecreaseItem;
   final ValueChanged<TicketItem> onIncreaseItem;
+  final ValueChanged<TicketItem> onRemoveItem;
+  final void Function(TicketItem ti, int qty) onSetQuantity;
   final ValueChanged<TicketItem>? onItemTap;
 
   const TicketPanel({
@@ -18,10 +23,45 @@ class TicketPanel extends StatelessWidget {
     required this.onPhoneOrder,
     required this.onDecreaseItem,
     required this.onIncreaseItem,
+    required this.onRemoveItem,
+    required this.onSetQuantity,
     this.onItemTap,
   });
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  @override
+  State<TicketPanel> createState() => _TicketPanelState();
+}
+
+class _TicketPanelState extends State<TicketPanel> {
+  final ScrollController _scrollCtrl = ScrollController();
+  int _prevItemCount = 0;
+
+  @override
+  void didUpdateWidget(covariant TicketPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newCount = widget.ticket?.items.length ?? 0;
+    if (newCount > _prevItemCount) {
+      // New item added — scroll to bottom after the frame renders.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollCtrl.hasClients) {
+          _scrollCtrl.animateTo(
+            _scrollCtrl.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+    _prevItemCount = newCount;
+  }
+
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  String _money(int cents) => formatMoney(cents);
 
   String _actionLabel(ModifierAction a) {
     switch (a) {
@@ -49,7 +89,7 @@ class TicketPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = ticket;
+    final t = widget.ticket;
     if (t == null) {
       return const Center(child: Text('No active ticket'));
     }
@@ -63,7 +103,18 @@ class TicketPanel extends StatelessWidget {
                   child: Text('Tap a menu item to begin',
                       style: TextStyle(fontSize: 16, color: Colors.grey)),
                 )
-              : ListView.separated(
+              : ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                      PointerDeviceKind.trackpad,
+                      PointerDeviceKind.stylus,
+                    },
+                  ),
+                  child: ListView.separated(
+                  controller: _scrollCtrl,
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.all(12),
                   itemCount: t.items.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
@@ -75,92 +126,100 @@ class TicketPanel extends StatelessWidget {
                       modAdj += m.priceAdjustmentCents;
                     }
                     final adjLineTotal = (ti.item.priceCents + modAdj) * ti.quantity;
-                    return Dismissible(
+                    return Padding(
                       key: ValueKey('${ti.lineKey}-${ti.quantity}'),
-                      direction: DismissDirection.horizontal,
-                      background: Container(
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 20),
-                        color: Colors.green.shade700,
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_circle, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text('+1', style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16)),
-                          ],
-                        ),
-                      ),
-                      secondaryBackground: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        color: Colors.orange.shade700,
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('-1', style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16)),
-                            SizedBox(width: 8),
-                            Icon(Icons.remove_circle, color: Colors.white),
-                          ],
-                        ),
-                      ),
-                      confirmDismiss: (direction) async {
-                        if (direction == DismissDirection.startToEnd) {
-                          onIncreaseItem(ti);
-                        } else {
-                          onDecreaseItem(ti);
-                        }
-                        return false; // never dismiss — state drives UI
-                      },
-                      child: ListTile(
-                        dense: true,
-                        onTap: onItemTap != null ? () => onItemTap!(ti) : null,
-                        title: Text(ti.item.name),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('x${ti.quantity}  @  ${_money(ti.item.priceCents)}'),
-                            if (ti.modifiers.isNotEmpty)
-                              ...ti.modifiers.map((m) {
-                                final label = _actionLabel(m.action);
-                                final price = m.priceAdjustmentCents > 0
-                                    ? ' +${_money(m.priceAdjustmentCents)}'
-                                    : '';
-                                return Text(
-                                  '  $label ${m.modifierName}$price',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: _actionColor(m.action),
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                );
-                              }),
-                            if (ti.specialInstructions.isNotEmpty)
-                              Text(
-                                '  \u{1F4DD} ${ti.specialInstructions}',
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Top row: item name (tappable) ──
+                          GestureDetector(
+                            onTap: widget.onItemTap != null ? () => widget.onItemTap!(ti) : null,
+                            child: Text(ti.item.name,
                                 style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 15)),
+                          ),
+                          // ── Modifiers + special instructions ──
+                          if (ti.modifiers.isNotEmpty)
+                            ...ti.modifiers.map((m) {
+                              final label = _actionLabel(m.action);
+                              final price = m.priceAdjustmentCents > 0
+                                  ? ' +${_money(m.priceAdjustmentCents)}'
+                                  : '';
+                              return Text(
+                                '  $label ${m.modifierName}$price',
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.deepPurple,
+                                  color: _actionColor(m.action),
                                   fontStyle: FontStyle.italic,
-                                  fontWeight: FontWeight.w500,
+                                ),
+                              );
+                            }),
+                          if (ti.specialInstructions.isNotEmpty)
+                            Text(
+                              '  \u{1F4DD} ${ti.specialInstructions}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.deepPurple,
+                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          // ── Bottom row: [-] qty [+]  🗑  price ──
+                          Row(
+                            children: [
+                              // Minus button
+                              _QuantityButton(
+                                icon: Icons.remove,
+                                color: Colors.orange.shade700,
+                                onTap: () => widget.onDecreaseItem(ti),
+                              ),
+                              // Quantity counter (tappable for custom input)
+                              GestureDetector(
+                                onTap: () => _showQuantityPad(ctx, ti),
+                                child: Container(
+                                  width: 44,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.shade400),
+                                  ),
+                                  child: Text(
+                                    '${ti.quantity}',
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ),
-                          ],
-                        ),
-                        trailing: Text(
-                          _money(adjLineTotal),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
+                              // Plus button
+                              _QuantityButton(
+                                icon: Icons.add,
+                                color: Colors.green.shade700,
+                                onTap: () => widget.onIncreaseItem(ti),
+                              ),
+                              const SizedBox(width: 8),
+                              // Trash button
+                              _QuantityButton(
+                                icon: Icons.delete_outline,
+                                color: Colors.red.shade700,
+                                onTap: () => _confirmRemove(ctx, ti),
+                              ),
+                              const Spacer(),
+                              // Price
+                              Text(
+                                _money(adjLineTotal),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     );
                   },
+                ),
                 ),
         ),
         // ── Totals + Checkout ─────────────────────────────────
@@ -185,7 +244,7 @@ class TicketPanel extends StatelessWidget {
                     child: SizedBox(
                       height: 56,
                       child: FilledButton.icon(
-                        onPressed: t.items.isEmpty ? null : onPhoneOrder,
+                        onPressed: t.items.isEmpty ? null : widget.onPhoneOrder,
                         icon: const Icon(Icons.phone),
                         label: const Text('PHONE ORDER',
                             style: TextStyle(fontSize: 16)),
@@ -199,7 +258,7 @@ class TicketPanel extends StatelessWidget {
                     child: SizedBox(
                       height: 56,
                       child: FilledButton.icon(
-                        onPressed: t.items.isEmpty ? null : onCheckout,
+                        onPressed: t.items.isEmpty ? null : widget.onCheckout,
                         icon: const Icon(Icons.payment),
                         label: const Text('CHECKOUT',
                             style: TextStyle(fontSize: 18)),
@@ -212,6 +271,83 @@ class TicketPanel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  // ── Open numeric keypad to set custom quantity ───────────
+  void _showQuantityPad(BuildContext context, TicketItem ti) {
+    showDialog<String>(
+      context: context,
+      builder: (_) => const TouchKeyboardDialog(
+        title: 'Enter Quantity',
+        numericOnly: true,
+      ),
+    ).then((val) {
+      if (val != null && val.isNotEmpty) {
+        final qty = int.tryParse(val);
+        if (qty != null && qty > 0) {
+          widget.onSetQuantity(ti, qty);
+        }
+      }
+    });
+  }
+
+  // ── Confirm before removing item with qty > 2 ───────────
+  void _confirmRemove(BuildContext context, TicketItem ti) {
+    if (ti.quantity > 2) {
+      showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Remove Item'),
+          content: Text(
+            'Remove ${ti.item.name} (qty ${ti.quantity}) from the order?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('CANCEL'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('REMOVE'),
+            ),
+          ],
+        ),
+      ).then((confirmed) {
+        if (confirmed == true) widget.onRemoveItem(ti);
+      });
+    } else {
+      widget.onRemoveItem(ti);
+    }
+  }
+}
+
+// ── Small square icon button used for +/−/trash ─────────────
+class _QuantityButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuantityButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Material(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
     );
   }
 }

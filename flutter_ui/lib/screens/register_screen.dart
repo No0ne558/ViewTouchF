@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
+import '../utils/money.dart';
 import '../widgets/menu_grid.dart';
 import '../widgets/ticket_panel.dart';
 import '../widgets/touchscreen_keyboard.dart';
@@ -206,6 +207,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _ticket = resp.ticket);
     } catch (e) {
       _showError('Failed to decrease item: $e');
+    }
+  }
+
+  Future<void> _removeItem(TicketItem ti) async {
+    if (_ticket == null) return;
+    try {
+      final req = RemoveItemRequest()
+        ..ticketId = _ticket!.id
+        ..menuItemId = ti.item.id
+        ..lineKey = ti.lineKey;
+      final resp = await PosClient.instance.stub.removeItem(req);
+      setState(() => _ticket = resp.ticket);
+    } catch (e) {
+      _showError('Failed to remove item: $e');
+    }
+  }
+
+  Future<void> _setItemQuantity(TicketItem ti, int newQty) async {
+    if (_ticket == null) return;
+    if (newQty <= 0) { _removeItem(ti); return; }
+    final delta = newQty - ti.quantity;
+    if (delta == 0) return;
+    try {
+      if (delta > 0) {
+        // Add the difference.
+        final req = AddItemRequest()
+          ..ticketId = _ticket!.id
+          ..menuItemId = ti.item.id
+          ..quantity = delta
+          ..specialInstructions = ti.specialInstructions;
+        req.modifiers.addAll(ti.modifiers);
+        final resp = await PosClient.instance.stub.addItem(req);
+        setState(() => _ticket = resp.ticket);
+      } else {
+        // Remove then re-add with the new quantity.
+        final removeReq = RemoveItemRequest()
+          ..ticketId = _ticket!.id
+          ..menuItemId = ti.item.id
+          ..lineKey = ti.lineKey;
+        await PosClient.instance.stub.removeItem(removeReq);
+        final addReq = AddItemRequest()
+          ..ticketId = _ticket!.id
+          ..menuItemId = ti.item.id
+          ..quantity = newQty
+          ..specialInstructions = ti.specialInstructions;
+        addReq.modifiers.addAll(ti.modifiers);
+        final resp = await PosClient.instance.stub.addItem(addReq);
+        setState(() => _ticket = resp.ticket);
+      }
+    } catch (e) {
+      _showError('Failed to set quantity: $e');
     }
   }
 
@@ -474,6 +526,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onPhoneOrder: _showPhoneOrderDialog,
               onDecreaseItem: _decreaseItem,
               onIncreaseItem: _increaseItem,
+              onRemoveItem: _removeItem,
+              onSetQuantity: _setItemQuantity,
               onItemTap: _editItem,
             ),
           ),
@@ -546,7 +600,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
     }
   }
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  String _money(int cents) => formatMoney(cents);
 
   List<AppliedModifier> _buildModifiers() {
     final result = <AppliedModifier>[];
@@ -811,7 +865,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     return (d * 100).round();
   }
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  String _money(int cents) => formatMoney(cents);
 
   void _appendDigit(String d) {
     setState(() {
@@ -1101,7 +1155,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
     }
   }
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  String _money(int cents) => formatMoney(cents);
 
   String _time(dynamic epochMs) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
@@ -1539,7 +1593,7 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
     }
   }
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  String _money(int cents) => formatMoney(cents);
 
   String _time(dynamic epochMs) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
