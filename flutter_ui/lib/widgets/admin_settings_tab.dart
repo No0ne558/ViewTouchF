@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
 import '../generated/pos_service.pbgrpc.dart';
@@ -105,6 +107,39 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         backgroundColor: error ? Colors.red.shade700 : Colors.green.shade700,
       ),
     );
+  }
+
+  Future<void> _shutdown() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Shutdown System'),
+        content: const Text(
+            'This will close the UI and stop the POS daemon.\n\n'
+            'Are you sure?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.power_settings_new),
+            label: const Text('Shutdown'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await PosClient.instance.stub.shutdown(ShutdownRequest());
+    } catch (_) {
+      // The daemon may close the connection before responding — that's OK.
+    }
+    // Close the Flutter UI.
+    exit(0);
   }
 
   Widget _buildPrinterTarget({
@@ -263,6 +298,22 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.save),
                 label: const Text('Save Settings'),
+              ),
+            ),
+            const SizedBox(height: 48),
+            const Divider(),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                ),
+                onPressed: _shutdown,
+                icon: const Icon(Icons.power_settings_new),
+                label: const Text('Shutdown System'),
               ),
             ),
           ],

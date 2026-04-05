@@ -5,6 +5,13 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] — 2026-04-04
+
+### Added
+- **Shutdown button** in Admin Panel → Settings: stops both the Flutter UI and the C++ daemon with a confirmation dialog
+- New `Shutdown` gRPC RPC — daemon responds with success, then gracefully shuts down on a short delay so the client receives the response
+- `PosServiceImpl::set_shutdown_callback()` — daemon wires up `g_server->Shutdown()` via callback
+
 ## [2.6.1] — 2026-04-04
 
 ### Added

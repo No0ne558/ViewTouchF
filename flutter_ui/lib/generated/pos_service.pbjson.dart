@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from proto/pos_service.proto.
+// Generated from pos_service.proto.
 
 // @dart = 3.3
 
@@ -1366,3 +1366,24 @@ const PhoneOrderCountResponse$json = {
 final $typed_data.Uint8List phoneOrderCountResponseDescriptor =
     $convert.base64Decode(
         'ChdQaG9uZU9yZGVyQ291bnRSZXNwb25zZRIUCgVjb3VudBgBIAEoBVIFY291bnQ=');
+
+@$core.Deprecated('Use shutdownRequestDescriptor instead')
+const ShutdownRequest$json = {
+  '1': 'ShutdownRequest',
+};
+
+/// Descriptor for `ShutdownRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List shutdownRequestDescriptor =
+    $convert.base64Decode('Cg9TaHV0ZG93blJlcXVlc3Q=');
+
+@$core.Deprecated('Use shutdownResponseDescriptor instead')
+const ShutdownResponse$json = {
+  '1': 'ShutdownResponse',
+  '2': [
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `ShutdownResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List shutdownResponseDescriptor = $convert.base64Decode(
+    'ChBTaHV0ZG93blJlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3M=');

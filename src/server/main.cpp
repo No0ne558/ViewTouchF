@@ -154,6 +154,12 @@ int main(int argc, char* argv[]) {
 
     // ── Build and start gRPC server ──────────────────────────
     PosServiceImpl service(mgr, printer);
+    service.set_shutdown_callback([]() {
+        if (g_server) {
+            std::cerr << "\n[vt_daemon] shutdown requested via RPC\n";
+            g_server->Shutdown();
+        }
+    });
 
     grpc::ServerBuilder builder;
     builder.AddListeningPort(listen_addr, grpc::InsecureServerCredentials());

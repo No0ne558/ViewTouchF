@@ -343,6 +343,11 @@ message PhoneOrderCountResponse {
     int32 count = 1;
 }
 
+// ─── System ──────────────────────────────────────────────────
+
+message ShutdownRequest {}
+message ShutdownResponse { bool success = 1; }
+
 // ─── Service ─────────────────────────────────────────────────
 
 service PosService {
@@ -389,4 +394,7 @@ service PosService {
     rpc ListPhoneOrders   (ListPhoneOrdersRequest)   returns (ListPhoneOrdersResponse);
     rpc PhoneOrderAction  (PhoneOrderActionRequest)  returns (PhoneOrderActionResponse);
     rpc GetPhoneOrderCount(PhoneOrderCountRequest)   returns (PhoneOrderCountResponse);
+
+    // System
+    rpc Shutdown (ShutdownRequest) returns (ShutdownResponse);
 }

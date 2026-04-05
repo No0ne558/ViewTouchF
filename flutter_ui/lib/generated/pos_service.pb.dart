@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from proto/pos_service.proto.
+// Generated from pos_service.proto.
 
 // @dart = 3.3
 
@@ -4729,6 +4729,98 @@ class PhoneOrderCountResponse extends $pb.GeneratedMessage {
   $core.bool hasCount() => $_has(0);
   @$pb.TagNumber(1)
   void clearCount() => $_clearField(1);
+}
+
+class ShutdownRequest extends $pb.GeneratedMessage {
+  factory ShutdownRequest() => create();
+
+  ShutdownRequest._();
+
+  factory ShutdownRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ShutdownRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ShutdownRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'vt_proto'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ShutdownRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ShutdownRequest copyWith(void Function(ShutdownRequest) updates) =>
+      super.copyWith((message) => updates(message as ShutdownRequest))
+          as ShutdownRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ShutdownRequest create() => ShutdownRequest._();
+  @$core.override
+  ShutdownRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ShutdownRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ShutdownRequest>(create);
+  static ShutdownRequest? _defaultInstance;
+}
+
+class ShutdownResponse extends $pb.GeneratedMessage {
+  factory ShutdownResponse({
+    $core.bool? success,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    return result;
+  }
+
+  ShutdownResponse._();
+
+  factory ShutdownResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ShutdownResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ShutdownResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'vt_proto'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ShutdownResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ShutdownResponse copyWith(void Function(ShutdownResponse) updates) =>
+      super.copyWith((message) => updates(message as ShutdownResponse))
+          as ShutdownResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ShutdownResponse create() => ShutdownResponse._();
+  @$core.override
+  ShutdownResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ShutdownResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ShutdownResponse>(create);
+  static ShutdownResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
 }
 
 const $core.bool _omitFieldNames =

@@ -5,6 +5,7 @@
 #include "pos_service.grpc.pb.h"
 
 #include <grpcpp/grpcpp.h>
+#include <functional>
 #include <memory>
 #include <mutex>
 
@@ -138,6 +139,14 @@ public:
                                     const pb::PhoneOrderCountRequest* req,
                                     pb::PhoneOrderCountResponse* resp) override;
 
+    // ── System ───────────────────────────────────────────────
+    grpc::Status Shutdown(grpc::ServerContext* ctx,
+                          const pb::ShutdownRequest* req,
+                          pb::ShutdownResponse* resp) override;
+
+    /// Set the callback invoked when a Shutdown RPC is received.
+    void set_shutdown_callback(std::function<void()> cb) { shutdown_cb_ = std::move(cb); }
+
 private:
     /// Convert a core Ticket struct into the protobuf Ticket message.
     static void fill_proto_ticket(const core::Ticket& src, pb::Ticket* dst);
@@ -147,4 +156,5 @@ private:
 
     std::shared_ptr<core::PosManager>  mgr_;
     std::shared_ptr<core::CupsPrinter> printer_;
+    std::function<void()> shutdown_cb_;
 };

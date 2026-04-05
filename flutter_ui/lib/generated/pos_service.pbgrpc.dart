@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from proto/pos_service.proto.
+// Generated from pos_service.proto.
 
 // @dart = 3.3
 
@@ -238,6 +238,14 @@ class PosServiceClient extends $grpc.Client {
     return $createUnaryCall(_$getPhoneOrderCount, request, options: options);
   }
 
+  /// System
+  $grpc.ResponseFuture<$0.ShutdownResponse> shutdown(
+    $0.ShutdownRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$shutdown, request, options: options);
+  }
+
   // method descriptors
 
   static final _$getMenu =
@@ -380,6 +388,11 @@ class PosServiceClient extends $grpc.Client {
           '/vt_proto.PosService/GetPhoneOrderCount',
           ($0.PhoneOrderCountRequest value) => value.writeToBuffer(),
           $0.PhoneOrderCountResponse.fromBuffer);
+  static final _$shutdown =
+      $grpc.ClientMethod<$0.ShutdownRequest, $0.ShutdownResponse>(
+          '/vt_proto.PosService/Shutdown',
+          ($0.ShutdownRequest value) => value.writeToBuffer(),
+          $0.ShutdownResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('vt_proto.PosService')
@@ -622,6 +635,13 @@ abstract class PosServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.PhoneOrderCountRequest.fromBuffer(value),
         ($0.PhoneOrderCountResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.ShutdownRequest, $0.ShutdownResponse>(
+        'Shutdown',
+        shutdown_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.ShutdownRequest.fromBuffer(value),
+        ($0.ShutdownResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.GetMenuResponse> getMenu_Pre($grpc.ServiceCall $call,
@@ -863,4 +883,12 @@ abstract class PosServiceBase extends $grpc.Service {
 
   $async.Future<$0.PhoneOrderCountResponse> getPhoneOrderCount(
       $grpc.ServiceCall call, $0.PhoneOrderCountRequest request);
+
+  $async.Future<$0.ShutdownResponse> shutdown_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.ShutdownRequest> $request) async {
+    return shutdown($call, await $request);
+  }
+
+  $async.Future<$0.ShutdownResponse> shutdown(
+      $grpc.ServiceCall call, $0.ShutdownRequest request);
 }

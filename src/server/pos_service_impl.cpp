@@ -769,3 +769,19 @@ grpc::Status PosServiceImpl::GetPhoneOrderCount(grpc::ServerContext* /*ctx*/,
     resp->set_count(mgr_->phone_order_count());
     return grpc::Status::OK;
 }
+
+// ── System ───────────────────────────────────────────────────
+
+grpc::Status PosServiceImpl::Shutdown(grpc::ServerContext* /*ctx*/,
+                                      const pb::ShutdownRequest* /*req*/,
+                                      pb::ShutdownResponse* resp) {
+    resp->set_success(true);
+    if (shutdown_cb_) {
+        // Fire shutdown on a detached thread so the response is sent first.
+        std::thread([cb = shutdown_cb_]() {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            cb();
+        }).detach();
+    }
+    return grpc::Status::OK;
+}
