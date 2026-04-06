@@ -47,7 +47,7 @@ install_system_deps() {
     green "==> Detected distro: $distro"
 
     case "$distro" in
-        fedora|rhel|centos)
+        fedora*|rhel|centos)
             green "==> Installing system packages (dnf)..."
             sudo dnf install -y \
                 cmake gcc-c++ grpc-devel protobuf-devel protobuf-compiler \
