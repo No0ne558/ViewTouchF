@@ -256,6 +256,9 @@ run() {
     mkdir -p "$INSTALL_DIR"/{data,menu,logs,config,run} 2>/dev/null || true
     mkdir -p /tmp/viewtouch
 
+    # Remove stale socket from a previous run
+    rm -f "$INSTALL_DIR/run/pos.sock"
+
     green "==> Starting daemon..."
     "$daemon" --data-dir "$INSTALL_DIR" &
     local daemon_pid=$!

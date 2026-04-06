@@ -49,6 +49,13 @@ int main(int argc, char* argv[]) {
         listen_addr = "unix://" + data_dir + "/run/pos.sock";
     }
 
+    // Remove stale socket from a previous run / crash
+    {
+        std::string sock_path = data_dir + "/run/pos.sock";
+        std::error_code ec;
+        fs::remove(sock_path, ec);
+    }
+
     std::cout << "[vt_daemon] data directory: " << data_dir << "\n";
 
     // ── Bootstrap core objects ───────────────────────────────
