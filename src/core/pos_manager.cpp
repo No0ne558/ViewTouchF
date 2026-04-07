@@ -278,6 +278,18 @@ std::string PosManager::today_str() const {
 
 Ticket PosManager::new_ticket() {
     std::lock_guard lock(mu_);
+
+    // Reuse the most recent empty OPEN ticket if one exists.
+    Ticket* best = nullptr;
+    for (auto& [id, t] : tickets_) {
+        if (t.status == TicketStatus::OPEN && t.items.empty()) {
+            if (!best || t.created_at_ms > best->created_at_ms) {
+                best = &t;
+            }
+        }
+    }
+    if (best) return *best;
+
     ++ticket_seq_;
 
     Ticket t;

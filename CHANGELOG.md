@@ -5,6 +5,11 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.7] — 2026-04-06
+
+### Fixed
+- **No more orphaned empty tickets on restart**: `new_ticket()` now reuses the most recent empty OPEN ticket instead of always creating a new one — previously every app launch generated a new empty ticket that accumulated in the order history
+
 ## [2.7.6] — 2026-04-06
 
 ### Fixed
