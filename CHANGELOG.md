@@ -5,6 +5,13 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] — 2026-04-06
+
+### Fixed
+- **Deadlock-free shutdown**: daemon shutdown no longer triggers gRPC 1.48's abseil deadlock detector — signal handlers and the RPC shutdown callback now only set an `atomic<bool>` flag; a dedicated watcher thread polls the flag and calls `Shutdown()` from a clean thread context
+- **Stale socket on startup**: daemon removes leftover `/opt/viewtouchf/run/pos.sock` before binding so a previous crash or unclean exit doesn't block restart
+- **Fedora Asahi Remix detection**: `build.sh` now matches `fedora-asahi-remix` (and any other Fedora variant) with a `fedora*` glob in the distro case pattern
+
 ## [2.7.0] — 2026-04-04
 
 ### Added
