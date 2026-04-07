@@ -69,6 +69,12 @@ public:
     void        set_kitchen_printer_name(const std::string& n);
     void        set_kitchen_printer_enabled(bool e);
 
+    // ── Credit card fee ──────────────────────────────────────
+    int32_t     get_cc_fee_cents() const;
+    int32_t     get_cc_fee_bps() const;
+    void        set_cc_fee_cents(int32_t cents);
+    void        set_cc_fee_bps(int32_t bps);
+
     // ── Menu ─────────────────────────────────────────────────
     void                      load_menu(std::vector<MenuItem> items);
     std::vector<MenuItem>     get_menu() const;
@@ -153,6 +159,8 @@ private:
     bool                                           receipt_printer_enabled_ = false;
     std::string                                    kitchen_printer_name_;
     bool                                           kitchen_printer_enabled_ = false;
+    int32_t                                        cc_fee_cents_ = 0;
+    int32_t                                        cc_fee_bps_ = 0;
     std::vector<MenuItem>                          menu_;
     std::unordered_map<std::string, MenuItem>      menu_index_;
     std::unordered_map<std::string, Ticket>        tickets_;

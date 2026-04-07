@@ -199,6 +199,8 @@ message Settings {
     bool   receipt_printer_enabled = 4;
     string kitchen_printer_name   = 5;
     bool   kitchen_printer_enabled = 6;
+    int32  cc_fee_cents           = 7;  // flat dollar amount (in cents), 0 = disabled
+    int32  cc_fee_bps             = 8;  // percentage in basis points, 0 = disabled
 }
 
 message GetSettingsRequest {}

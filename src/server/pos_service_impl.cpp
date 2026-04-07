@@ -316,6 +316,8 @@ grpc::Status PosServiceImpl::GetSettings(grpc::ServerContext* /*ctx*/,
     s->set_receipt_printer_enabled(mgr_->get_receipt_printer_enabled());
     s->set_kitchen_printer_name(mgr_->get_kitchen_printer_name());
     s->set_kitchen_printer_enabled(mgr_->get_kitchen_printer_enabled());
+    s->set_cc_fee_cents(mgr_->get_cc_fee_cents());
+    s->set_cc_fee_bps(mgr_->get_cc_fee_bps());
     return grpc::Status::OK;
 }
 
@@ -335,6 +337,8 @@ grpc::Status PosServiceImpl::UpdateSettings(grpc::ServerContext* /*ctx*/,
     mgr_->set_receipt_printer_enabled(s.receipt_printer_enabled());
     mgr_->set_kitchen_printer_name(s.kitchen_printer_name());
     mgr_->set_kitchen_printer_enabled(s.kitchen_printer_enabled());
+    mgr_->set_cc_fee_cents(s.cc_fee_cents());
+    mgr_->set_cc_fee_bps(s.cc_fee_bps());
     // Echo back current settings.
     auto* out = resp->mutable_settings();
     out->set_restaurant_name(mgr_->get_restaurant_name());
@@ -343,6 +347,8 @@ grpc::Status PosServiceImpl::UpdateSettings(grpc::ServerContext* /*ctx*/,
     out->set_receipt_printer_enabled(mgr_->get_receipt_printer_enabled());
     out->set_kitchen_printer_name(mgr_->get_kitchen_printer_name());
     out->set_kitchen_printer_enabled(mgr_->get_kitchen_printer_enabled());
+    out->set_cc_fee_cents(mgr_->get_cc_fee_cents());
+    out->set_cc_fee_bps(mgr_->get_cc_fee_bps());
     return grpc::Status::OK;
 }
 

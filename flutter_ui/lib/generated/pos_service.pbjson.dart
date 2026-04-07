@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from pos_service.proto.
+// Generated from proto/pos_service.proto.
 
 // @dart = 3.3
 
@@ -682,6 +682,8 @@ const Settings$json = {
       '5': 8,
       '10': 'kitchenPrinterEnabled'
     },
+    {'1': 'cc_fee_cents', '3': 7, '4': 1, '5': 5, '10': 'ccFeeCents'},
+    {'1': 'cc_fee_bps', '3': 8, '4': 1, '5': 5, '10': 'ccFeeBps'},
   ],
 };
 
@@ -692,7 +694,8 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'IAEoCVIScmVjZWlwdFByaW50ZXJOYW1lEjYKF3JlY2VpcHRfcHJpbnRlcl9lbmFibGVkGAQgAS'
     'gIUhVyZWNlaXB0UHJpbnRlckVuYWJsZWQSMAoUa2l0Y2hlbl9wcmludGVyX25hbWUYBSABKAlS'
     'EmtpdGNoZW5QcmludGVyTmFtZRI2ChdraXRjaGVuX3ByaW50ZXJfZW5hYmxlZBgGIAEoCFIVa2'
-    'l0Y2hlblByaW50ZXJFbmFibGVk');
+    'l0Y2hlblByaW50ZXJFbmFibGVkEiAKDGNjX2ZlZV9jZW50cxgHIAEoBVIKY2NGZWVDZW50cxIc'
+    'CgpjY19mZWVfYnBzGAggASgFUghjY0ZlZUJwcw==');
 
 @$core.Deprecated('Use getSettingsRequestDescriptor instead')
 const GetSettingsRequest$json = {

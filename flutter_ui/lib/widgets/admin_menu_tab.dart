@@ -217,8 +217,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
         return _EditableModifierGroup(
           idCtrl: TextEditingController(text: g.id),
           nameCtrl: TextEditingController(text: g.name),
-          minSelect: g.minSelect,
-          maxSelect: g.maxSelect,
+          minSelectCtrl: TextEditingController(text: '${g.minSelect}'),
+          maxSelectCtrl: TextEditingController(text: '${g.maxSelect}'),
           modifiers: g.modifiers.map((m) {
             return _EditableModifier(
               idCtrl: TextEditingController(text: m.id),
@@ -247,6 +247,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
     for (final g in _groups) {
       g.idCtrl.dispose();
       g.nameCtrl.dispose();
+      g.minSelectCtrl.dispose();
+      g.maxSelectCtrl.dispose();
       for (final m in g.modifiers) {
         m.idCtrl.dispose();
         m.nameCtrl.dispose();
@@ -261,8 +263,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
       _groups.add(_EditableModifierGroup(
         idCtrl: TextEditingController(text: _uniqueId('MG')),
         nameCtrl: TextEditingController(),
-        minSelect: 0,
-        maxSelect: 0,
+        minSelectCtrl: TextEditingController(text: '0'),
+        maxSelectCtrl: TextEditingController(text: '0'),
         modifiers: [],
       ));
     });
@@ -273,6 +275,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
       final g = _groups.removeAt(index);
       g.idCtrl.dispose();
       g.nameCtrl.dispose();
+      g.minSelectCtrl.dispose();
+      g.maxSelectCtrl.dispose();
       for (final m in g.modifiers) {
         m.idCtrl.dispose();
         m.nameCtrl.dispose();
@@ -314,8 +318,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
       final group = ModifierGroup()
         ..id = g.idCtrl.text.trim()
         ..name = g.nameCtrl.text.trim()
-        ..minSelect = g.minSelect
-        ..maxSelect = g.maxSelect;
+        ..minSelect = int.tryParse(g.minSelectCtrl.text) ?? 0
+        ..maxSelect = int.tryParse(g.maxSelectCtrl.text) ?? 0;
       for (final m in g.modifiers) {
         final modPrice = double.tryParse(m.priceCtrl.text) ?? 0;
         group.modifiers.add(Modifier()
@@ -490,7 +494,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 SizedBox(
                   width: 70,
                   child: TouchTextField(
-                    controller: TextEditingController(text: '${g.minSelect}'),
+                    controller: g.minSelectCtrl,
                     dialogTitle: 'Min Select',
                     numericOnly: true,
                     decoration: const InputDecoration(
@@ -504,7 +508,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 SizedBox(
                   width: 70,
                   child: TouchTextField(
-                    controller: TextEditingController(text: '${g.maxSelect}'),
+                    controller: g.maxSelectCtrl,
                     dialogTitle: 'Max Select',
                     numericOnly: true,
                     decoration: const InputDecoration(
@@ -629,15 +633,15 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
 class _EditableModifierGroup {
   TextEditingController idCtrl;
   TextEditingController nameCtrl;
-  int minSelect;
-  int maxSelect;
+  TextEditingController minSelectCtrl;
+  TextEditingController maxSelectCtrl;
   List<_EditableModifier> modifiers;
 
   _EditableModifierGroup({
     required this.idCtrl,
     required this.nameCtrl,
-    required this.minSelect,
-    required this.maxSelect,
+    required this.minSelectCtrl,
+    required this.maxSelectCtrl,
     required this.modifiers,
   });
 }

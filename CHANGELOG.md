@@ -5,6 +5,15 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3] — 2026-04-06
+
+### Added
+- **Credit Card Fee setting**: new "Credit Card Fee" section in Admin Settings with two configurable fields — flat dollar amount and percentage; values persist to the database via new `cc_fee_cents` and `cc_fee_bps` proto fields
+- **Credit Card Fee in Checkout**: orange "Add Credit Card Fee" button in the Checkout dialog adds the configured fee to the ticket total; fee is displayed separately and can be removed before making a payment; change-due calculation correctly excludes the CC fee portion
+
+### Fixed
+- **Modifier min/max not saving**: the admin menu editor created throwaway `TextEditingController` instances on every rebuild, so user edits to min/max fields were silently discarded; now uses persistent controllers that survive widget rebuilds
+
 ## [2.7.2] — 2026-04-06
 
 ### Fixed

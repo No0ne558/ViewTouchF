@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from pos_service.proto.
+// Generated from proto/pos_service.proto.
 
 // @dart = 3.3
 

@@ -16,6 +16,8 @@ class AdminSettingsTab extends StatefulWidget {
 class _AdminSettingsTabState extends State<AdminSettingsTab> {
   final _nameCtrl = TextEditingController();
   final _taxCtrl = TextEditingController();
+  final _ccFeeCentsCtrl = TextEditingController();
+  final _ccFeePctCtrl = TextEditingController();
   bool _loading = true;
   bool _saving = false;
 
@@ -37,6 +39,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
   void dispose() {
     _nameCtrl.dispose();
     _taxCtrl.dispose();
+    _ccFeeCentsCtrl.dispose();
+    _ccFeePctCtrl.dispose();
     super.dispose();
   }
 
@@ -54,6 +58,12 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       _receiptPrinterEnabled = s.receiptPrinterEnabled;
       _kitchenPrinterName = s.kitchenPrinterName;
       _kitchenPrinterEnabled = s.kitchenPrinterEnabled;
+      _ccFeeCentsCtrl.text = s.ccFeeCents > 0
+          ? (s.ccFeeCents / 100.0).toStringAsFixed(2)
+          : '';
+      _ccFeePctCtrl.text = s.ccFeeBps > 0
+          ? (s.ccFeeBps / 100.0).toStringAsFixed(2)
+          : '';
       setState(() => _loading = false);
     } catch (e) {
       setState(() => _loading = false);
@@ -80,6 +90,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     try {
       final taxPercent = double.tryParse(_taxCtrl.text) ?? 0;
       final taxBps = (taxPercent * 100).round();
+      final ccDollars = double.tryParse(_ccFeeCentsCtrl.text) ?? 0;
+      final ccCents = (ccDollars * 100).round();
+      final ccPct = double.tryParse(_ccFeePctCtrl.text) ?? 0;
+      final ccBps = (ccPct * 100).round();
 
       final req = UpdateSettingsRequest()
         ..settings = (Settings()
@@ -88,7 +102,9 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
           ..receiptPrinterName = _receiptPrinterName
           ..receiptPrinterEnabled = _receiptPrinterEnabled
           ..kitchenPrinterName = _kitchenPrinterName
-          ..kitchenPrinterEnabled = _kitchenPrinterEnabled);
+          ..kitchenPrinterEnabled = _kitchenPrinterEnabled
+          ..ccFeeCents = ccCents
+          ..ccFeeBps = ccBps);
 
       await PosClient.instance.stub.updateSettings(req);
       _showSnack('Settings saved');
@@ -235,6 +251,49 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 prefixIcon: Icon(Icons.percent),
                 hintText: '8.25',
               ),
+            ),
+            const SizedBox(height: 32),
+
+            // ── Credit Card Fee Section ──
+            Text('Credit Card Fee',
+                style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            const Text(
+              'Set a flat dollar amount, a percentage, or both. '
+              'The fee is added to the total when the customer pays by card.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TouchTextField(
+                    controller: _ccFeeCentsCtrl,
+                    dialogTitle: 'CC Fee (\$)',
+                    numericOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Flat Fee (\$)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.attach_money),
+                      hintText: '0.50',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TouchTextField(
+                    controller: _ccFeePctCtrl,
+                    dialogTitle: 'CC Fee (%)',
+                    numericOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Percentage (%)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.percent),
+                      hintText: '3.00',
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 32),
 

@@ -282,13 +282,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _showError(resp.error);
         return;
       }
-      // Show change due if any.
-      if (resp.ticket.changeDue > 0) {
+      // Show change due if any (suppress the CC fee portion).
+      final realChange = resp.ticket.changeDue - result.ccFeeAmount;
+      if (realChange > 0) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Change due: \$${(resp.ticket.changeDue / 100).toStringAsFixed(2)}'),
+                  'Change due: \$${(realChange / 100).toStringAsFixed(2)}'),
               backgroundColor: Colors.green.shade700,
               duration: const Duration(seconds: 4),
             ),
@@ -839,7 +840,8 @@ class _PaymentLeg {
 
 class _CheckoutResult {
   final List<_PaymentLeg> payments;
-  _CheckoutResult(this.payments);
+  final int ccFeeAmount;
+  _CheckoutResult(this.payments, {this.ccFeeAmount = 0});
 }
 
 class _CheckoutDialog extends StatefulWidget {
@@ -853,8 +855,40 @@ class _CheckoutDialog extends StatefulWidget {
 class _CheckoutDialogState extends State<_CheckoutDialog> {
   String _input = '';
   final List<_PaymentLeg> _payments = [];
+  bool _ccFeeApplied = false;
+  int _ccFeeCents = 0;  // flat amount
+  int _ccFeeBps = 0;    // percentage in basis points
+  int _ccFeeAmount = 0; // computed fee for this ticket
 
-  int get _totalDue => widget.ticket.total;
+  @override
+  void initState() {
+    super.initState();
+    _loadCcFee();
+  }
+
+  Future<void> _loadCcFee() async {
+    try {
+      final resp = await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      if (!mounted) return;
+      setState(() {
+        _ccFeeCents = resp.settings.ccFeeCents;
+        _ccFeeBps = resp.settings.ccFeeBps;
+      });
+    } catch (_) {}
+  }
+
+  bool get _hasCcFee => _ccFeeCents > 0 || _ccFeeBps > 0;
+
+  int _computeCcFee() {
+    int fee = _ccFeeCents;
+    if (_ccFeeBps > 0) {
+      fee += (_totalBase * _ccFeeBps / 10000).round();
+    }
+    return fee;
+  }
+
+  int get _totalBase => widget.ticket.total;
+  int get _totalDue => _totalBase + _ccFeeAmount;
   int get _paidSoFar => _payments.fold(0, (s, p) => s + p.amount);
   int get _remaining => _totalDue - _paidSoFar;
 
@@ -904,8 +938,24 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     });
     // If fully paid, finalize.
     if (_paidSoFar >= _totalDue) {
-      Navigator.pop(context, _CheckoutResult(_payments));
+      Navigator.pop(context, _CheckoutResult(_payments, ccFeeAmount: _ccFeeAmount));
     }
+  }
+
+  void _applyCcFee() {
+    if (_ccFeeApplied) return;
+    setState(() {
+      _ccFeeApplied = true;
+      _ccFeeAmount = _computeCcFee();
+    });
+  }
+
+  void _removeCcFee() {
+    if (!_ccFeeApplied) return;
+    setState(() {
+      _ccFeeApplied = false;
+      _ccFeeAmount = 0;
+    });
   }
 
   void _undoLastPayment() {
@@ -932,11 +982,39 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Total:', style: TextStyle(fontSize: 22)),
-                  Text(_money(_totalDue),
+                  Text(_money(_totalBase),
                       style: const TextStyle(
                           fontSize: 32, fontWeight: FontWeight.bold)),
                 ],
               ),
+              if (_ccFeeApplied) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(children: [
+                      const Text('CC Fee:', style: TextStyle(fontSize: 16, color: Colors.orange)),
+                      const SizedBox(width: 4),
+                      if (_payments.isEmpty)
+                        InkWell(
+                          onTap: _removeCcFee,
+                          child: const Icon(Icons.close, size: 16, color: Colors.red),
+                        ),
+                    ]),
+                    Text('+${_money(_ccFeeAmount)}',
+                        style: TextStyle(fontSize: 16, color: Colors.orange.shade700)),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('New Total:',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(_money(_totalDue),
+                        style: const TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ],
               if (_payments.isNotEmpty) ...[
                 const Divider(),
                 // Show partial payments made.
@@ -997,6 +1075,24 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
               ),
               const SizedBox(height: 8),
               // Pay buttons
+              if (_hasCcFee && !_ccFeeApplied)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: _remaining > 0 ? _applyCcFee : null,
+                      icon: const Icon(Icons.credit_score, size: 24),
+                      label: Text(
+                        'Add Credit Card Fee (+${_money(_computeCcFee())})',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      style: FilledButton.styleFrom(
+                          backgroundColor: Colors.orange.shade700),
+                    ),
+                  ),
+                ),
               Row(
                 children: [
                   Expanded(

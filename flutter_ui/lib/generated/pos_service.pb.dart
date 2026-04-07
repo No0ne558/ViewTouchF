@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from pos_service.proto.
+// Generated from proto/pos_service.proto.
 
 // @dart = 3.3
 
@@ -2210,6 +2210,8 @@ class Settings extends $pb.GeneratedMessage {
     $core.bool? receiptPrinterEnabled,
     $core.String? kitchenPrinterName,
     $core.bool? kitchenPrinterEnabled,
+    $core.int? ccFeeCents,
+    $core.int? ccFeeBps,
   }) {
     final result = create();
     if (restaurantName != null) result.restaurantName = restaurantName;
@@ -2222,6 +2224,8 @@ class Settings extends $pb.GeneratedMessage {
       result.kitchenPrinterName = kitchenPrinterName;
     if (kitchenPrinterEnabled != null)
       result.kitchenPrinterEnabled = kitchenPrinterEnabled;
+    if (ccFeeCents != null) result.ccFeeCents = ccFeeCents;
+    if (ccFeeBps != null) result.ccFeeBps = ccFeeBps;
     return result;
   }
 
@@ -2244,6 +2248,8 @@ class Settings extends $pb.GeneratedMessage {
     ..aOB(4, _omitFieldNames ? '' : 'receiptPrinterEnabled')
     ..aOS(5, _omitFieldNames ? '' : 'kitchenPrinterName')
     ..aOB(6, _omitFieldNames ? '' : 'kitchenPrinterEnabled')
+    ..aI(7, _omitFieldNames ? '' : 'ccFeeCents')
+    ..aI(8, _omitFieldNames ? '' : 'ccFeeBps')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2317,6 +2323,24 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasKitchenPrinterEnabled() => $_has(5);
   @$pb.TagNumber(6)
   void clearKitchenPrinterEnabled() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.int get ccFeeCents => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set ccFeeCents($core.int value) => $_setSignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasCcFeeCents() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearCcFeeCents() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.int get ccFeeBps => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set ccFeeBps($core.int value) => $_setSignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasCcFeeBps() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearCcFeeBps() => $_clearField(8);
 }
 
 class GetSettingsRequest extends $pb.GeneratedMessage {

@@ -62,6 +62,10 @@ void PosManager::load_from_database() {
     receipt_printer_enabled_ = db_->load_setting("receipt_printer_enabled") == "1";
     kitchen_printer_name_    = db_->load_setting("kitchen_printer_name");
     kitchen_printer_enabled_ = db_->load_setting("kitchen_printer_enabled") == "1";
+    auto saved_cc_cents = db_->load_setting("cc_fee_cents");
+    if (!saved_cc_cents.empty()) cc_fee_cents_ = std::stoi(saved_cc_cents);
+    auto saved_cc_bps = db_->load_setting("cc_fee_bps");
+    if (!saved_cc_bps.empty()) cc_fee_bps_ = std::stoi(saved_cc_bps);
 
     std::cout << "[vt_daemon] restored " << tickets_.size() << " tickets, "
               << phone_orders_.size() << " phone orders, "
@@ -129,6 +133,27 @@ void PosManager::set_kitchen_printer_enabled(bool e) {
     std::lock_guard lock(mu_);
     kitchen_printer_enabled_ = e;
     if (db_) db_->save_setting("kitchen_printer_enabled", e ? "1" : "0");
+}
+
+// ── Credit card fee ──────────────────────────────────────────
+
+int32_t PosManager::get_cc_fee_cents() const {
+    std::lock_guard lock(mu_);
+    return cc_fee_cents_;
+}
+int32_t PosManager::get_cc_fee_bps() const {
+    std::lock_guard lock(mu_);
+    return cc_fee_bps_;
+}
+void PosManager::set_cc_fee_cents(int32_t cents) {
+    std::lock_guard lock(mu_);
+    cc_fee_cents_ = cents;
+    if (db_) db_->save_setting("cc_fee_cents", std::to_string(cents));
+}
+void PosManager::set_cc_fee_bps(int32_t bps) {
+    std::lock_guard lock(mu_);
+    cc_fee_bps_ = bps;
+    if (db_) db_->save_setting("cc_fee_bps", std::to_string(bps));
 }
 
 // ── Menu ─────────────────────────────────────────────────────
