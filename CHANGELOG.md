@@ -5,6 +5,16 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.2] — 2026-04-06
+
+### Fixed
+- **Menu delete persistence**: deleting a menu item now reliably persists across restarts — all menu CRUD methods save to the database *before* updating in-memory state so a failed write never causes DB/memory desync
+- **Duplicate modifier IDs**: demo menu data reused modifier IDs across items (e.g. MOD01 in both Classic Burger and Cheese Burger), causing the SQLite PRIMARY KEY to silently drop duplicates; each item now has unique modifier IDs
+- **Flutter modifier ID collisions**: the admin menu editor's sequential counters (`MG1`, `MOD1`, …) reset every session, guaranteeing collisions after the first item; now generates random hex IDs (e.g. `MOD_a3f2b1c0`)
+- **Demo re-seeding on empty menu**: deleting all menu items caused the demo to re-seed on restart; now uses a persistent `menu_seeded` database flag — once set, the demo is never re-seeded
+- **RAII transaction guard**: all transactional database methods (`save_menu`, `save_ticket`, `save_report`, migrations) now use an RAII guard that auto-rolls-back on exception, preventing stuck open transactions
+- **Menu RPC error reporting**: `AddMenuItem`, `UpdateMenuItem`, and `DeleteMenuItem` now catch exceptions and return `INTERNAL` with the actual error message instead of gRPC's generic `UNKNOWN`
+
 ## [2.7.1] — 2026-04-06
 
 ### Fixed
