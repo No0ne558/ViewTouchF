@@ -5,20 +5,23 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include <atomic>
+#include <chrono>
 #include <csignal>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <thread>
 #include <unistd.h>
 
 namespace {
     std::unique_ptr<grpc::Server> g_server;
+    std::atomic<bool> g_shutdown_requested{false};
 
     void signal_handler(int /*sig*/) {
-        if (g_server) {
-            std::cerr << "\n[vt_daemon] shutting down...\n";
-            g_server->Shutdown();
-        }
+        // Only set the flag — never call Shutdown() from a signal handler
+        // because gRPC 1.48's abseil mutex is not async-signal-safe.
+        g_shutdown_requested.store(true, std::memory_order_relaxed);
     }
 }  // namespace
 
@@ -164,10 +167,7 @@ int main(int argc, char* argv[]) {
     PosServiceImpl service(mgr, printer);
     service.set_shutdown_callback([]() {
         std::cerr << "\n[vt_daemon] shutdown requested via RPC\n";
-        // Raise SIGTERM to trigger the normal signal_handler path.
-        // Calling g_server->Shutdown() from a gRPC handler thread
-        // triggers abseil's deadlock detector in gRPC 1.48.
-        kill(getpid(), SIGTERM);
+        g_shutdown_requested.store(true, std::memory_order_relaxed);
     });
 
     grpc::ServerBuilder builder;
@@ -190,6 +190,18 @@ int main(int argc, char* argv[]) {
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
 
+    // Dedicated thread polls the atomic flag and calls Shutdown()
+    // from a clean context — avoids the abseil deadlock in gRPC 1.48
+    // that occurs when Shutdown() is called from a signal handler
+    // or from within a gRPC handler thread.
+    std::thread shutdown_watcher([&]() {
+        while (!g_shutdown_requested.load(std::memory_order_relaxed))
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::cerr << "[vt_daemon] shutting down...\n";
+        if (g_server) g_server->Shutdown();
+    });
+
     g_server->Wait();
+    shutdown_watcher.join();
     return 0;
 }
