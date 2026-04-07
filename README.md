@@ -33,6 +33,23 @@ ViewTouchF is a full-stack POS system designed for food trucks, high-volume rest
 | **Admin** | Menu CRUD with modifier groups, tax rate, printer discovery & config |
 
 ---
+ 
+---
+
+## What's New (v2.8.0 — Recent)
+
+### Highlights
+
+- **Credit Card Fee**: New admin setting for a flat fee and percentage; the fee is applied at checkout, flows through the backend (stored on tickets), and is taxed. The UI displays the raw fee while the charged amount includes tax; receipts show a `CC Fee` line and a `GRAND` total.
+- **Reports (Accounting)**: Reports now include **Subtotal**, **CC Fees**, and **Total Collected** summary cards; the summary card order was adjusted for accounting clarity. Item sales have been moved out of the main Reports tab and into the new *Menu Productivity* tab.
+- **Menu Productivity**: New admin tab that ranks most-sold items with Daily / Weekly / Monthly / Yearly / Custom ranges. Sort by quantity (default) or by revenue; includes rank, item name, qty sold, and revenue columns.
+- **End of Day / Z-Report**: `end_day()` now clears empty OPEN tickets (prevents phantom open checks). Z-Report now displays Subtotal, CC Fees, and Total Collected.
+- **Database & Proto**: DB migration **v3** adds `subtotal_cents`, `cc_fee_total_cents`, and `total_collected_cents` to archived reports. Protobufs and Dart gRPC stubs were regenerated to include new report and CC fee fields.
+- **Misc fixes**: Reuse of empty OPEN tickets on new ticket creation, modifier min/max persistence fixes, and correct change-due calculation that accounts for CC fees.
+
+For full per-release details, see [CHANGELOG.md](CHANGELOG.md).
+
+---
 
 ## Screenshots
 
