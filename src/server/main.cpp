@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <unistd.h>
 
 namespace {
     std::unique_ptr<grpc::Server> g_server;
@@ -162,10 +163,11 @@ int main(int argc, char* argv[]) {
     // ── Build and start gRPC server ──────────────────────────
     PosServiceImpl service(mgr, printer);
     service.set_shutdown_callback([]() {
-        if (g_server) {
-            std::cerr << "\n[vt_daemon] shutdown requested via RPC\n";
-            g_server->Shutdown();
-        }
+        std::cerr << "\n[vt_daemon] shutdown requested via RPC\n";
+        // Raise SIGTERM to trigger the normal signal_handler path.
+        // Calling g_server->Shutdown() from a gRPC handler thread
+        // triggers abseil's deadlock detector in gRPC 1.48.
+        kill(getpid(), SIGTERM);
     });
 
     grpc::ServerBuilder builder;
