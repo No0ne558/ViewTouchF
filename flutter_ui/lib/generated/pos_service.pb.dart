@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from pos_service.proto.
+// Generated from proto/pos_service.proto.
 
 // @dart = 3.3
 
@@ -3322,6 +3322,9 @@ class DailyReport extends $pb.GeneratedMessage {
     $core.int? compedTotalCents,
     $core.int? refundedTotalCents,
     $core.int? netRevenueCents,
+    $core.int? ccFeeTotalCents,
+    $core.int? totalCollectedCents,
+    $core.int? subtotalCents,
   }) {
     final result = create();
     if (date != null) result.date = date;
@@ -3340,6 +3343,10 @@ class DailyReport extends $pb.GeneratedMessage {
     if (refundedTotalCents != null)
       result.refundedTotalCents = refundedTotalCents;
     if (netRevenueCents != null) result.netRevenueCents = netRevenueCents;
+    if (ccFeeTotalCents != null) result.ccFeeTotalCents = ccFeeTotalCents;
+    if (totalCollectedCents != null)
+      result.totalCollectedCents = totalCollectedCents;
+    if (subtotalCents != null) result.subtotalCents = subtotalCents;
     return result;
   }
 
@@ -3372,6 +3379,9 @@ class DailyReport extends $pb.GeneratedMessage {
     ..aI(13, _omitFieldNames ? '' : 'compedTotalCents')
     ..aI(14, _omitFieldNames ? '' : 'refundedTotalCents')
     ..aI(15, _omitFieldNames ? '' : 'netRevenueCents')
+    ..aI(16, _omitFieldNames ? '' : 'ccFeeTotalCents')
+    ..aI(17, _omitFieldNames ? '' : 'totalCollectedCents')
+    ..aI(18, _omitFieldNames ? '' : 'subtotalCents')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3521,6 +3531,33 @@ class DailyReport extends $pb.GeneratedMessage {
   $core.bool hasNetRevenueCents() => $_has(14);
   @$pb.TagNumber(15)
   void clearNetRevenueCents() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.int get ccFeeTotalCents => $_getIZ(15);
+  @$pb.TagNumber(16)
+  set ccFeeTotalCents($core.int value) => $_setSignedInt32(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasCcFeeTotalCents() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearCcFeeTotalCents() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.int get totalCollectedCents => $_getIZ(16);
+  @$pb.TagNumber(17)
+  set totalCollectedCents($core.int value) => $_setSignedInt32(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasTotalCollectedCents() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearTotalCollectedCents() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.int get subtotalCents => $_getIZ(17);
+  @$pb.TagNumber(18)
+  set subtotalCents($core.int value) => $_setSignedInt32(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasSubtotalCents() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearSubtotalCents() => $_clearField(18);
 }
 
 class DailyReportRequest extends $pb.GeneratedMessage {

@@ -441,6 +441,9 @@ static void fill_proto_report(const core::DailyReport& src, pb::DailyReport* dst
     dst->set_comped_total_cents(src.comped_total_cents);
     dst->set_refunded_total_cents(src.refunded_total_cents);
     dst->set_net_revenue_cents(src.net_revenue_cents);
+    dst->set_cc_fee_total_cents(src.cc_fee_total_cents);
+    dst->set_total_collected_cents(src.total_collected_cents);
+    dst->set_subtotal_cents(src.subtotal_cents);
     for (const auto& e : src.item_sales) {
         auto* pe = dst->add_item_sales();
         pe->set_item_name(e.item_name);

@@ -262,6 +262,9 @@ message DailyReport {
     int32  comped_total_cents      = 13; // total comped value
     int32  refunded_total_cents    = 14; // total refunded value
     int32  net_revenue_cents       = 15; // revenue - refunds - comps
+    int32  cc_fee_total_cents      = 16; // total CC fees collected
+    int32  total_collected_cents   = 17; // grand total collected (net + cc fees)
+    int32  subtotal_cents          = 18; // pre-tax subtotal
 }
 
 message DailyReportRequest { string date = 1; }  // empty = today

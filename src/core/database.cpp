@@ -115,7 +115,7 @@ void Database::exec(const char* sql) {
 // Migrations run inside a transaction; if one fails the DB is
 // left at the last successful version.
 
-static constexpr int kLatestVersion = 2;
+static constexpr int kLatestVersion = 3;
 
 int Database::get_user_version() {
     sqlite3_stmt* stmt = nullptr;
@@ -147,7 +147,8 @@ void Database::migrate() {
         switch (v) {
             case 1: migrate_to_1(); break;
             case 2: migrate_to_2(); break;
-            // case 3: migrate_to_3(); break;
+            case 3: migrate_to_3(); break;
+            // case 4: migrate_to_4(); break;
             default:
                 throw std::runtime_error(
                     "Unknown migration version " + std::to_string(v));
@@ -276,6 +277,13 @@ void Database::migrate_to_1() {
 // Migration 2 — add cc_fee_cents column to tickets (v2.7.3).
 void Database::migrate_to_2() {
     exec("ALTER TABLE tickets ADD COLUMN cc_fee_cents INTEGER NOT NULL DEFAULT 0");
+}
+
+// Migration 3 — add accounting fields to archived_reports (v2.8.0).
+void Database::migrate_to_3() {
+    exec("ALTER TABLE archived_reports ADD COLUMN cc_fee_total_cents INTEGER NOT NULL DEFAULT 0");
+    exec("ALTER TABLE archived_reports ADD COLUMN total_collected_cents INTEGER NOT NULL DEFAULT 0");
+    exec("ALTER TABLE archived_reports ADD COLUMN subtotal_cents INTEGER NOT NULL DEFAULT 0");
 }
 
 // ── Sequences ────────────────────────────────────────────────
@@ -721,8 +729,9 @@ void Database::save_report(const DailyReport& rpt) {
         "INSERT INTO archived_reports(date,total_tickets,total_revenue_cents,"
         "total_tax_cents,cash_count,card_count,voided_count,comped_count,"
         "refunded_count,cash_total_cents,card_total_cents,comped_total_cents,"
-        "refunded_total_cents,net_revenue_cents) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "refunded_total_cents,net_revenue_cents,cc_fee_total_cents,"
+        "total_collected_cents,subtotal_cents) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(date) DO UPDATE SET "
         "total_tickets=excluded.total_tickets, total_revenue_cents=excluded.total_revenue_cents, "
         "total_tax_cents=excluded.total_tax_cents, cash_count=excluded.cash_count, "
@@ -730,7 +739,8 @@ void Database::save_report(const DailyReport& rpt) {
         "comped_count=excluded.comped_count, refunded_count=excluded.refunded_count, "
         "cash_total_cents=excluded.cash_total_cents, card_total_cents=excluded.card_total_cents, "
         "comped_total_cents=excluded.comped_total_cents, refunded_total_cents=excluded.refunded_total_cents, "
-        "net_revenue_cents=excluded.net_revenue_cents",
+        "net_revenue_cents=excluded.net_revenue_cents, cc_fee_total_cents=excluded.cc_fee_total_cents, "
+        "total_collected_cents=excluded.total_collected_cents, subtotal_cents=excluded.subtotal_cents",
         -1, &stmt, nullptr);
     sqlite3_bind_text(stmt,  1, rpt.date.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt,   2, rpt.total_tickets);
@@ -746,6 +756,9 @@ void Database::save_report(const DailyReport& rpt) {
     sqlite3_bind_int(stmt,  12, rpt.comped_total_cents);
     sqlite3_bind_int(stmt,  13, rpt.refunded_total_cents);
     sqlite3_bind_int(stmt,  14, rpt.net_revenue_cents);
+    sqlite3_bind_int(stmt,  15, rpt.cc_fee_total_cents);
+    sqlite3_bind_int(stmt,  16, rpt.total_collected_cents);
+    sqlite3_bind_int(stmt,  17, rpt.subtotal_cents);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
@@ -782,7 +795,8 @@ std::vector<DailyReport> Database::load_all_reports() {
         "SELECT date,total_tickets,total_revenue_cents,total_tax_cents,"
         "cash_count,card_count,voided_count,comped_count,refunded_count,"
         "cash_total_cents,card_total_cents,comped_total_cents,"
-        "refunded_total_cents,net_revenue_cents "
+        "refunded_total_cents,net_revenue_cents,cc_fee_total_cents,"
+        "total_collected_cents,subtotal_cents "
         "FROM archived_reports ORDER BY date DESC", -1, &stmt, nullptr);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -801,6 +815,9 @@ std::vector<DailyReport> Database::load_all_reports() {
         r.comped_total_cents    = sqlite3_column_int(stmt, 11);
         r.refunded_total_cents  = sqlite3_column_int(stmt, 12);
         r.net_revenue_cents     = sqlite3_column_int(stmt, 13);
+        r.cc_fee_total_cents    = sqlite3_column_int(stmt, 14);
+        r.total_collected_cents = sqlite3_column_int(stmt, 15);
+        r.subtotal_cents        = sqlite3_column_int(stmt, 16);
 
         reports.push_back(std::move(r));
     }

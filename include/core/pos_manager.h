@@ -37,6 +37,9 @@ struct DailyReport {
     int32_t     comped_total_cents = 0;
     int32_t     refunded_total_cents = 0;
     int32_t     net_revenue_cents  = 0;
+    int32_t     cc_fee_total_cents = 0;   // total CC fees collected
+    int32_t     total_collected_cents = 0; // grand total actually collected (revenue + cc fees)
+    int32_t     subtotal_cents     = 0;   // pre-tax subtotal
     std::vector<ItemSalesEntry> item_sales;
 };
 

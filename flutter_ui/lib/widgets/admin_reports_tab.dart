@@ -252,8 +252,6 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 20),
           _buildSummaryCards(r),
-          const SizedBox(height: 28),
-          _buildItemTable(r),
         ],
       ),
     );
@@ -313,14 +311,24 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       runSpacing: 14,
       children: [
         _SummaryCard(
-            label: 'Net Revenue', value: _money(r.netRevenueCents),
-            icon: Icons.attach_money),
+            label: 'Subtotal', value: _money(r.subtotalCents),
+            icon: Icons.receipt),
+        _SummaryCard(
+            label: 'Tax', value: _money(r.totalTaxCents),
+            icon: Icons.receipt_long),
         _SummaryCard(
             label: 'Gross Revenue', value: _money(r.totalRevenueCents),
             icon: Icons.monetization_on_outlined),
         _SummaryCard(
-            label: 'Tax', value: _money(r.totalTaxCents),
-            icon: Icons.receipt_long),
+            label: 'CC Fees', value: _money(r.ccFeeTotalCents),
+            icon: Icons.credit_score,
+            color: r.ccFeeTotalCents > 0 ? Colors.blue : null),
+        _SummaryCard(
+            label: 'Net Revenue', value: _money(r.netRevenueCents),
+            icon: Icons.attach_money),
+        _SummaryCard(
+            label: 'Total Collected', value: _money(r.totalCollectedCents),
+            icon: Icons.account_balance_wallet),
         _SummaryCard(
             label: 'Cash', value: _money(r.cashTotalCents),
             icon: Icons.payments),
@@ -346,31 +354,6 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
     );
   }
 
-  Widget _buildItemTable(DailyReport r) {
-    if (r.itemSales.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Item Sales',
-            style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 12),
-        DataTable(
-          columns: const [
-            DataColumn(label: Text('Item')),
-            DataColumn(label: Text('Qty'), numeric: true),
-            DataColumn(label: Text('Revenue'), numeric: true),
-          ],
-          rows: r.itemSales.map((e) {
-            return DataRow(cells: [
-              DataCell(Text(e.itemName)),
-              DataCell(Text('${e.quantitySold}')),
-              DataCell(Text(_money(e.revenueCents))),
-            ]);
-          }).toList(),
-        ),
-      ],
-    );
-  }
 }
 
 class _SummaryCard extends StatelessWidget {

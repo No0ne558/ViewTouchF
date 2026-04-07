@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from pos_service.proto.
+// Generated from proto/pos_service.proto.
 
 // @dart = 3.3
 
@@ -1017,6 +1017,21 @@ const DailyReport$json = {
       '5': 5,
       '10': 'netRevenueCents'
     },
+    {
+      '1': 'cc_fee_total_cents',
+      '3': 16,
+      '4': 1,
+      '5': 5,
+      '10': 'ccFeeTotalCents'
+    },
+    {
+      '1': 'total_collected_cents',
+      '3': 17,
+      '4': 1,
+      '5': 5,
+      '10': 'totalCollectedCents'
+    },
+    {'1': 'subtotal_cents', '3': 18, '4': 1, '5': 5, '10': 'subtotalCents'},
   ],
 };
 
@@ -1032,8 +1047,10 @@ final $typed_data.Uint8List dailyReportDescriptor = $convert.base64Decode(
     'oQY2FzaF90b3RhbF9jZW50cxgLIAEoBVIOY2FzaFRvdGFsQ2VudHMSKAoQY2FyZF90b3RhbF9j'
     'ZW50cxgMIAEoBVIOY2FyZFRvdGFsQ2VudHMSLAoSY29tcGVkX3RvdGFsX2NlbnRzGA0gASgFUh'
     'Bjb21wZWRUb3RhbENlbnRzEjAKFHJlZnVuZGVkX3RvdGFsX2NlbnRzGA4gASgFUhJyZWZ1bmRl'
-    'ZFRvdGFsQ2VudHMSKgoRbmV0X3JldmVudWVfY2VudHMYDyABKAVSD25ldFJldmVudWVDZW50cw'
-    '==');
+    'ZFRvdGFsQ2VudHMSKgoRbmV0X3JldmVudWVfY2VudHMYDyABKAVSD25ldFJldmVudWVDZW50cx'
+    'IrChJjY19mZWVfdG90YWxfY2VudHMYECABKAVSD2NjRmVlVG90YWxDZW50cxIyChV0b3RhbF9j'
+    'b2xsZWN0ZWRfY2VudHMYESABKAVSE3RvdGFsQ29sbGVjdGVkQ2VudHMSJQoOc3VidG90YWxfY2'
+    'VudHMYEiABKAVSDXN1YnRvdGFsQ2VudHM=');
 
 @$core.Deprecated('Use dailyReportRequestDescriptor instead')
 const DailyReportRequest$json = {

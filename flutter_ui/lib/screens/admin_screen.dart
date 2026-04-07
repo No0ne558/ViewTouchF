@@ -3,6 +3,7 @@ import '../widgets/admin_settings_tab.dart';
 import '../widgets/admin_menu_tab.dart';
 import '../widgets/admin_reports_tab.dart';
 import '../widgets/admin_end_day_tab.dart';
+import '../widgets/admin_menu_productivity_tab.dart';
 
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
@@ -10,7 +11,7 @@ class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Admin Panel'),
@@ -19,6 +20,7 @@ class AdminScreen extends StatelessWidget {
               Tab(icon: Icon(Icons.settings), text: 'Settings'),
               Tab(icon: Icon(Icons.restaurant_menu), text: 'Menu'),
               Tab(icon: Icon(Icons.bar_chart), text: 'Reports'),
+              Tab(icon: Icon(Icons.trending_up), text: 'Productivity'),
               Tab(icon: Icon(Icons.nightlight_round), text: 'End Day'),
             ],
           ),
@@ -28,6 +30,7 @@ class AdminScreen extends StatelessWidget {
             AdminSettingsTab(),
             AdminMenuTab(),
             AdminReportsTab(),
+            AdminMenuProductivityTab(),
             AdminEndDayTab(),
           ],
         ),

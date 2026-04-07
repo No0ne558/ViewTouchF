@@ -510,6 +510,8 @@ void accumulate_report(DailyReport& rpt, const Ticket& ticket,
         ++rpt.total_tickets;
         rpt.total_revenue_cents += ticket.total_cents;
         rpt.total_tax_cents     += ticket.tax_cents;
+        rpt.subtotal_cents      += ticket.subtotal_cents;
+        rpt.cc_fee_total_cents  += ticket.cc_fee_cents;
         for (const auto& p : ticket.payments) {
             if (p.payment_type == "CASH") {
                 ++rpt.cash_count;
@@ -545,6 +547,7 @@ void finalize_report(DailyReport& rpt,
                      std::unordered_map<std::string, ItemSalesEntry>& item_map) {
     rpt.net_revenue_cents = rpt.total_revenue_cents
         - rpt.refunded_total_cents - rpt.comped_total_cents;
+    rpt.total_collected_cents = rpt.net_revenue_cents + rpt.cc_fee_total_cents;
     rpt.item_sales.reserve(item_map.size());
     for (auto& [_, entry] : item_map) {
         rpt.item_sales.push_back(std::move(entry));
@@ -685,10 +688,13 @@ DailyReport PosManager::end_day() {
         archived_reports_.end());
     archived_reports_.push_back(zrpt);
 
-    // 3. Remove all non-OPEN tickets (clear history).
+    // 3. Remove all closed/voided/comped/refunded tickets AND empty OPEN tickets.
     for (auto it = tickets_.begin(); it != tickets_.end(); ) {
-        if (it->second.status != TicketStatus::OPEN) {
-            if (db_) db_->delete_ticket(it->second.id);
+        const auto& t = it->second;
+        bool should_delete = (t.status != TicketStatus::OPEN) ||
+                             (t.status == TicketStatus::OPEN && t.items.empty());
+        if (should_delete) {
+            if (db_) db_->delete_ticket(t.id);
             it = tickets_.erase(it);
         } else {
             ++it;

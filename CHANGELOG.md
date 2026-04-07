@@ -5,6 +5,21 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] — 2026-04-06
+
+### Added
+- **Menu Productivity tab**: new admin tab showing most sold items ranked by quantity or revenue, with Daily/Weekly/Monthly/Yearly/Custom date range selector — item sales data moved here from the Reports tab
+- **Accounting detail in Reports**: new summary cards for Subtotal, CC Fees, and Total Collected; cards reordered for accounting clarity (Subtotal → Tax → Gross Revenue → CC Fees → Net Revenue → Total Collected → Cash → Card → Tickets → Voided/Comped/Refunded)
+- **DailyReport accounting fields**: `subtotal_cents`, `cc_fee_total_cents`, `total_collected_cents` tracked in C++ struct, proto, and database
+- **DB schema migration v3**: adds `cc_fee_total_cents`, `total_collected_cents`, `subtotal_cents` columns to `archived_reports`
+
+### Changed
+- Item sales table removed from Reports tab and Z-Report display (moved to Menu Productivity)
+- Z-Report now shows Subtotal, CC Fees, and Total Collected lines
+
+### Fixed
+- **End-of-day clears empty tickets**: `end_day()` now also deletes empty OPEN tickets that had no items, preventing phantom open checks after closing the day
+
 ## [2.7.7] — 2026-04-06
 
 ### Fixed
