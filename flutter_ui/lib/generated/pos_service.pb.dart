@@ -519,6 +519,7 @@ class Ticket extends $pb.GeneratedMessage {
     $core.Iterable<Payment>? payments,
     $core.int? amountPaid,
     $core.int? changeDue,
+    $core.int? ccFee,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -531,6 +532,7 @@ class Ticket extends $pb.GeneratedMessage {
     if (payments != null) result.payments.addAll(payments);
     if (amountPaid != null) result.amountPaid = amountPaid;
     if (changeDue != null) result.changeDue = changeDue;
+    if (ccFee != null) result.ccFee = ccFee;
     return result;
   }
 
@@ -559,6 +561,7 @@ class Ticket extends $pb.GeneratedMessage {
         subBuilder: Payment.create)
     ..aI(9, _omitFieldNames ? '' : 'amountPaid')
     ..aI(10, _omitFieldNames ? '' : 'changeDue')
+    ..aI(11, _omitFieldNames ? '' : 'ccFee')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -656,6 +659,15 @@ class Ticket extends $pb.GeneratedMessage {
   $core.bool hasChangeDue() => $_has(9);
   @$pb.TagNumber(10)
   void clearChangeDue() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.int get ccFee => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set ccFee($core.int value) => $_setSignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCcFee() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCcFee() => $_clearField(11);
 }
 
 class Payment extends $pb.GeneratedMessage {
@@ -1495,10 +1507,12 @@ class CheckoutRequest extends $pb.GeneratedMessage {
   factory CheckoutRequest({
     $core.String? ticketId,
     $core.Iterable<Payment>? payments,
+    $core.int? ccFeeCents,
   }) {
     final result = create();
     if (ticketId != null) result.ticketId = ticketId;
     if (payments != null) result.payments.addAll(payments);
+    if (ccFeeCents != null) result.ccFeeCents = ccFeeCents;
     return result;
   }
 
@@ -1518,6 +1532,7 @@ class CheckoutRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'ticketId')
     ..pPM<Payment>(2, _omitFieldNames ? '' : 'payments',
         subBuilder: Payment.create)
+    ..aI(3, _omitFieldNames ? '' : 'ccFeeCents')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1550,6 +1565,15 @@ class CheckoutRequest extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(2)
   $pb.PbList<Payment> get payments => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.int get ccFeeCents => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set ccFeeCents($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCcFeeCents() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCcFeeCents() => $_clearField(3);
 }
 
 class CheckoutResponse extends $pb.GeneratedMessage {

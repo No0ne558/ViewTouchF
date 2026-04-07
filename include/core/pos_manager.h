@@ -105,7 +105,8 @@ public:
                                             const std::string& line_key = "");
     /// Finalise the ticket with split payments.
     std::optional<Ticket>     checkout(const std::string& ticket_id,
-                                       const std::vector<Payment>& payments);
+                                       const std::vector<Payment>& payments,
+                                       int32_t cc_fee_cents = 0);
     bool                      void_ticket(const std::string& ticket_id);
 
     // ── Ticket actions ───────────────────────────────────────

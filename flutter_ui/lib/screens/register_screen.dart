@@ -271,7 +271,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (result == null) return; // cancelled
 
     try {
-      final req = CheckoutRequest()..ticketId = _ticket!.id;
+      final req = CheckoutRequest()
+        ..ticketId = _ticket!.id
+        ..ccFeeCents = result.ccFeeAmount;
       for (final p in result.payments) {
         req.payments.add(Payment()
           ..paymentType = p.type
@@ -282,14 +284,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _showError(resp.error);
         return;
       }
-      // Show change due if any (suppress the CC fee portion).
-      final realChange = resp.ticket.changeDue - result.ccFeeAmount;
-      if (realChange > 0) {
+      // Show change due if any.
+      if (resp.ticket.changeDue > 0) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Change due: \$${(realChange / 100).toStringAsFixed(2)}'),
+                  'Change due: \$${(resp.ticket.changeDue / 100).toStringAsFixed(2)}'),
               backgroundColor: Colors.green.shade700,
               duration: const Duration(seconds: 4),
             ),
@@ -1448,6 +1449,19 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                 ],
                 if (t.payments.isNotEmpty) ...[
                   const Divider(),
+                  if (t.ccFee > 0)
+                    Row(
+                      children: [
+                        const Text('CC Fee',
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.orange)),
+                        const Spacer(),
+                        Text(_money(t.ccFee),
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.orange.shade700)),
+                      ],
+                    ),
                   for (final p in t.payments)
                     Row(
                       children: [

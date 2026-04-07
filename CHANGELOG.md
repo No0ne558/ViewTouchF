@@ -5,6 +5,14 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.4] — 2026-04-06
+
+### Fixed
+- **Credit Card Fee now flows through the entire stack**: the CC fee is sent to the backend via `cc_fee_cents` in `CheckoutRequest`, stored on the ticket, and used in the change-due calculation — previously the fee was client-side only, causing the backend to record overpayment as change
+- **Receipt prints CC fee**: when a CC fee was applied the receipt now shows a "CC Fee" line and "GRAND" total including the fee
+- **Closed check no longer shows phantom change**: the persisted `change_due` is now correct (0 when the customer paid exact + fee), and the closed check view displays a "CC Fee" line in orange when one was applied
+- **DB schema migration v2**: adds `cc_fee_cents` column to the `tickets` table for existing databases
+
 ## [2.7.3] — 2026-04-06
 
 ### Added

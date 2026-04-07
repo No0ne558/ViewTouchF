@@ -115,7 +115,7 @@ void Database::exec(const char* sql) {
 // Migrations run inside a transaction; if one fails the DB is
 // left at the last successful version.
 
-static constexpr int kLatestVersion = 1;
+static constexpr int kLatestVersion = 2;
 
 int Database::get_user_version() {
     sqlite3_stmt* stmt = nullptr;
@@ -146,7 +146,7 @@ void Database::migrate() {
         Transaction txn(*this);
         switch (v) {
             case 1: migrate_to_1(); break;
-            // case 2: migrate_to_2(); break;
+            case 2: migrate_to_2(); break;
             // case 3: migrate_to_3(); break;
             default:
                 throw std::runtime_error(
@@ -271,6 +271,11 @@ void Database::migrate_to_1() {
             PRIMARY KEY (report_date, item_name)
         );
     )");
+}
+
+// Migration 2 — add cc_fee_cents column to tickets (v2.7.3).
+void Database::migrate_to_2() {
+    exec("ALTER TABLE tickets ADD COLUMN cc_fee_cents INTEGER NOT NULL DEFAULT 0");
 }
 
 // ── Sequences ────────────────────────────────────────────────
@@ -453,13 +458,14 @@ void Database::save_ticket(const Ticket& t) {
     sqlite3_stmt* stmt = nullptr;
     sqlite3_prepare_v2(db_,
         "INSERT INTO tickets(id,status,payment_type,created_at_ms,closed_date,"
-        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?) "
+        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents,cc_fee_cents) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(id) DO UPDATE SET "
         "status=excluded.status, payment_type=excluded.payment_type, "
         "closed_date=excluded.closed_date, subtotal_cents=excluded.subtotal_cents, "
         "tax_cents=excluded.tax_cents, total_cents=excluded.total_cents, "
-        "amount_paid_cents=excluded.amount_paid_cents, change_due_cents=excluded.change_due_cents",
+        "amount_paid_cents=excluded.amount_paid_cents, change_due_cents=excluded.change_due_cents, "
+        "cc_fee_cents=excluded.cc_fee_cents",
         -1, &stmt, nullptr);
     sqlite3_bind_text(stmt,  1, t.id.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt,  2, status_to_str(t.status).c_str(), -1, SQLITE_TRANSIENT);
@@ -471,6 +477,7 @@ void Database::save_ticket(const Ticket& t) {
     sqlite3_bind_int(stmt,   8, t.total_cents);
     sqlite3_bind_int(stmt,   9, t.amount_paid_cents);
     sqlite3_bind_int(stmt,  10, t.change_due_cents);
+    sqlite3_bind_int(stmt,  11, t.cc_fee_cents);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
@@ -559,7 +566,7 @@ std::vector<Ticket> Database::load_all_tickets() {
     sqlite3_stmt* stmt = nullptr;
     sqlite3_prepare_v2(db_,
         "SELECT id,status,payment_type,created_at_ms,closed_date,"
-        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents "
+        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents,cc_fee_cents "
         "FROM tickets", -1, &stmt, nullptr);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -574,6 +581,7 @@ std::vector<Ticket> Database::load_all_tickets() {
         t.total_cents       = sqlite3_column_int(stmt, 7);
         t.amount_paid_cents = sqlite3_column_int(stmt, 8);
         t.change_due_cents  = sqlite3_column_int(stmt, 9);
+        t.cc_fee_cents      = sqlite3_column_int(stmt, 10);
         tickets.push_back(std::move(t));
     }
     sqlite3_finalize(stmt);

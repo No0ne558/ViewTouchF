@@ -201,6 +201,7 @@ const Ticket$json = {
     },
     {'1': 'amount_paid', '3': 9, '4': 1, '5': 5, '10': 'amountPaid'},
     {'1': 'change_due', '3': 10, '4': 1, '5': 5, '10': 'changeDue'},
+    {'1': 'cc_fee', '3': 11, '4': 1, '5': 5, '10': 'ccFee'},
   ],
 };
 
@@ -211,7 +212,7 @@ final $typed_data.Uint8List ticketDescriptor = $convert.base64Decode(
     'dGF4EhQKBXRvdGFsGAUgASgFUgV0b3RhbBIWCgZzdGF0dXMYBiABKAlSBnN0YXR1cxIdCgpjcm'
     'VhdGVkX2F0GAcgASgDUgljcmVhdGVkQXQSLQoIcGF5bWVudHMYCCADKAsyES52dF9wcm90by5Q'
     'YXltZW50UghwYXltZW50cxIfCgthbW91bnRfcGFpZBgJIAEoBVIKYW1vdW50UGFpZBIdCgpjaG'
-    'FuZ2VfZHVlGAogASgFUgljaGFuZ2VEdWU=');
+    'FuZ2VfZHVlGAogASgFUgljaGFuZ2VEdWUSFQoGY2NfZmVlGAsgASgFUgVjY0ZlZQ==');
 
 @$core.Deprecated('Use paymentDescriptor instead')
 const Payment$json = {
@@ -474,13 +475,15 @@ const CheckoutRequest$json = {
       '6': '.vt_proto.Payment',
       '10': 'payments'
     },
+    {'1': 'cc_fee_cents', '3': 3, '4': 1, '5': 5, '10': 'ccFeeCents'},
   ],
 };
 
 /// Descriptor for `CheckoutRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List checkoutRequestDescriptor = $convert.base64Decode(
     'Cg9DaGVja291dFJlcXVlc3QSGwoJdGlja2V0X2lkGAEgASgJUgh0aWNrZXRJZBItCghwYXltZW'
-    '50cxgCIAMoCzIRLnZ0X3Byb3RvLlBheW1lbnRSCHBheW1lbnRz');
+    '50cxgCIAMoCzIRLnZ0X3Byb3RvLlBheW1lbnRSCHBheW1lbnRzEiAKDGNjX2ZlZV9jZW50cxgD'
+    'IAEoBVIKY2NGZWVDZW50cw==');
 
 @$core.Deprecated('Use checkoutResponseDescriptor instead')
 const CheckoutResponse$json = {

@@ -84,6 +84,7 @@ void PosServiceImpl::fill_proto_ticket(const core::Ticket& src, pb::Ticket* dst)
     dst->set_created_at(src.created_at_ms);
     dst->set_amount_paid(src.amount_paid_cents);
     dst->set_change_due(src.change_due_cents);
+    dst->set_cc_fee(src.cc_fee_cents);
     for (const auto& p : src.payments) {
         auto* pp = dst->add_payments();
         pp->set_payment_type(p.payment_type);
@@ -228,7 +229,7 @@ grpc::Status PosServiceImpl::Checkout(grpc::ServerContext* /*ctx*/,
         p.amount_cents = pp.amount_cents();
         payments.push_back(std::move(p));
     }
-    auto result = mgr_->checkout(req->ticket_id(), payments);
+    auto result = mgr_->checkout(req->ticket_id(), payments, req->cc_fee_cents());
     if (!result) {
         resp->set_success(false);
         resp->set_error("Ticket not found, already closed, or underpayment");

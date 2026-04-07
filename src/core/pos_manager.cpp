@@ -392,7 +392,8 @@ std::optional<Ticket> PosManager::decrease_item(const std::string& ticket_id,
 }
 
 std::optional<Ticket> PosManager::checkout(const std::string& ticket_id,
-                                            const std::vector<Payment>& payments) {
+                                            const std::vector<Payment>& payments,
+                                            int32_t cc_fee_cents) {
     std::lock_guard lock(mu_);
 
     auto it = tickets_.find(ticket_id);
@@ -400,16 +401,20 @@ std::optional<Ticket> PosManager::checkout(const std::string& ticket_id,
     auto& ticket = it->second;
     if (ticket.status != TicketStatus::OPEN) return std::nullopt;
 
+    // Apply CC fee to ticket total.
+    ticket.cc_fee_cents = cc_fee_cents;
+    const int32_t effective_total = ticket.total_cents + cc_fee_cents;
+
     // Sum up all payment legs.
     int32_t total_paid = 0;
     for (const auto& p : payments) {
         total_paid += p.amount_cents;
     }
-    if (total_paid < ticket.total_cents) return std::nullopt; // underpayment
+    if (total_paid < effective_total) return std::nullopt; // underpayment
 
     ticket.payments = payments;
     ticket.amount_paid_cents = total_paid;
-    ticket.change_due_cents = total_paid - ticket.total_cents;
+    ticket.change_due_cents = total_paid - effective_total;
     ticket.status = TicketStatus::CLOSED;
     // Derive primary payment type from first leg.
     if (!payments.empty()) ticket.payment_type = payments[0].payment_type;

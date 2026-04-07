@@ -68,6 +68,7 @@ message Ticket {
     repeated Payment    payments    = 8;  // partial / split payments
     int32               amount_paid = 9;  // total paid so far (cents)
     int32               change_due  = 10; // change returned to customer (cents)
+    int32               cc_fee      = 11; // credit card fee applied (cents)
 }
 
 message Payment {
@@ -137,6 +138,7 @@ message NewTicketResponse {
 message CheckoutRequest {
     string ticket_id      = 1;
     repeated Payment payments = 2;  // one or more payment legs
+    int32  cc_fee_cents   = 3;     // credit card fee to add (cents)
 }
 
 message CheckoutResponse {

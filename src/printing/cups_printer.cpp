@@ -199,6 +199,16 @@ std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket,
     append(buf, escpos::LF);
     append(buf, escpos::BOLD_OFF);
 
+    // 6b. CC fee (if applied)
+    if (ticket.cc_fee_cents > 0) {
+        append_text(buf, " CC Fee: " + fmt_money(ticket.cc_fee_cents));
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_ON);
+        append_text(buf, "  GRAND: " + fmt_money(ticket.total_cents + ticket.cc_fee_cents));
+        append(buf, escpos::LF);
+        append(buf, escpos::BOLD_OFF);
+    }
+
     // 7. Footer
     append(buf, escpos::ALIGN_CENTER);
     append(buf, escpos::LF);

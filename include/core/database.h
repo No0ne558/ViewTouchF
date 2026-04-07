@@ -55,8 +55,7 @@ public:
 private:
     void migrate();           ///< Run pending schema migrations.
     void migrate_to_1();      ///< v2.6.0 — initial 12-table schema.
-    // Future migrations:
-    // void migrate_to_2();   ///< v2.7.0 — example future change.
+    void migrate_to_2();      ///< v2.7.3 — add cc_fee_cents to tickets.
     void exec(const char* sql);
     int  get_user_version();
     void set_user_version(int v);
