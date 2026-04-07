@@ -25,6 +25,16 @@ flutter_ui/.metadata
 flutter_ui/*.iml
 flutter_ui/linux/flutter/ephemeral/
 
+# Ignore ephemeral protoc output (Dart generation)
+flutter_ui/lib/generated/proto/
+
+# Ignore any nested build directories and common intermediate files
+**/build/
+**/out/
+**/intermediates/
+**/cmake_install.cmake
+**/CMakeFiles/
+
 # ── IDE / Editor ──────────────────────────────────
 .vscode/
 .idea/
