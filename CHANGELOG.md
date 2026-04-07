@@ -5,6 +5,12 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.5] — 2026-04-06
+
+### Fixed
+- **CC fee is now taxed**: the credit card fee surcharge has sales tax applied to it (using the configured tax rate) before being added to the ticket — e.g. a $0.30 fee at 8.25% tax becomes $0.32
+- **History header shows correct total**: closed checks in the order history now display the grand total including the CC fee (was showing only the food total)
+
 ## [2.7.4] — 2026-04-06
 
 ### Fixed

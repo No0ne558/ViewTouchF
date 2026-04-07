@@ -859,7 +859,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   bool _ccFeeApplied = false;
   int _ccFeeCents = 0;  // flat amount
   int _ccFeeBps = 0;    // percentage in basis points
-  int _ccFeeAmount = 0; // computed fee for this ticket
+  int _taxRateBps = 0;  // tax rate to apply to CC fee
+  int _ccFeeAmount = 0; // computed fee for this ticket (incl. tax)
 
   @override
   void initState() {
@@ -874,6 +875,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
       setState(() {
         _ccFeeCents = resp.settings.ccFeeCents;
         _ccFeeBps = resp.settings.ccFeeBps;
+        _taxRateBps = resp.settings.taxRateBps;
       });
     } catch (_) {}
   }
@@ -884,6 +886,10 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     int fee = _ccFeeCents;
     if (_ccFeeBps > 0) {
       fee += (_totalBase * _ccFeeBps / 10000).round();
+    }
+    // Tax the CC fee.
+    if (_taxRateBps > 0) {
+      fee += (fee * _taxRateBps / 10000).round();
     }
     return fee;
   }
@@ -1411,7 +1417,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
           padding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
         ),
-        title: Text('#${t.id}  ${_money(t.total)}',
+        title: Text('#${t.id}  ${_money(t.total + t.ccFee)}',
             style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           '${_time(t.createdAt)}  $itemSummary',
