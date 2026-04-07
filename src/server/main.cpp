@@ -73,8 +73,9 @@ int main(int argc, char* argv[]) {
     auto printer = std::make_shared<viewtouch::CupsPrinter>(
         printer_name, mgr->get_restaurant_name());
 
-    // Seed demo menu only on first run (DB has no menu yet).
-    if (mgr->get_menu().empty()) {
+    // Seed demo menu only on first run — never re-seed after initial setup
+    // even if the user deletes all items.
+    if (db.load_setting("menu_seeded") != "1") {
     std::vector<viewtouch::MenuItem> demo_menu;
 
     // ── Entrees (with modifier groups) ───────────────────────
@@ -108,13 +109,13 @@ int main(int argc, char* argv[]) {
         item.price_cents = 1499; item.category = "Entrees";
         item.modifier_groups = {
             {"MG03", "Toppings", {
-                {"MOD01", "Lettuce",    0, true},
-                {"MOD02", "Tomato",     0, true},
-                {"MOD03", "Onion",      0, true},
-                {"MOD04", "Pickles",    0, true},
-                {"MOD20", "Extra Cheese", 100, false},
-                {"MOD06", "Bacon",      199, false},
-                {"MOD07", "Jalapeños",   50, false},
+                {"MOD40", "Lettuce",    0, true},
+                {"MOD41", "Tomato",     0, true},
+                {"MOD42", "Onion",      0, true},
+                {"MOD43", "Pickles",    0, true},
+                {"MOD44", "Extra Cheese", 100, false},
+                {"MOD45", "Bacon",      199, false},
+                {"MOD46", "Jalapeños",   50, false},
             }, 0, 0},
         };
         demo_menu.push_back(std::move(item));
@@ -160,6 +161,7 @@ int main(int argc, char* argv[]) {
     demo_menu.push_back({"SID02", "Rice & Beans",   399, "Sides",     {}, true});
 
     mgr->load_menu(std::move(demo_menu));
+    db.save_setting("menu_seeded", "1");
     std::cout << "[vt_daemon] seeded demo menu (" << mgr->get_menu().size() << " items)\n";
     } // end first-run seed
 

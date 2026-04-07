@@ -143,18 +143,17 @@ void Database::migrate() {
 
     // Dispatch table — add new cases as the schema evolves.
     for (int v = current + 1; v <= kLatestVersion; ++v) {
-        exec("BEGIN TRANSACTION");
+        Transaction txn(*this);
         switch (v) {
             case 1: migrate_to_1(); break;
             // case 2: migrate_to_2(); break;
             // case 3: migrate_to_3(); break;
             default:
-                exec("ROLLBACK");
                 throw std::runtime_error(
                     "Unknown migration version " + std::to_string(v));
         }
         set_user_version(v);
-        exec("COMMIT");
+        txn.commit();
         std::cout << "[database] applied migration v" << v << "\n";
     }
 }
@@ -330,7 +329,7 @@ void Database::save_setting(const std::string& key, const std::string& val) {
 // ── Menu ─────────────────────────────────────────────────────
 
 void Database::save_menu(const std::vector<MenuItem>& items) {
-    exec("BEGIN TRANSACTION");
+    Transaction txn(*this);
     // Clear existing menu data.
     exec("DELETE FROM modifiers");
     exec("DELETE FROM modifier_groups");
@@ -384,7 +383,7 @@ void Database::save_menu(const std::vector<MenuItem>& items) {
     sqlite3_finalize(item_stmt);
     sqlite3_finalize(grp_stmt);
     sqlite3_finalize(mod_stmt);
-    exec("COMMIT");
+    txn.commit();
 }
 
 std::vector<MenuItem> Database::load_menu() {
@@ -448,7 +447,7 @@ std::vector<MenuItem> Database::load_menu() {
 // ── Tickets ──────────────────────────────────────────────────
 
 void Database::save_ticket(const Ticket& t) {
-    exec("BEGIN TRANSACTION");
+    Transaction txn(*this);
 
     // Upsert ticket header.
     sqlite3_stmt* stmt = nullptr;
@@ -543,7 +542,7 @@ void Database::save_ticket(const Ticket& t) {
     }
     sqlite3_finalize(ins_pay);
 
-    exec("COMMIT");
+    txn.commit();
 }
 
 void Database::delete_ticket(const std::string& ticket_id) {
@@ -707,7 +706,7 @@ std::vector<PhoneOrder> Database::load_all_phone_orders() {
 // ── Archived Reports ─────────────────────────────────────────
 
 void Database::save_report(const DailyReport& rpt) {
-    exec("BEGIN TRANSACTION");
+    Transaction txn(*this);
 
     sqlite3_stmt* stmt = nullptr;
     sqlite3_prepare_v2(db_,
@@ -764,7 +763,7 @@ void Database::save_report(const DailyReport& rpt) {
     }
     sqlite3_finalize(ins);
 
-    exec("COMMIT");
+    txn.commit();
 }
 
 std::vector<DailyReport> Database::load_all_reports() {

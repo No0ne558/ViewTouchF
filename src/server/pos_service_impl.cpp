@@ -378,9 +378,12 @@ grpc::Status PosServiceImpl::AddMenuItem(grpc::ServerContext* /*ctx*/,
                                          const pb::AddMenuItemRequest* req,
                                          pb::AddMenuItemResponse* resp) {
     auto mi = parse_proto_menu_item(req->item());
-
-    if (!mgr_->add_menu_item(mi)) {
-        return grpc::Status(grpc::ALREADY_EXISTS, "Menu item ID already exists");
+    try {
+        if (!mgr_->add_menu_item(mi)) {
+            return grpc::Status(grpc::ALREADY_EXISTS, "Menu item ID already exists");
+        }
+    } catch (const std::exception& e) {
+        return grpc::Status(grpc::INTERNAL, std::string("Database error: ") + e.what());
     }
 
     fill_proto_menu_item(mi, resp->mutable_item());
@@ -391,9 +394,12 @@ grpc::Status PosServiceImpl::UpdateMenuItem(grpc::ServerContext* /*ctx*/,
                                             const pb::UpdateMenuItemRequest* req,
                                             pb::UpdateMenuItemResponse* resp) {
     auto mi = parse_proto_menu_item(req->item());
-
-    if (!mgr_->update_menu_item(mi)) {
-        return grpc::Status(grpc::NOT_FOUND, "Menu item not found");
+    try {
+        if (!mgr_->update_menu_item(mi)) {
+            return grpc::Status(grpc::NOT_FOUND, "Menu item not found");
+        }
+    } catch (const std::exception& e) {
+        return grpc::Status(grpc::INTERNAL, std::string("Database error: ") + e.what());
     }
 
     fill_proto_menu_item(mi, resp->mutable_item());
@@ -403,7 +409,11 @@ grpc::Status PosServiceImpl::UpdateMenuItem(grpc::ServerContext* /*ctx*/,
 grpc::Status PosServiceImpl::DeleteMenuItem(grpc::ServerContext* /*ctx*/,
                                             const pb::DeleteMenuItemRequest* req,
                                             pb::DeleteMenuItemResponse* resp) {
-    resp->set_success(mgr_->delete_menu_item(req->item_id()));
+    try {
+        resp->set_success(mgr_->delete_menu_item(req->item_id()));
+    } catch (const std::exception& e) {
+        return grpc::Status(grpc::INTERNAL, std::string("Database error: ") + e.what());
+    }
     return grpc::Status::OK;
 }
 

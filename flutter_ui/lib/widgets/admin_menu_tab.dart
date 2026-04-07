@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
@@ -191,8 +193,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   // Mutable list of modifier groups being edited.
   late List<_EditableModifierGroup> _groups;
 
-  int _groupIdSeq = 1;
-  int _modIdSeq = 1;
+  static String _uniqueId(String prefix) {
+    final r = Random();
+    final hex = List.generate(8, (_) => r.nextInt(16).toRadixString(16)).join();
+    return '${prefix}_$hex';
+  }
 
   @override
   void initState() {
@@ -254,7 +259,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   void _addGroup() {
     setState(() {
       _groups.add(_EditableModifierGroup(
-        idCtrl: TextEditingController(text: 'MG${_groupIdSeq++}'),
+        idCtrl: TextEditingController(text: _uniqueId('MG')),
         nameCtrl: TextEditingController(),
         minSelect: 0,
         maxSelect: 0,
@@ -279,7 +284,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   void _addModifier(int groupIndex) {
     setState(() {
       _groups[groupIndex].modifiers.add(_EditableModifier(
-        idCtrl: TextEditingController(text: 'MOD${_modIdSeq++}'),
+        idCtrl: TextEditingController(text: _uniqueId('MOD')),
         nameCtrl: TextEditingController(),
         priceCtrl: TextEditingController(),
         isDefault: false,

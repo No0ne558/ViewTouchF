@@ -61,6 +61,19 @@ private:
     int  get_user_version();
     void set_user_version(int v);
     sqlite3* db_ = nullptr;
+
+    /// RAII transaction guard — automatically rolls back if not committed.
+    class Transaction {
+    public:
+        explicit Transaction(Database& db) : db_(db) { db_.exec("BEGIN TRANSACTION"); }
+        ~Transaction() { if (!committed_) try { db_.exec("ROLLBACK"); } catch (...) {} }
+        void commit() { db_.exec("COMMIT"); committed_ = true; }
+        Transaction(const Transaction&) = delete;
+        Transaction& operator=(const Transaction&) = delete;
+    private:
+        Database& db_;
+        bool committed_ = false;
+    };
 };
 
 }  // namespace viewtouch

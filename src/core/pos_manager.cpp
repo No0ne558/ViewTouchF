@@ -160,9 +160,12 @@ std::optional<MenuItem> PosManager::find_menu_item(const std::string& item_id) c
 bool PosManager::add_menu_item(const MenuItem& item) {
     std::lock_guard lock(mu_);
     if (menu_index_.count(item.id)) return false;  // duplicate
-    menu_.push_back(item);
+    // Save to DB first — if it throws, in-memory state is unchanged.
+    auto updated = menu_;
+    updated.push_back(item);
+    if (db_) db_->save_menu(updated);
+    menu_ = std::move(updated);
     menu_index_[item.id] = item;
-    if (db_) db_->save_menu(menu_);
     return true;
 }
 
@@ -170,20 +173,30 @@ bool PosManager::update_menu_item(const MenuItem& item) {
     std::lock_guard lock(mu_);
     auto idx_it = menu_index_.find(item.id);
     if (idx_it == menu_index_.end()) return false;
-    idx_it->second = item;
-    for (auto& m : menu_) {
+    // Save to DB first — if it throws, in-memory state is unchanged.
+    auto updated = menu_;
+    for (auto& m : updated) {
         if (m.id == item.id) { m = item; break; }
     }
-    if (db_) db_->save_menu(menu_);
+    if (db_) db_->save_menu(updated);
+    menu_ = std::move(updated);
+    idx_it->second = item;
     return true;
 }
 
 bool PosManager::delete_menu_item(const std::string& item_id) {
     std::lock_guard lock(mu_);
-    if (!menu_index_.erase(item_id)) return false;
-    menu_.erase(std::remove_if(menu_.begin(), menu_.end(),
-        [&](const MenuItem& m) { return m.id == item_id; }), menu_.end());
-    if (db_) db_->save_menu(menu_);
+    if (menu_index_.find(item_id) == menu_index_.end()) return false;
+    // Build updated list and save to DB first — if it throws,
+    // in-memory state is unchanged.
+    std::vector<MenuItem> updated;
+    updated.reserve(menu_.size());
+    for (const auto& m : menu_) {
+        if (m.id != item_id) updated.push_back(m);
+    }
+    if (db_) db_->save_menu(updated);
+    menu_ = std::move(updated);
+    menu_index_.erase(item_id);
     return true;
 }
 
