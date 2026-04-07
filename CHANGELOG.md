@@ -5,6 +5,11 @@ All notable changes to **ViewTouchF** (ViewTouch Food Truck) will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.6] — 2026-04-06
+
+### Fixed
+- **CC fee display shows raw fee amount**: the checkout dialog button and "CC Fee" line now show the configured fee (e.g. $0.30), while the tax on the fee is silently included in the charged total — previously the UI showed the fee+tax together which was confusing
+
 ## [2.7.5] — 2026-04-06
 
 ### Fixed

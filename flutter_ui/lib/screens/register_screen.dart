@@ -860,7 +860,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   int _ccFeeCents = 0;  // flat amount
   int _ccFeeBps = 0;    // percentage in basis points
   int _taxRateBps = 0;  // tax rate to apply to CC fee
-  int _ccFeeAmount = 0; // computed fee for this ticket (incl. tax)
+  int _ccFeeAmount = 0;   // fee + tax (added to total, sent to backend)
+  int _ccFeeDisplay = 0;  // raw fee (shown in UI)
 
   @override
   void initState() {
@@ -887,9 +888,13 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     if (_ccFeeBps > 0) {
       fee += (_totalBase * _ccFeeBps / 10000).round();
     }
-    // Tax the CC fee.
+    return fee;
+  }
+
+  int _computeCcFeeWithTax() {
+    final fee = _computeCcFee();
     if (_taxRateBps > 0) {
-      fee += (fee * _taxRateBps / 10000).round();
+      return fee + (fee * _taxRateBps / 10000).round();
     }
     return fee;
   }
@@ -953,7 +958,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     if (_ccFeeApplied) return;
     setState(() {
       _ccFeeApplied = true;
-      _ccFeeAmount = _computeCcFee();
+      _ccFeeDisplay = _computeCcFee();
+      _ccFeeAmount = _computeCcFeeWithTax();
     });
   }
 
@@ -962,6 +968,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     setState(() {
       _ccFeeApplied = false;
       _ccFeeAmount = 0;
+      _ccFeeDisplay = 0;
     });
   }
 
@@ -1007,7 +1014,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                           child: const Icon(Icons.close, size: 16, color: Colors.red),
                         ),
                     ]),
-                    Text('+${_money(_ccFeeAmount)}',
+                    Text('+${_money(_ccFeeDisplay)}',
                         style: TextStyle(fontSize: 16, color: Colors.orange.shade700)),
                   ],
                 ),
