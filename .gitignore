@@ -1,3 +1,16 @@
+# Build and binary artifacts
+/bin/
+/build/
+
+# Flutter build/metadata
+flutter_ui/build/
+flutter_ui/.dart_tool/
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*.log
 # ── C++ build artifacts ────────────────────────────
 build/
 cmake-build-*/

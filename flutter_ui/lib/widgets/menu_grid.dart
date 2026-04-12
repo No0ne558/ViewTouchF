@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../generated/pos_service.pb.dart';
+import '../utils/money.dart';
 
 /// A responsive grid of tappable menu item buttons.
 class MenuGrid extends StatelessWidget {
@@ -80,7 +81,7 @@ class _MenuButton extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '\$${(item.priceCents / 100).toStringAsFixed(2)}',
+                formatMoney(item.priceCents),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                     ),

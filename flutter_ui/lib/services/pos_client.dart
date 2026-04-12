@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:grpc/grpc.dart';
-import '../generated/pos_service.pb.dart';
 import '../generated/pos_service.pbgrpc.dart';
 
 /// Singleton client that manages the gRPC channel to the C++ daemon.
@@ -32,7 +31,8 @@ class PosClient {
 
   /// Access the singleton.
   static PosClient get instance {
-    assert(_instance != null, 'Call PosClient.init() before accessing instance');
+    assert(
+        _instance != null, 'Call PosClient.init() before accessing instance');
     return _instance!;
   }
 

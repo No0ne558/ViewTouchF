@@ -267,3 +267,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [2.2.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.2.0
 [2.1.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.1.0
 [2.0.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.0.0
+[2.9.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.9.0
+
+## [2.9.0] — 2026-04-11
+
+### Added
+- **Go CLI (`vtctl`)**: scaffolded a command-line tool under `cli/` with commands such as `status`, `seed-demo`, `migrate`, `serve`, `backup`, and `restore`. A local `bin/vtctl` binary is produced by the build target.
+- **CI / GitHub Actions workflow**: `.github/workflows/ci.yml` added to run formatting, CMake daemon builds, Go CLI build, and Flutter `analyze`/`test` jobs; CI packages updated to include the gRPC C++ plugin and CUPS dependencies.
+- **Pre-commit tooling**: added `.pre-commit-config.yaml`, `.clang-format`, and `.editorconfig` with hooks for `gofmt`, `go vet`, `dart format`, `clang-format`, and other hygiene hooks; formatting was applied across the repo.
+- **Localization runtime**: added English/Spanish runtime selector, ARB files under `flutter_ui/lib/l10n/`, gen-l10n fixes, and `LocaleProvider` wiring to allow switching and persisting the UI locale.
+- **Docker / Packaging scaffolds**: multi-stage `docker/daemon/Dockerfile`, Debian and RPM packaging scripts under `packaging/` (`packaging/deb/build-deb.sh`, `packaging/rpm/*`) and an RPM spec file for building distributable packages.
+- **Top-level Makefile and docs**: added Makefile targets for `build`, `lint`, `docker-image`, `package-deb`, and `package-rpm`, plus `CONTRIBUTING.md` and a PR template to improve contributor workflow.
+
+### Changed
+- Applied repo-wide formatting (Dart, Go, and C/C++) via pre-commit hooks and updated generated localization files in `flutter_ui/lib/generated/`.
+- Improved build/CI scripts to ensure `flutter pub get` runs before formatting and to install system packages required for gRPC C++ plugin and CUPS on CI (`protobuf-compiler-grpc`, `libcups2-dev`, `libavahi-client-dev`, `libgnutls28-dev`).
+- Flutter UI: integrated locale selector in settings and wired gen-l10n outputs to the app state so runtime language changes persist.
+
+### Fixed
+- Fixed analyzer/style warnings (added missing braces in `flutter_ui/lib/widgets/admin_reports_tab.dart`).
+- Resolved CI pre-commit PATH and permission issues (ensured `$HOME/.local/bin` is on PATH and `flutter pub get` executes in format jobs).
+- Minor Go vet and lint fixes in the CLI scaffold and small bugfixes discovered while integrating pre-commit hooks.
+

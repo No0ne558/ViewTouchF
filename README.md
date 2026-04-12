@@ -33,7 +33,7 @@ ViewTouchF is a full-stack POS system designed for food trucks, high-volume rest
 | **Admin** | Menu CRUD with modifier groups, tax rate, printer discovery & config |
 
 ---
- 
+
 ---
 
 ## What's New (v2.8.0 — Recent)

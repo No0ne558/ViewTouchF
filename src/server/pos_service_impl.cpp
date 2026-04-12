@@ -10,46 +10,70 @@
 
 static std::string ticket_status_str(core::TicketStatus s) {
     switch (s) {
-        case core::TicketStatus::OPEN:     return "OPEN";
-        case core::TicketStatus::CLOSED:   return "CLOSED";
-        case core::TicketStatus::VOIDED:   return "VOIDED";
-        case core::TicketStatus::COMPED:   return "COMPED";
-        case core::TicketStatus::REFUNDED: return "REFUNDED";
+        case core::TicketStatus::OPEN:
+            return "OPEN";
+        case core::TicketStatus::CLOSED:
+            return "CLOSED";
+        case core::TicketStatus::VOIDED:
+            return "VOIDED";
+        case core::TicketStatus::COMPED:
+            return "COMPED";
+        case core::TicketStatus::REFUNDED:
+            return "REFUNDED";
     }
     return "UNKNOWN";
 }
 
 static std::string modifier_action_str(core::ModifierAction a) {
     switch (a) {
-        case core::ModifierAction::NO:    return "NO";
-        case core::ModifierAction::ADD:   return "ADD";
-        case core::ModifierAction::EXTRA: return "EXTRA";
-        case core::ModifierAction::LIGHT: return "LIGHT";
-        default: return "NONE";
+        case core::ModifierAction::NO:
+            return "NO";
+        case core::ModifierAction::ADD:
+            return "ADD";
+        case core::ModifierAction::EXTRA:
+            return "EXTRA";
+        case core::ModifierAction::LIGHT:
+            return "LIGHT";
+        default:
+            return "NONE";
     }
 }
 
 static core::ModifierAction parse_modifier_action(pb::ModifierAction a) {
     switch (a) {
-        case pb::MOD_NO:     return core::ModifierAction::NO;
-        case pb::MOD_ADD:    return core::ModifierAction::ADD;
-        case pb::MOD_EXTRA:  return core::ModifierAction::EXTRA;
-        case pb::MOD_LIGHT:  return core::ModifierAction::LIGHT;
-        case pb::MOD_SIDE:   return core::ModifierAction::SIDE;
-        case pb::MOD_DOUBLE: return core::ModifierAction::DOUBLE;
-        default:             return core::ModifierAction::NONE;
+        case pb::MOD_NO:
+            return core::ModifierAction::NO;
+        case pb::MOD_ADD:
+            return core::ModifierAction::ADD;
+        case pb::MOD_EXTRA:
+            return core::ModifierAction::EXTRA;
+        case pb::MOD_LIGHT:
+            return core::ModifierAction::LIGHT;
+        case pb::MOD_SIDE:
+            return core::ModifierAction::SIDE;
+        case pb::MOD_DOUBLE:
+            return core::ModifierAction::DOUBLE;
+        default:
+            return core::ModifierAction::NONE;
     }
 }
 
 static pb::ModifierAction to_proto_action(core::ModifierAction a) {
     switch (a) {
-        case core::ModifierAction::NO:     return pb::MOD_NO;
-        case core::ModifierAction::ADD:    return pb::MOD_ADD;
-        case core::ModifierAction::EXTRA:  return pb::MOD_EXTRA;
-        case core::ModifierAction::LIGHT:  return pb::MOD_LIGHT;
-        case core::ModifierAction::SIDE:   return pb::MOD_SIDE;
-        case core::ModifierAction::DOUBLE: return pb::MOD_DOUBLE;
-        default:                           return pb::MOD_NONE;
+        case core::ModifierAction::NO:
+            return pb::MOD_NO;
+        case core::ModifierAction::ADD:
+            return pb::MOD_ADD;
+        case core::ModifierAction::EXTRA:
+            return pb::MOD_EXTRA;
+        case core::ModifierAction::LIGHT:
+            return pb::MOD_LIGHT;
+        case core::ModifierAction::SIDE:
+            return pb::MOD_SIDE;
+        case core::ModifierAction::DOUBLE:
+            return pb::MOD_DOUBLE;
+        default:
+            return pb::MOD_NONE;
     }
 }
 
@@ -121,8 +145,7 @@ PosServiceImpl::PosServiceImpl(std::shared_ptr<core::PosManager> mgr,
 // ── RPC Implementations ──────────────────────────────────────
 
 grpc::Status PosServiceImpl::GetMenu(grpc::ServerContext* /*ctx*/,
-                                     const pb::GetMenuRequest* /*req*/,
-                                     pb::GetMenuResponse* resp) {
+                                     const pb::GetMenuRequest* /*req*/, pb::GetMenuResponse* resp) {
     for (const auto& m : mgr_->get_menu()) {
         fill_proto_menu_item(m, resp->add_items());
     }
@@ -137,24 +160,23 @@ grpc::Status PosServiceImpl::NewTicket(grpc::ServerContext* /*ctx*/,
     return grpc::Status::OK;
 }
 
-grpc::Status PosServiceImpl::AddItem(grpc::ServerContext* /*ctx*/,
-                                     const pb::AddItemRequest* req,
+grpc::Status PosServiceImpl::AddItem(grpc::ServerContext* /*ctx*/, const pb::AddItemRequest* req,
                                      pb::AddItemResponse* resp) {
     std::vector<core::AppliedModifier> mods;
     mods.reserve(req->modifiers_size());
     for (const auto& pm : req->modifiers()) {
         core::AppliedModifier am;
-        am.modifier_id            = pm.modifier_id();
-        am.modifier_name          = pm.modifier_name();
-        am.action                 = parse_modifier_action(pm.action());
+        am.modifier_id = pm.modifier_id();
+        am.modifier_name = pm.modifier_name();
+        am.action = parse_modifier_action(pm.action());
         am.price_adjustment_cents = pm.price_adjustment_cents();
         mods.push_back(std::move(am));
     }
-    auto result = mgr_->add_item(req->ticket_id(), req->menu_item_id(),
-                                  req->quantity(), mods,
-                                  req->special_instructions());
+    auto result = mgr_->add_item(req->ticket_id(), req->menu_item_id(), req->quantity(), mods,
+                                 req->special_instructions());
     if (!result) {
-        return grpc::Status(grpc::INVALID_ARGUMENT, "Ticket or menu item not found, or ticket not open");
+        return grpc::Status(grpc::INVALID_ARGUMENT,
+                            "Ticket or menu item not found, or ticket not open");
     }
     fill_proto_ticket(*result, resp->mutable_ticket());
     return grpc::Status::OK;
@@ -167,14 +189,14 @@ grpc::Status PosServiceImpl::UpdateItem(grpc::ServerContext* /*ctx*/,
     mods.reserve(req->modifiers_size());
     for (const auto& pm : req->modifiers()) {
         core::AppliedModifier am;
-        am.modifier_id            = pm.modifier_id();
-        am.modifier_name          = pm.modifier_name();
-        am.action                 = parse_modifier_action(pm.action());
+        am.modifier_id = pm.modifier_id();
+        am.modifier_name = pm.modifier_name();
+        am.action = parse_modifier_action(pm.action());
         am.price_adjustment_cents = pm.price_adjustment_cents();
         mods.push_back(std::move(am));
     }
-    auto result = mgr_->update_item(req->ticket_id(), req->line_key(),
-                                     mods, req->special_instructions());
+    auto result =
+        mgr_->update_item(req->ticket_id(), req->line_key(), mods, req->special_instructions());
     if (!result) {
         return grpc::Status(grpc::INVALID_ARGUMENT, "Ticket or item not found, or ticket not open");
     }
@@ -185,8 +207,7 @@ grpc::Status PosServiceImpl::UpdateItem(grpc::ServerContext* /*ctx*/,
 grpc::Status PosServiceImpl::RemoveItem(grpc::ServerContext* /*ctx*/,
                                         const pb::RemoveItemRequest* req,
                                         pb::RemoveItemResponse* resp) {
-    auto result = mgr_->remove_item(req->ticket_id(), req->menu_item_id(),
-                                     req->line_key());
+    auto result = mgr_->remove_item(req->ticket_id(), req->menu_item_id(), req->line_key());
     if (!result) {
         return grpc::Status(grpc::INVALID_ARGUMENT, "Ticket or item not found, or ticket not open");
     }
@@ -197,8 +218,7 @@ grpc::Status PosServiceImpl::RemoveItem(grpc::ServerContext* /*ctx*/,
 grpc::Status PosServiceImpl::DecreaseItem(grpc::ServerContext* /*ctx*/,
                                           const pb::DecreaseItemRequest* req,
                                           pb::DecreaseItemResponse* resp) {
-    auto result = mgr_->decrease_item(req->ticket_id(), req->menu_item_id(),
-                                       req->line_key());
+    auto result = mgr_->decrease_item(req->ticket_id(), req->menu_item_id(), req->line_key());
     if (!result) {
         return grpc::Status(grpc::INVALID_ARGUMENT, "Ticket or item not found, or ticket not open");
     }
@@ -217,8 +237,7 @@ grpc::Status PosServiceImpl::GetTicket(grpc::ServerContext* /*ctx*/,
     return grpc::Status::OK;
 }
 
-grpc::Status PosServiceImpl::Checkout(grpc::ServerContext* /*ctx*/,
-                                      const pb::CheckoutRequest* req,
+grpc::Status PosServiceImpl::Checkout(grpc::ServerContext* /*ctx*/, const pb::CheckoutRequest* req,
                                       pb::CheckoutResponse* resp) {
     // Convert proto payments to core payments.
     std::vector<core::Payment> payments;
@@ -257,10 +276,9 @@ grpc::Status PosServiceImpl::PrintReceipt(grpc::ServerContext* /*ctx*/,
     return grpc::Status::OK;
 }
 
-grpc::Status PosServiceImpl::WatchPrintStatus(
-        grpc::ServerContext* ctx,
-        const pb::PrintReceiptRequest* req,
-        grpc::ServerWriter<pb::PrintStatusEvent>* writer) {
+grpc::Status PosServiceImpl::WatchPrintStatus(grpc::ServerContext* ctx,
+                                              const pb::PrintReceiptRequest* req,
+                                              grpc::ServerWriter<pb::PrintStatusEvent>* writer) {
     // First, trigger the print.
     auto ticket = mgr_->get_ticket(req->ticket_id());
     if (!ticket) {
@@ -326,13 +344,10 @@ grpc::Status PosServiceImpl::UpdateSettings(grpc::ServerContext* /*ctx*/,
                                             const pb::UpdateSettingsRequest* req,
                                             pb::UpdateSettingsResponse* resp) {
     const auto& s = req->settings();
-    if (!s.restaurant_name().empty())
-        mgr_->set_restaurant_name(s.restaurant_name());
-    if (s.tax_rate_bps() > 0)
-        mgr_->set_tax_rate_bps(s.tax_rate_bps());
+    if (!s.restaurant_name().empty()) mgr_->set_restaurant_name(s.restaurant_name());
+    if (s.tax_rate_bps() > 0) mgr_->set_tax_rate_bps(s.tax_rate_bps());
     // Also update the receipt header on the printer.
-    if (!s.restaurant_name().empty())
-        printer_->set_store_name(s.restaurant_name());
+    if (!s.restaurant_name().empty()) printer_->set_store_name(s.restaurant_name());
     // Printer settings — always apply (empty string = cleared).
     mgr_->set_receipt_printer_name(s.receipt_printer_name());
     mgr_->set_receipt_printer_enabled(s.receipt_printer_enabled());
@@ -357,23 +372,23 @@ grpc::Status PosServiceImpl::UpdateSettings(grpc::ServerContext* /*ctx*/,
 
 static core::MenuItem parse_proto_menu_item(const pb::MenuItem& src) {
     core::MenuItem mi;
-    mi.id              = src.id();
-    mi.name            = src.name();
-    mi.price_cents     = src.price_cents();
-    mi.category        = src.category();
+    mi.id = src.id();
+    mi.name = src.name();
+    mi.price_cents = src.price_cents();
+    mi.category = src.category();
     mi.send_to_kitchen = src.send_to_kitchen();
     for (const auto& pg : src.modifier_groups()) {
         core::ModifierGroup mg;
-        mg.id         = pg.id();
-        mg.name       = pg.name();
+        mg.id = pg.id();
+        mg.name = pg.name();
         mg.min_select = pg.min_select();
         mg.max_select = pg.max_select();
         for (const auto& pm : pg.modifiers()) {
             core::Modifier mod;
-            mod.id          = pm.id();
-            mod.name        = pm.name();
+            mod.id = pm.id();
+            mod.name = pm.name();
             mod.price_cents = pm.price_cents();
-            mod.is_default  = pm.is_default();
+            mod.is_default = pm.is_default();
             mg.modifiers.push_back(std::move(mod));
         }
         mi.modifier_groups.push_back(std::move(mg));
@@ -562,10 +577,9 @@ grpc::Status PosServiceImpl::TicketAction(grpc::ServerContext* /*ctx*/,
 
 // ── Extended reporting ───────────────────────────────────────
 
-grpc::Status PosServiceImpl::GetDateRangeReport(
-        grpc::ServerContext* /*ctx*/,
-        const pb::DateRangeReportRequest* req,
-        pb::DateRangeReportResponse* resp) {
+grpc::Status PosServiceImpl::GetDateRangeReport(grpc::ServerContext* /*ctx*/,
+                                                const pb::DateRangeReportRequest* req,
+                                                pb::DateRangeReportResponse* resp) {
     auto summary = mgr_->get_date_range_report(req->start_date(), req->end_date());
     fill_proto_report(summary, resp->mutable_summary());
     // Also return individual daily reports for the range.
@@ -585,13 +599,12 @@ static std::string fmt_money(int32_t cents) {
     if (neg) cents = -cents;
     std::ostringstream os;
     if (neg) os << '-';
-    os << '$' << (cents / 100) << '.' << std::setw(2) << std::setfill('0')
-       << (cents % 100);
+    os << '$' << (cents / 100) << '.' << std::setw(2) << std::setfill('0') << (cents % 100);
     return os.str();
 }
 
 std::string PosServiceImpl::format_report_text(const core::DailyReport& rpt,
-                                                const std::string& title) {
+                                               const std::string& title) {
     std::ostringstream os;
     os << "========================================\n";
     os << "  " << title << "\n";
@@ -607,12 +620,13 @@ std::string PosServiceImpl::format_report_text(const core::DailyReport& rpt,
     os << "--- Adjustments ---\n";
     os << "Voided:   " << rpt.voided_count << "\n";
     os << "Comps:    " << rpt.comped_count << "  " << fmt_money(rpt.comped_total_cents) << "\n";
-    os << "Refunds:  " << rpt.refunded_count << "  " << fmt_money(rpt.refunded_total_cents) << "\n\n";
+    os << "Refunds:  " << rpt.refunded_count << "  " << fmt_money(rpt.refunded_total_cents)
+       << "\n\n";
     if (!rpt.item_sales.empty()) {
         os << "--- Item Sales ---\n";
         for (const auto& e : rpt.item_sales) {
-            os << "  " << e.item_name << "  x" << e.quantity_sold
-               << "  " << fmt_money(e.revenue_cents) << "\n";
+            os << "  " << e.item_name << "  x" << e.quantity_sold << "  "
+               << fmt_money(e.revenue_cents) << "\n";
         }
         os << "\n";
     }
@@ -633,10 +647,8 @@ grpc::Status PosServiceImpl::PrintReport(grpc::ServerContext* /*ctx*/,
     if (req->report_type() == "DAILY" || req->report_type() == "ZREPORT") {
         rpt = mgr_->get_daily_report(req->date());
         title = req->report_type() == "ZREPORT" ? "Z-REPORT" : "DAILY REPORT";
-    } else if (req->report_type() == "CUSTOM" ||
-               req->report_type() == "WEEKLY"  ||
-               req->report_type() == "MONTHLY" ||
-               req->report_type() == "YEARLY"  ||
+    } else if (req->report_type() == "CUSTOM" || req->report_type() == "WEEKLY" ||
+               req->report_type() == "MONTHLY" || req->report_type() == "YEARLY" ||
                req->report_type() == "XREPORT") {
         rpt = mgr_->get_date_range_report(req->start_date(), req->end_date());
         date_range = req->start_date() + " to " + req->end_date();
@@ -668,8 +680,8 @@ grpc::Status PosServiceImpl::PrintReport(grpc::ServerContext* /*ctx*/,
         return grpc::Status::OK;
     }
 
-    auto pr = printer_->print_formatted_report(rpt, title, date_range,
-                                                daily_breakdown, receipt_printer);
+    auto pr =
+        printer_->print_formatted_report(rpt, title, date_range, daily_breakdown, receipt_printer);
     resp->set_success(pr.success);
     resp->set_error(pr.error);
     resp->set_job_id(pr.job_id);
@@ -678,8 +690,7 @@ grpc::Status PosServiceImpl::PrintReport(grpc::ServerContext* /*ctx*/,
 
 // ── End of Day ───────────────────────────────────────────────
 
-grpc::Status PosServiceImpl::EndDay(grpc::ServerContext* /*ctx*/,
-                                    const pb::EndDayRequest* /*req*/,
+grpc::Status PosServiceImpl::EndDay(grpc::ServerContext* /*ctx*/, const pb::EndDayRequest* /*req*/,
                                     pb::EndDayResponse* resp) {
     auto zrpt = mgr_->end_day();
     resp->set_success(true);
@@ -688,8 +699,7 @@ grpc::Status PosServiceImpl::EndDay(grpc::ServerContext* /*ctx*/,
     // Print the Z-report to receipt printer with ESC/POS formatting.
     std::string receipt_printer = mgr_->get_receipt_printer_name();
     if (!receipt_printer.empty() && mgr_->get_receipt_printer_enabled()) {
-        printer_->print_formatted_report(zrpt, "Z-REPORT (END OF DAY)",
-                                          "", {}, receipt_printer);
+        printer_->print_formatted_report(zrpt, "Z-REPORT (END OF DAY)", "", {}, receipt_printer);
     }
 
     return grpc::Status::OK;
@@ -699,15 +709,17 @@ grpc::Status PosServiceImpl::EndDay(grpc::ServerContext* /*ctx*/,
 
 static std::string phone_order_status_str(core::PhoneOrderStatus s) {
     switch (s) {
-        case core::PhoneOrderStatus::HOLDING:   return "HOLDING";
-        case core::PhoneOrderStatus::COMPLETED: return "COMPLETED";
-        case core::PhoneOrderStatus::CANCELLED: return "CANCELLED";
+        case core::PhoneOrderStatus::HOLDING:
+            return "HOLDING";
+        case core::PhoneOrderStatus::COMPLETED:
+            return "COMPLETED";
+        case core::PhoneOrderStatus::CANCELLED:
+            return "CANCELLED";
     }
     return "UNKNOWN";
 }
 
-static void fill_proto_phone_order(const core::PhoneOrder& src,
-                                    pb::PhoneOrder* dst) {
+static void fill_proto_phone_order(const core::PhoneOrder& src, pb::PhoneOrder* dst) {
     dst->set_id(src.id);
     dst->set_customer_name(src.customer_name);
     dst->set_comment(src.comment);
@@ -718,8 +730,7 @@ static void fill_proto_phone_order(const core::PhoneOrder& src,
 grpc::Status PosServiceImpl::CreatePhoneOrder(grpc::ServerContext* /*ctx*/,
                                               const pb::CreatePhoneOrderRequest* req,
                                               pb::CreatePhoneOrderResponse* resp) {
-    auto result = mgr_->create_phone_order(
-        req->ticket_id(), req->customer_name(), req->comment());
+    auto result = mgr_->create_phone_order(req->ticket_id(), req->customer_name(), req->comment());
     if (!result) {
         resp->set_success(false);
         resp->set_error("Ticket not found, not open, or empty");
@@ -732,16 +743,13 @@ grpc::Status PosServiceImpl::CreatePhoneOrder(grpc::ServerContext* /*ctx*/,
 
     // Print a receipt for the phone order (with customer name/comment).
     if (mgr_->get_receipt_printer_enabled()) {
-        printer_->print_receipt(result->ticket,
-                                req->customer_name(),
-                                req->comment());
+        printer_->print_receipt(result->ticket, req->customer_name(), req->comment());
     }
 
     // Send to kitchen like a normal order.
     std::string kitchen_printer = mgr_->get_kitchen_printer_name();
     if (!kitchen_printer.empty() && mgr_->get_kitchen_printer_enabled()) {
-        printer_->print_kitchen(result->ticket, kitchen_printer,
-                                req->customer_name(),
+        printer_->print_kitchen(result->ticket, kitchen_printer, req->customer_name(),
                                 req->comment());
     }
 

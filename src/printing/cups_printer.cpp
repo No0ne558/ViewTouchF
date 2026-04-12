@@ -14,22 +14,22 @@ namespace viewtouch {
 
 // ── ESC/POS command constants ────────────────────────────────
 namespace escpos {
-    // Reset printer
-    constexpr uint8_t INIT[]          = {0x1B, 0x40};
-    // Select justification: 0=left, 1=center, 2=right
-    constexpr uint8_t ALIGN_CENTER[]  = {0x1B, 0x61, 0x01};
-    constexpr uint8_t ALIGN_LEFT[]    = {0x1B, 0x61, 0x00};
-    constexpr uint8_t ALIGN_RIGHT[]   = {0x1B, 0x61, 0x02};
-    // Double-height + double-width ON / OFF
-    constexpr uint8_t DOUBLE_ON[]     = {0x1D, 0x21, 0x11};
-    constexpr uint8_t DOUBLE_OFF[]    = {0x1D, 0x21, 0x00};
-    // Bold ON / OFF
-    constexpr uint8_t BOLD_ON[]       = {0x1B, 0x45, 0x01};
-    constexpr uint8_t BOLD_OFF[]      = {0x1B, 0x45, 0x00};
-    // Feed + full cut
-    constexpr uint8_t FEED_CUT[]      = {0x1D, 0x56, 0x41, 0x03};
-    // Line feed
-    constexpr uint8_t LF[]            = {0x0A};
+// Reset printer
+constexpr uint8_t INIT[] = {0x1B, 0x40};
+// Select justification: 0=left, 1=center, 2=right
+constexpr uint8_t ALIGN_CENTER[] = {0x1B, 0x61, 0x01};
+constexpr uint8_t ALIGN_LEFT[] = {0x1B, 0x61, 0x00};
+constexpr uint8_t ALIGN_RIGHT[] = {0x1B, 0x61, 0x02};
+// Double-height + double-width ON / OFF
+constexpr uint8_t DOUBLE_ON[] = {0x1D, 0x21, 0x11};
+constexpr uint8_t DOUBLE_OFF[] = {0x1D, 0x21, 0x00};
+// Bold ON / OFF
+constexpr uint8_t BOLD_ON[] = {0x1B, 0x45, 0x01};
+constexpr uint8_t BOLD_OFF[] = {0x1B, 0x45, 0x00};
+// Feed + full cut
+constexpr uint8_t FEED_CUT[] = {0x1D, 0x56, 0x41, 0x03};
+// Line feed
+constexpr uint8_t LF[] = {0x0A};
 }  // namespace escpos
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -73,12 +73,9 @@ std::string pad_left(const std::string& s, size_t width) {
 // ── CupsPrinter implementation ───────────────────────────────
 
 CupsPrinter::CupsPrinter(std::string printer_name, std::string store_name)
-    : printer_name_(std::move(printer_name)),
-      store_name_(std::move(store_name)) {}
+    : printer_name_(std::move(printer_name)), store_name_(std::move(store_name)) {}
 
-void CupsPrinter::set_store_name(const std::string& name) {
-    store_name_ = name;
-}
+void CupsPrinter::set_store_name(const std::string& name) { store_name_ = name; }
 
 std::string CupsPrinter::resolve_printer() const {
     if (!printer_name_.empty()) {
@@ -93,8 +90,8 @@ std::string CupsPrinter::resolve_printer() const {
 // ── Build ESC/POS receipt payload ────────────────────────────
 
 std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket,
-                                                         const std::string& customer_name,
-                                                         const std::string& comment) const {
+                                                        const std::string& customer_name,
+                                                        const std::string& comment) const {
     constexpr int LINE_WIDTH = 42;  // 42 columns for 80mm paper, standard
 
     std::vector<uint8_t> buf;
@@ -152,11 +149,9 @@ std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket,
         for (const auto& m : ti.modifiers) {
             mod_adj += m.price_adjustment_cents;
         }
-        int32_t line_total  = (ti.item.price_cents + mod_adj) * ti.quantity;
-        std::string line =
-            pad_right(ti.item.name, 24) +
-            pad_right(qty_str, 6) +
-            pad_left(fmt_money(line_total), 12);
+        int32_t line_total = (ti.item.price_cents + mod_adj) * ti.quantity;
+        std::string line = pad_right(ti.item.name, 24) + pad_right(qty_str, 6) +
+                           pad_left(fmt_money(line_total), 12);
         append_text(buf, line);
         append(buf, escpos::LF);
 
@@ -165,15 +160,24 @@ std::vector<uint8_t> CupsPrinter::build_receipt_payload(const Ticket& ticket,
             if (m.price_adjustment_cents <= 0) continue;
             std::string action_str;
             switch (m.action) {
-                case ModifierAction::ADD:    action_str = "ADD "; break;
-                case ModifierAction::EXTRA:  action_str = "EXTRA "; break;
-                case ModifierAction::SIDE:   action_str = "ON SIDE "; break;
-                case ModifierAction::DOUBLE: action_str = "DOUBLE "; break;
-                default: break;
+                case ModifierAction::ADD:
+                    action_str = "ADD ";
+                    break;
+                case ModifierAction::EXTRA:
+                    action_str = "EXTRA ";
+                    break;
+                case ModifierAction::SIDE:
+                    action_str = "ON SIDE ";
+                    break;
+                case ModifierAction::DOUBLE:
+                    action_str = "DOUBLE ";
+                    break;
+                default:
+                    break;
             }
             std::string mod_line = "  " + action_str + m.modifier_name;
-            mod_line = pad_right(mod_line, 30) +
-                       pad_left("+" + fmt_money(m.price_adjustment_cents), 12);
+            mod_line =
+                pad_right(mod_line, 30) + pad_left("+" + fmt_money(m.price_adjustment_cents), 12);
             append_text(buf, mod_line);
             append(buf, escpos::LF);
         }
@@ -257,12 +261,10 @@ PrintResult CupsPrinter::send_raw(const std::vector<uint8_t>& data,
         return result;
     }
 
-    int job_id = cupsPrintFile(
-        printer.c_str(),
-        tmppath,
-        "ViewTouch Receipt",       // job title shown in CUPS UI
-        0,                         // num_options
-        nullptr                    // options (raw mode is set via MIME type)
+    int job_id = cupsPrintFile(printer.c_str(), tmppath,
+                               "ViewTouch Receipt",  // job title shown in CUPS UI
+                               0,                    // num_options
+                               nullptr               // options (raw mode is set via MIME type)
     );
 
     unlink(tmppath);  // clean up temp file
@@ -274,27 +276,25 @@ PrintResult CupsPrinter::send_raw(const std::vector<uint8_t>& data,
     }
 
     result.success = true;
-    result.job_id  = job_id;
+    result.job_id = job_id;
     return result;
 }
 
-PrintResult CupsPrinter::print_receipt(const Ticket& ticket,
-                                        const std::string& customer_name,
-                                        const std::string& comment) {
+PrintResult CupsPrinter::print_receipt(const Ticket& ticket, const std::string& customer_name,
+                                       const std::string& comment) {
     auto payload = build_receipt_payload(ticket, customer_name, comment);
     return send_raw(payload);
 }
 
-PrintResult CupsPrinter::print_kitchen(const Ticket& ticket,
-                                        const std::string& printer_name,
-                                        const std::string& customer_name,
-                                        const std::string& comment) {
+PrintResult CupsPrinter::print_kitchen(const Ticket& ticket, const std::string& printer_name,
+                                       const std::string& customer_name,
+                                       const std::string& comment) {
     auto payload = build_kitchen_payload(ticket, customer_name, comment);
     return send_raw(payload, printer_name);
 }
 
 PrintResult CupsPrinter::print_report(const std::string& report_text,
-                                       const std::string& printer_name) {
+                                      const std::string& printer_name) {
     std::vector<uint8_t> buf;
     buf.reserve(report_text.size() + 64);
     append(buf, escpos::INIT);
@@ -304,20 +304,17 @@ PrintResult CupsPrinter::print_report(const std::string& report_text,
     return send_raw(buf, printer_name);
 }
 
-PrintResult CupsPrinter::print_formatted_report(const DailyReport& report,
-                                                  const std::string& title,
-                                                  const std::string& date_range,
-                                                  const std::vector<DailyReport>& daily_breakdown,
-                                                  const std::string& printer_name) {
+PrintResult CupsPrinter::print_formatted_report(const DailyReport& report, const std::string& title,
+                                                const std::string& date_range,
+                                                const std::vector<DailyReport>& daily_breakdown,
+                                                const std::string& printer_name) {
     auto payload = build_report_payload(report, title, date_range, daily_breakdown);
     return send_raw(payload, printer_name);
 }
 
 std::vector<uint8_t> CupsPrinter::build_report_payload(
-        const DailyReport& rpt,
-        const std::string& title,
-        const std::string& date_range,
-        const std::vector<DailyReport>& daily_breakdown) const {
+    const DailyReport& rpt, const std::string& title, const std::string& date_range,
+    const std::vector<DailyReport>& daily_breakdown) const {
     constexpr int W = 42;  // 42-column 80mm thermal paper
 
     std::vector<uint8_t> buf;
@@ -428,9 +425,9 @@ std::vector<uint8_t> CupsPrinter::build_report_payload(
         append(buf, escpos::LF);
 
         for (const auto& e : rpt.item_sales) {
-            append_text(buf, pad_right(e.item_name, 22)
-                           + pad_left(std::to_string(e.quantity_sold), 8)
-                           + pad_left(fmt_money(e.revenue_cents), 12));
+            append_text(buf, pad_right(e.item_name, 22) +
+                                 pad_left(std::to_string(e.quantity_sold), 8) +
+                                 pad_left(fmt_money(e.revenue_cents), 12));
             append(buf, escpos::LF);
         }
     }
@@ -455,9 +452,8 @@ std::vector<uint8_t> CupsPrinter::build_report_payload(
         append(buf, escpos::LF);
 
         for (const auto& d : daily_breakdown) {
-            append_text(buf, pad_right(d.date, 14)
-                           + pad_left(std::to_string(d.total_tickets), 8)
-                           + pad_left(fmt_money(d.net_revenue_cents), 20));
+            append_text(buf, pad_right(d.date, 14) + pad_left(std::to_string(d.total_tickets), 8) +
+                                 pad_left(fmt_money(d.net_revenue_cents), 20));
             append(buf, escpos::LF);
         }
     }
@@ -471,12 +467,10 @@ std::vector<uint8_t> CupsPrinter::build_report_payload(
         auto now = std::time(nullptr);
         auto* tm = std::localtime(&now);
         std::ostringstream ts;
-        ts << "Printed: "
-           << (tm->tm_year + 1900) << '-'
-           << std::setw(2) << std::setfill('0') << (tm->tm_mon + 1) << '-'
-           << std::setw(2) << std::setfill('0') << tm->tm_mday << ' '
-           << std::setw(2) << std::setfill('0') << tm->tm_hour << ':'
-           << std::setw(2) << std::setfill('0') << tm->tm_min;
+        ts << "Printed: " << (tm->tm_year + 1900) << '-' << std::setw(2) << std::setfill('0')
+           << (tm->tm_mon + 1) << '-' << std::setw(2) << std::setfill('0') << tm->tm_mday << ' '
+           << std::setw(2) << std::setfill('0') << tm->tm_hour << ':' << std::setw(2)
+           << std::setfill('0') << tm->tm_min;
         append(buf, escpos::ALIGN_CENTER);
         append_text(buf, ts.str());
         append(buf, escpos::LF);
@@ -510,8 +504,8 @@ std::vector<PrinterInfo> CupsPrinter::list_printers() {
 // ── Build kitchen ticket payload ─────────────────────────────
 
 std::vector<uint8_t> CupsPrinter::build_kitchen_payload(const Ticket& ticket,
-                                                          const std::string& customer_name,
-                                                          const std::string& comment) const {
+                                                        const std::string& customer_name,
+                                                        const std::string& comment) const {
     constexpr int LINE_WIDTH = 42;
 
     std::vector<uint8_t> buf;
@@ -568,13 +562,26 @@ std::vector<uint8_t> CupsPrinter::build_kitchen_payload(const Ticket& ticket,
         for (const auto& m : ti.modifiers) {
             std::string action_str;
             switch (m.action) {
-                case ModifierAction::NO:     action_str = "NO "; break;
-                case ModifierAction::ADD:    action_str = "ADD "; break;
-                case ModifierAction::EXTRA:  action_str = "EXTRA "; break;
-                case ModifierAction::LIGHT:  action_str = "LIGHT "; break;
-                case ModifierAction::SIDE:   action_str = "ON SIDE "; break;
-                case ModifierAction::DOUBLE: action_str = "DOUBLE "; break;
-                default: break;
+                case ModifierAction::NO:
+                    action_str = "NO ";
+                    break;
+                case ModifierAction::ADD:
+                    action_str = "ADD ";
+                    break;
+                case ModifierAction::EXTRA:
+                    action_str = "EXTRA ";
+                    break;
+                case ModifierAction::LIGHT:
+                    action_str = "LIGHT ";
+                    break;
+                case ModifierAction::SIDE:
+                    action_str = "ON SIDE ";
+                    break;
+                case ModifierAction::DOUBLE:
+                    action_str = "DOUBLE ";
+                    break;
+                default:
+                    break;
             }
             append_text(buf, "   >> " + action_str + m.modifier_name);
             append(buf, escpos::LF);
@@ -603,10 +610,10 @@ PrintJobStatus CupsPrinter::query_job(int job_id) {
     PrintJobStatus status;
     status.job_id = job_id;
 
-    cups_job_t* jobs  = nullptr;
+    cups_job_t* jobs = nullptr;
     std::string printer = resolve_printer();
     if (printer.empty()) {
-        status.state   = "ERROR";
+        status.state = "ERROR";
         status.message = "No printer configured";
         return status;
     }
@@ -632,7 +639,7 @@ PrintJobStatus CupsPrinter::query_job(int job_id) {
                 case IPP_JOB_CANCELED:
                 case IPP_JOB_ABORTED:
                 default:
-                    status.state   = "ERROR";
+                    status.state = "ERROR";
                     status.message = "Job state: " + std::to_string(jobs[i].state);
                     break;
             }
@@ -641,7 +648,7 @@ PrintJobStatus CupsPrinter::query_job(int job_id) {
     }
 
     if (!found) {
-        status.state   = "ERROR";
+        status.state = "ERROR";
         status.message = "Job ID not found in CUPS queue";
     }
 
