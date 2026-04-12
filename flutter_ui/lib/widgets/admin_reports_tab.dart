@@ -495,7 +495,9 @@ class _CalendarGridState extends State<_CalendarGrid> {
     final nextMonth = _month == 12 ? 1 : _month + 1;
     final nextYear = _month == 12 ? _year + 1 : _year;
     if (DateTime(nextYear, nextMonth, 1)
-        .isAfter(DateTime(now.year, now.month + 1, 0))) return;
+        .isAfter(DateTime(now.year, now.month + 1, 0))) {
+      return;
+    }
     setState(() {
       _month = nextMonth;
       _year = nextYear;
@@ -550,8 +552,9 @@ class _CalendarGridState extends State<_CalendarGrid> {
                 if (y == null) return;
                 setState(() {
                   _year = y;
-                  if (_year == now.year && _month > now.month)
+                  if (_year == now.year && _month > now.month) {
                     _month = now.month;
+                  }
                 });
               },
             ),
