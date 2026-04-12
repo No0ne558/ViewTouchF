@@ -288,4 +288,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed analyzer/style warnings (added missing braces in `flutter_ui/lib/widgets/admin_reports_tab.dart`).
 - Resolved CI pre-commit PATH and permission issues (ensured `$HOME/.local/bin` is on PATH and `flutter pub get` executes in format jobs).
 - Minor Go vet and lint fixes in the CLI scaffold and small bugfixes discovered while integrating pre-commit hooks.
-
