@@ -32,3 +32,19 @@ lint:
 	else \
 		echo "pre-commit not found; install with 'pip3 install --user pre-commit'"; exit 1; \
 	fi
+
+.PHONY: docker-image package package-deb package-rpm
+
+docker-image:
+	docker build -t viewtouchf/daemon:latest -f docker/daemon/Dockerfile .
+
+package-deb:
+	@echo "Building .deb package (requires dpkg-deb)"
+	@./packaging/deb/build-deb.sh
+
+package-rpm:
+	@echo "Building .rpm package (requires rpmbuild)"
+	@./packaging/rpm/build-rpm.sh
+
+package: package-deb package-rpm
+	@echo "Packages built in dist/ and packaging/rpm/rpmbuild/RPMS"
