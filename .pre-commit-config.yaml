@@ -16,8 +16,8 @@ repos:
         files: '\.go$'
 
       - id: go-vet
-        name: go vet
-        entry: go vet ./...
+        name: go vet (cli module)
+        entry: bash -c "cd cli && go vet ./..."
         language: system
         pass_filenames: false
         always_run: true
@@ -26,10 +26,10 @@ repos:
         name: clang-format
         entry: clang-format -i
         language: system
-        files: '\.(c|cc|cpp|cxx|h|hpp)$$'
+        files: '\.(c|cc|cpp|cxx|h|hpp)$'
 
       - id: dart-format
-        name: dart format
-        entry: dart format
+        name: dart format (flutter_ui)
+        entry: bash -c "cd flutter_ui && dart format ."
         language: system
         files: '\.dart$'
