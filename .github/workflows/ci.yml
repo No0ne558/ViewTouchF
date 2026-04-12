@@ -25,11 +25,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip clang-format
           pip3 install --user pre-commit
-          export PATH=$HOME/.local/bin:$PATH
+          # make the user's local bin available to subsequent steps
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           pre-commit --version
       - name: Run pre-commit
-        env:
-          PATH: ${{ env.HOME }}/.local/bin:${{ env.PATH }}
         run: pre-commit run --all-files
 
   build-daemon:
