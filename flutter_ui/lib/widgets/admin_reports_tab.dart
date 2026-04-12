@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:viewtouch_ui/generated/app_localizations.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
 
@@ -95,7 +96,7 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       context: context,
       builder: (ctx) => _SingleDatePickerDialog(
         initialDate: _selectedDate,
-        title: 'Select Report Date',
+        title: AppLocalizations.of(context)!.selectReportDate,
       ),
     );
     if (d != null) {
@@ -181,12 +182,12 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
           child: Row(
             children: [
               SegmentedButton<_ReportRange>(
-                segments: const [
-                  ButtonSegment(value: _ReportRange.daily, label: Text('Daily')),
-                  ButtonSegment(value: _ReportRange.weekly, label: Text('Weekly')),
-                  ButtonSegment(value: _ReportRange.monthly, label: Text('Monthly')),
-                  ButtonSegment(value: _ReportRange.yearly, label: Text('Yearly')),
-                  ButtonSegment(value: _ReportRange.custom, label: Text('Custom')),
+                segments: [
+                  ButtonSegment(value: _ReportRange.daily, label: Text(AppLocalizations.of(context)!.daily)),
+                  ButtonSegment(value: _ReportRange.weekly, label: Text(AppLocalizations.of(context)!.weekly)),
+                  ButtonSegment(value: _ReportRange.monthly, label: Text(AppLocalizations.of(context)!.monthly)),
+                  ButtonSegment(value: _ReportRange.yearly, label: Text(AppLocalizations.of(context)!.yearly)),
+                  ButtonSegment(value: _ReportRange.custom, label: Text(AppLocalizations.of(context)!.custom)),
                 ],
                 selected: {_range},
                 onSelectionChanged: (sel) {
@@ -215,14 +216,14 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: AppLocalizations.of(context)!.refresh,
                 onPressed: _loadReport,
               ),
               const SizedBox(width: 4),
               FilledButton.icon(
                 onPressed: _report != null ? _printReport : null,
                 icon: const Icon(Icons.print, size: 18),
-                label: const Text('Print'),
+                label: Text(AppLocalizations.of(context)!.printLabel),
               ),
             ],
           ),
@@ -232,8 +233,8 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
-              : _report == null
-                  ? const Center(child: Text('No data'))
+                : _report == null
+                  ? Center(child: Text(AppLocalizations.of(context)!.noData))
                   : _range == _ReportRange.daily
                       ? _buildSingleReport(_report!)
                       : _buildRangeReport(),
@@ -248,7 +249,7 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Report — ${r.date}',
+            Text(AppLocalizations.of(context)!.reportForDate(r.date),
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 20),
           _buildSummaryCards(r),
@@ -268,7 +269,7 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Daily Breakdown',
+                child: Text(AppLocalizations.of(context)!.dailyBreakdown,
                     style: Theme.of(context).textTheme.titleMedium),
               ),
               Expanded(
@@ -283,7 +284,7 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                             selected: isSel,
                             title: Text(r.date),
                             subtitle: Text(
-                                '${r.totalTickets} tickets • ${_money(r.netRevenueCents)}'),
+                              '${r.totalTickets} ${AppLocalizations.of(context)!.tickets} • ${_money(r.netRevenueCents)}'),
                             dense: true,
                             onTap: () =>
                                 setState(() => _detailReport = r),
@@ -311,43 +312,43 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       runSpacing: 14,
       children: [
         _SummaryCard(
-            label: 'Subtotal', value: _money(r.subtotalCents),
+          label: AppLocalizations.of(context)!.subtotal, value: _money(r.subtotalCents),
             icon: Icons.receipt),
         _SummaryCard(
-            label: 'Tax', value: _money(r.totalTaxCents),
+          label: AppLocalizations.of(context)!.tax, value: _money(r.totalTaxCents),
             icon: Icons.receipt_long),
         _SummaryCard(
-            label: 'Gross Revenue', value: _money(r.totalRevenueCents),
+          label: AppLocalizations.of(context)!.grossRevenue, value: _money(r.totalRevenueCents),
             icon: Icons.monetization_on_outlined),
         _SummaryCard(
-            label: 'CC Fees', value: _money(r.ccFeeTotalCents),
+          label: AppLocalizations.of(context)!.ccFee, value: _money(r.ccFeeTotalCents),
             icon: Icons.credit_score,
             color: r.ccFeeTotalCents > 0 ? Colors.blue : null),
         _SummaryCard(
-            label: 'Net Revenue', value: _money(r.netRevenueCents),
+          label: AppLocalizations.of(context)!.netRevenue, value: _money(r.netRevenueCents),
             icon: Icons.attach_money),
         _SummaryCard(
-            label: 'Total Collected', value: _money(r.totalCollectedCents),
+          label: AppLocalizations.of(context)!.totalCollected, value: _money(r.totalCollectedCents),
             icon: Icons.account_balance_wallet),
         _SummaryCard(
-            label: 'Cash', value: _money(r.cashTotalCents),
+          label: AppLocalizations.of(context)!.cash, value: _money(r.cashTotalCents),
             icon: Icons.payments),
         _SummaryCard(
-            label: 'Card', value: _money(r.cardTotalCents),
+          label: AppLocalizations.of(context)!.card, value: _money(r.cardTotalCents),
             icon: Icons.credit_card),
         _SummaryCard(
-            label: 'Tickets', value: '${r.totalTickets}',
+          label: AppLocalizations.of(context)!.tickets, value: '${r.totalTickets}',
             icon: Icons.confirmation_number),
         _SummaryCard(
-            label: 'Voided', value: '${r.voidedCount}',
+          label: AppLocalizations.of(context)!.voided, value: '${r.voidedCount}',
             icon: Icons.cancel,
             color: r.voidedCount > 0 ? Colors.red : null),
         _SummaryCard(
-            label: 'Comped', value: '${r.compedCount} (${_money(r.compedTotalCents)})',
+          label: AppLocalizations.of(context)!.comped, value: '${r.compedCount} (${_money(r.compedTotalCents)})',
             icon: Icons.card_giftcard,
             color: r.compedCount > 0 ? Colors.orange : null),
         _SummaryCard(
-            label: 'Refunded', value: '${r.refundedCount} (${_money(r.refundedTotalCents)})',
+          label: AppLocalizations.of(context)!.refunded, value: '${r.refundedCount} (${_money(r.refundedTotalCents)})',
             icon: Icons.undo,
             color: r.refundedCount > 0 ? Colors.purple : null),
       ],
@@ -373,7 +374,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardColor = color ?? Theme.of(context).colorScheme.primaryContainer;
     return Card(
-      color: cardColor.withOpacity(0.3),
+      color: cardColor.withAlpha((0.3 * 255).round()),
       child: SizedBox(
         width: 175,
         height: 100,
@@ -570,7 +571,7 @@ class _CalendarGridState extends State<_CalendarGrid> {
                 bg = Theme.of(context).colorScheme.primary;
                 fg = Theme.of(context).colorScheme.onPrimary;
               } else if (inRange) {
-                bg = Theme.of(context).colorScheme.primary.withOpacity(0.15);
+                bg = Theme.of(context).colorScheme.primary.withAlpha((0.15 * 255).round());
               }
 
               return Material(

@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:viewtouch_ui/generated/app_localizations.dart';
 import '../generated/pos_service.pb.dart';
 import '../generated/pos_service.pbgrpc.dart';
 import '../services/pos_client.dart';
+import '../services/locale_provider.dart';
 import 'touchscreen_keyboard.dart';
 
 class AdminSettingsTab extends StatefulWidget {
@@ -67,7 +70,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       setState(() => _loading = false);
     } catch (e) {
       setState(() => _loading = false);
-      _showSnack('Failed to load settings: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon, error: true);
     }
   }
 
@@ -81,7 +85,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       });
     } catch (e) {
       setState(() => _loadingPrinters = false);
-      _showSnack('Failed to list printers: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon, error: true);
     }
   }
 
@@ -107,9 +112,11 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
           ..ccFeeBps = ccBps);
 
       await PosClient.instance.stub.updateSettings(req);
-      _showSnack('Settings saved');
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.saveSettings);
     } catch (e) {
-      _showSnack('Save failed: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.saveFailed, error: true);
     } finally {
       setState(() => _saving = false);
     }
@@ -129,20 +136,19 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Shutdown System'),
-        content: const Text(
-            'This will close the UI and stop the POS daemon.\n\n'
-            'Are you sure?'),
+        title: Text(AppLocalizations.of(ctx)!.shutdownSystem),
+        content: Text(
+            '${AppLocalizations.of(ctx)!.shutdownSystem}\n\n${AppLocalizations.of(ctx)!.retry}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
             icon: const Icon(Icons.power_settings_new),
-            label: const Text('Shutdown'),
+            label: Text(AppLocalizations.of(ctx)!.shutdown),
           ),
         ],
       ),
@@ -188,7 +194,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _availablePrinters.any((p) => p.name == selectedPrinter)
+              initialValue: _availablePrinters.any((p) => p.name == selectedPrinter)
                   ? selectedPrinter
                   : null,
               decoration: InputDecoration(
@@ -209,7 +215,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                       if (val != null) onPrinterChanged(val);
                     }
                   : null,
-              hint: const Text('Select printer'),
+              hint: Text(AppLocalizations.of(context)!.selectPrinter),
             ),
           ],
         ),
@@ -228,9 +234,27 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Restaurant Settings',
+            Text(AppLocalizations.of(context)!.restaurantSettings,
                 style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: Provider.of<LocaleProvider>(context).locale?.languageCode ?? 'en',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.language,
+                border: const OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'es', child: Text('Español')),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  Provider.of<LocaleProvider>(context, listen: false)
+                      .setLocale(Locale(val));
+                }
+              },
+            ),
+            const SizedBox(height: 16),
             TouchTextField(
               controller: _nameCtrl,
               dialogTitle: 'Restaurant Name',
@@ -312,20 +336,20 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 TextButton.icon(
                   onPressed: _loadPrinters,
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text('Refresh'),
+                    label: Text(AppLocalizations.of(context)!.refresh),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             if (_availablePrinters.isEmpty && !_loadingPrinters)
-              const Card(
+              Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No CUPS printers found on this system.'),
+                  padding: const EdgeInsets.all(16),
+                  child: Text(AppLocalizations.of(context)!.noCupsPrinters),
                 ),
               ),
             _buildPrinterTarget(
-              label: 'Receipt Printer',
+              label: AppLocalizations.of(context)!.receiptPrinter,
               icon: Icons.receipt_long,
               enabled: _receiptPrinterEnabled,
               selectedPrinter: _receiptPrinterName,
@@ -336,7 +360,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             ),
             const SizedBox(height: 12),
             _buildPrinterTarget(
-              label: 'Kitchen Printer',
+              label: AppLocalizations.of(context)!.kitchenPrinter,
               icon: Icons.restaurant,
               enabled: _kitchenPrinterEnabled,
               selectedPrinter: _kitchenPrinterName,
@@ -356,7 +380,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                         width: 20, height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.save),
-                label: const Text('Save Settings'),
+                label: Text(AppLocalizations.of(context)!.saveSettings),
               ),
             ),
             const SizedBox(height: 48),
@@ -372,7 +396,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 ),
                 onPressed: _shutdown,
                 icon: const Icon(Icons.power_settings_new),
-                label: const Text('Shutdown System'),
+                label: Text(AppLocalizations.of(context)!.shutdownSystem),
               ),
             ),
           ],

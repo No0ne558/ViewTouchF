@@ -1,5 +1,6 @@
 import 'dart:ui' show PointerDeviceKind;
 import 'package:flutter/material.dart';
+import 'package:viewtouch_ui/generated/app_localizations.dart';
 import '../generated/pos_service.pb.dart';
 import '../utils/money.dart';
 import 'touchscreen_keyboard.dart';
@@ -64,13 +65,14 @@ class _TicketPanelState extends State<TicketPanel> {
   String _money(int cents) => formatMoney(cents);
 
   String _actionLabel(ModifierAction a) {
+    final loc = AppLocalizations.of(context)!;
     switch (a) {
-      case ModifierAction.MOD_NO:     return 'NO';
-      case ModifierAction.MOD_ADD:    return 'ADD';
-      case ModifierAction.MOD_EXTRA:  return 'EXTRA';
-      case ModifierAction.MOD_LIGHT:  return 'LIGHT';
-      case ModifierAction.MOD_SIDE:   return 'ON SIDE';
-      case ModifierAction.MOD_DOUBLE: return 'DOUBLE';
+      case ModifierAction.MOD_NO:     return loc.modNo;
+      case ModifierAction.MOD_ADD:    return loc.modAdd;
+      case ModifierAction.MOD_EXTRA:  return loc.modExtra;
+      case ModifierAction.MOD_LIGHT:  return loc.modLight;
+      case ModifierAction.MOD_SIDE:   return loc.modSide;
+      case ModifierAction.MOD_DOUBLE: return loc.modDouble;
       default: return '';
     }
   }
@@ -91,7 +93,7 @@ class _TicketPanelState extends State<TicketPanel> {
   Widget build(BuildContext context) {
     final t = widget.ticket;
     if (t == null) {
-      return const Center(child: Text('No active ticket'));
+      return Center(child: Text(AppLocalizations.of(context)!.noActiveTicket));
     }
 
     return Column(
@@ -99,9 +101,9 @@ class _TicketPanelState extends State<TicketPanel> {
         // ── Line items ────────────────────────────────────────
         Expanded(
           child: t.items.isEmpty
-              ? const Center(
-                  child: Text('Tap a menu item to begin',
-                      style: TextStyle(fontSize: 16, color: Colors.grey)),
+                ? Center(
+                  child: Text(AppLocalizations.of(context)!.tapMenuToBegin,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey)),
                 )
               : ScrollConfiguration(
                   behavior: ScrollConfiguration.of(context).copyWith(
@@ -228,8 +230,8 @@ class _TicketPanelState extends State<TicketPanel> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             children: [
-              _TotalRow(label: 'Subtotal', value: _money(t.subtotal)),
-              _TotalRow(label: 'Tax', value: _money(t.tax)),
+              _TotalRow(label: AppLocalizations.of(context)!.subtotal, value: _money(t.subtotal)),
+              _TotalRow(label: AppLocalizations.of(context)!.tax, value: _money(t.tax)),
               const Divider(),
               _TotalRow(
                 label: 'TOTAL',
@@ -246,8 +248,8 @@ class _TicketPanelState extends State<TicketPanel> {
                       child: FilledButton.icon(
                         onPressed: t.items.isEmpty ? null : widget.onPhoneOrder,
                         icon: const Icon(Icons.phone),
-                        label: const Text('PHONE ORDER',
-                            style: TextStyle(fontSize: 16)),
+                        label: Text(AppLocalizations.of(context)!.phoneOrder,
+                          style: const TextStyle(fontSize: 16)),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.orange.shade700),
                       ),
@@ -260,8 +262,8 @@ class _TicketPanelState extends State<TicketPanel> {
                       child: FilledButton.icon(
                         onPressed: t.items.isEmpty ? null : widget.onCheckout,
                         icon: const Icon(Icons.payment),
-                        label: const Text('CHECKOUT',
-                            style: TextStyle(fontSize: 18)),
+                        label: Text(AppLocalizations.of(context)!.checkout,
+                            style: const TextStyle(fontSize: 18)),
                       ),
                     ),
                   ),
@@ -278,8 +280,8 @@ class _TicketPanelState extends State<TicketPanel> {
   void _showQuantityPad(BuildContext context, TicketItem ti) {
     showDialog<String>(
       context: context,
-      builder: (_) => const TouchKeyboardDialog(
-        title: 'Enter Quantity',
+      builder: (_) => TouchKeyboardDialog(
+        title: AppLocalizations.of(context)!.enterQuantity,
         numericOnly: true,
       ),
     ).then((val) {
@@ -298,18 +300,17 @@ class _TicketPanelState extends State<TicketPanel> {
       showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Remove Item'),
-          content: Text(
-            'Remove ${ti.item.name} (qty ${ti.quantity}) from the order?'),
+          title: Text(AppLocalizations.of(context)!.removeItemTitle),
+            content: Text(AppLocalizations.of(context)!.removeItemConfirm(ti.item.name, ti.quantity)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('CANCEL'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: FilledButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('REMOVE'),
+              child: Text(AppLocalizations.of(context)!.remove),
             ),
           ],
         ),

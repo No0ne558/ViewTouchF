@@ -1,8 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:viewtouch_ui/generated/app_localizations.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
+import '../utils/money.dart';
 import 'touchscreen_keyboard.dart';
 
 class AdminMenuTab extends StatefulWidget {
@@ -31,7 +33,8 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
       });
     } catch (e) {
       setState(() => _loading = false);
-      _showSnack('Failed to load menu: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.loadMenuFailed, error: true);
     }
   }
 
@@ -45,9 +48,11 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
         AddMenuItemRequest()..item = result,
       );
       _loadMenu();
-      _showSnack('Item added');
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.itemAdded);
     } catch (e) {
-      _showSnack('Add failed: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.addItemFailed, error: true);
     }
   }
 
@@ -61,9 +66,11 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
         UpdateMenuItemRequest()..item = result,
       );
       _loadMenu();
-      _showSnack('Item updated');
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.itemUpdated);
     } catch (e) {
-      _showSnack('Update failed: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.updateItemFailed, error: true);
     }
   }
 
@@ -71,14 +78,14 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Menu Item'),
-        content: Text('Remove "${item.name}" from the menu?'),
+        title: Text(AppLocalizations.of(ctx)!.deleteMenuItemTitle),
+        content: Text(AppLocalizations.of(ctx)!.deleteMenuItemConfirm(item.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(ctx)!.cancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(ctx)!.delete),
           ),
         ],
       ),
@@ -89,9 +96,11 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
         DeleteMenuItemRequest()..itemId = item.id,
       );
       _loadMenu();
-      _showSnack('Item deleted');
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.itemDeleted);
     } catch (e) {
-      _showSnack('Delete failed: $e', error: true);
+      if (!mounted) return;
+      _showSnack(AppLocalizations.of(context)!.removeItemFailed, error: true);
     }
   }
 
@@ -105,7 +114,7 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
     );
   }
 
-  String _money(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';
+  String _money(int cents) => formatMoney(cents);
 
   @override
   Widget build(BuildContext context) {
@@ -117,20 +126,20 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Text('Menu Items (${_items.length})',
+                Text('${AppLocalizations.of(context)!.menuItems} (${_items.length})',
                   style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
               FilledButton.icon(
                 onPressed: _addItem,
                 icon: const Icon(Icons.add),
-                label: const Text('Add Item'),
+                label: Text(AppLocalizations.of(context)!.addItem),
               ),
             ],
           ),
         ),
         Expanded(
-          child: _items.isEmpty
-              ? const Center(child: Text('No menu items. Add one above.'))
+            child: _items.isEmpty
+              ? Center(child: Text(AppLocalizations.of(context)!.noMenuItems))
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _items.length,
@@ -337,12 +346,12 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Edit Menu Item' : 'New Menu Item'),
+        title: Text(_isEdit ? AppLocalizations.of(context)!.editMenuItem : AppLocalizations.of(context)!.newMenuItem),
         actions: [
           FilledButton.icon(
             onPressed: () => Navigator.pop(context, _buildMenuItem()),
             icon: const Icon(Icons.save),
-            label: Text(_isEdit ? 'Save' : 'Add'),
+            label: Text(_isEdit ? AppLocalizations.of(context)!.save : AppLocalizations.of(context)!.add),
           ),
           const SizedBox(width: 12),
         ],
@@ -351,9 +360,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
         padding: const EdgeInsets.all(16),
         children: [
           // ── Basic fields ─────────────────────────────────
-          Text('Item Details',
+            Text(AppLocalizations.of(context)!.itemDetails,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold)),
+                fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -361,10 +370,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 child: TouchTextField(
                   controller: _idCtrl,
                   enabled: !_isEdit,
-                  dialogTitle: 'Item ID',
-                  decoration: const InputDecoration(
-                    labelText: 'Item ID',
-                    border: OutlineInputBorder(),
+                  dialogTitle: AppLocalizations.of(context)!.itemIdLabel,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.itemIdLabel,
+                    border: const OutlineInputBorder(),
                     hintText: 'e.g. BUR03',
                   ),
                 ),
@@ -374,10 +383,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 flex: 2,
                 child: TouchTextField(
                   controller: _nameCtrl,
-                  dialogTitle: 'Item Name',
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+                  dialogTitle: AppLocalizations.of(context)!.itemNameLabel,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.itemNameLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -389,11 +398,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
               Expanded(
                 child: TouchTextField(
                   controller: _priceCtrl,
-                  dialogTitle: 'Price (\$)',
+                  dialogTitle: AppLocalizations.of(context)!.priceLabel,
                   numericOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Price (\$)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.priceLabel,
+                    border: const OutlineInputBorder(),
                     hintText: '12.99',
                   ),
                 ),
@@ -402,10 +411,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
               Expanded(
                 child: TouchTextField(
                   controller: _catCtrl,
-                  dialogTitle: 'Category',
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
+                  dialogTitle: AppLocalizations.of(context)!.categoryLabel,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.categoryLabel,
+                    border: const OutlineInputBorder(),
                     hintText: 'e.g. Entrees',
                   ),
                 ),
@@ -416,8 +425,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(height: 12),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Send to Kitchen'),
-            subtitle: const Text('Print this item on kitchen tickets'),
+            title: Text(AppLocalizations.of(context)!.sendToKitchen),
+            subtitle: Text(AppLocalizations.of(context)!.sendToKitchenSubtitle),
             value: _sendToKitchen,
             onChanged: (v) => setState(() => _sendToKitchen = v),
           ),
@@ -426,24 +435,24 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(height: 24),
           Row(
             children: [
-              Text('Modifier Groups',
+                Text(AppLocalizations.of(context)!.modifierGroups,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.bold)),
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: _addGroup,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Group'),
+                label: Text(AppLocalizations.of(context)!.addGroup),
               ),
             ],
           ),
           const SizedBox(height: 8),
           if (_groups.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Center(
-                child: Text('No modifier groups. Items will be added as-is.',
-                    style: TextStyle(color: Colors.grey)),
+                child: Text(AppLocalizations.of(context)!.noModifierGroups,
+                    style: const TextStyle(color: Colors.grey)),
               ),
             ),
           for (int gi = 0; gi < _groups.length; gi++)
@@ -468,10 +477,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 Expanded(
                   child: TouchTextField(
                     controller: g.idCtrl,
-                    dialogTitle: 'Group ID',
-                    decoration: const InputDecoration(
-                      labelText: 'Group ID',
-                      border: OutlineInputBorder(),
+                    dialogTitle: AppLocalizations.of(context)!.groupIdLabel,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.groupIdLabel,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                   ),
@@ -481,10 +490,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                   flex: 2,
                   child: TouchTextField(
                     controller: g.nameCtrl,
-                    dialogTitle: 'Group Name',
-                    decoration: const InputDecoration(
-                      labelText: 'Group Name',
-                      border: OutlineInputBorder(),
+                    dialogTitle: AppLocalizations.of(context)!.groupNameLabel,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.groupNameLabel,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                       hintText: 'e.g. Toppings',
                     ),
@@ -495,11 +504,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                   width: 70,
                   child: TouchTextField(
                     controller: g.minSelectCtrl,
-                    dialogTitle: 'Min Select',
+                    dialogTitle: AppLocalizations.of(context)!.minSelectLabel,
                     numericOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Min',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.minSelectLabel,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                   ),
@@ -509,11 +518,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                   width: 70,
                   child: TouchTextField(
                     controller: g.maxSelectCtrl,
-                    dialogTitle: 'Max Select',
+                    dialogTitle: AppLocalizations.of(context)!.maxSelectLabel,
                     numericOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Max',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.maxSelectLabel,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                   ),
@@ -521,7 +530,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                  tooltip: 'Remove group',
+                  tooltip: AppLocalizations.of(context)!.removeGroup,
                   onPressed: () => _removeGroup(gi),
                 ),
               ],
@@ -532,10 +541,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
 
             // Modifier rows
             if (g.modifiers.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No modifiers in this group.',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(AppLocalizations.of(context)!.noModifiersInGroup,
+                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ),
             for (int mi = 0; mi < g.modifiers.length; mi++)
               _buildModifierRow(gi, mi),
@@ -543,10 +552,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             // Add modifier button
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton.icon(
+                child: TextButton.icon(
                 onPressed: () => _addModifier(gi),
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add Modifier', style: TextStyle(fontSize: 13)),
+                label: Text(AppLocalizations.of(context)!.addModifier, style: const TextStyle(fontSize: 13)),
               ),
             ),
           ],
@@ -565,10 +574,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             width: 80,
             child: TouchTextField(
               controller: m.idCtrl,
-              dialogTitle: 'Modifier ID',
-              decoration: const InputDecoration(
-                labelText: 'ID',
-                border: OutlineInputBorder(),
+              dialogTitle: AppLocalizations.of(context)!.modifierIdLabel,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.modifierIdLabel,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               style: const TextStyle(fontSize: 13),
@@ -579,10 +588,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             flex: 3,
             child: TouchTextField(
               controller: m.nameCtrl,
-              dialogTitle: 'Modifier Name',
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              dialogTitle: AppLocalizations.of(context)!.modifierNameLabel,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.modifierNameLabel,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               style: const TextStyle(fontSize: 13),
@@ -593,11 +602,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             width: 80,
             child: TouchTextField(
               controller: m.priceCtrl,
-              dialogTitle: 'Modifier Price',
+              dialogTitle: AppLocalizations.of(context)!.modifierPriceLabel,
               numericOnly: true,
-              decoration: const InputDecoration(
-                labelText: 'Price',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.priceShort,
+                border: const OutlineInputBorder(),
                 isDense: true,
                 hintText: '0.00',
               ),
@@ -607,7 +616,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(width: 6),
           Column(
             children: [
-              const Text('Default', style: TextStyle(fontSize: 10)),
+              Text(AppLocalizations.of(context)!.defaultLabel, style: const TextStyle(fontSize: 10)),
               Switch(
                 value: m.isDefault,
                 onChanged: (v) => setState(() => m.isDefault = v),
@@ -618,7 +627,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           IconButton(
             icon: const Icon(Icons.remove_circle_outline,
                 color: Colors.red, size: 18),
-            tooltip: 'Remove',
+            tooltip: AppLocalizations.of(context)!.remove,
             visualDensity: VisualDensity.compact,
             onPressed: () => _removeModifier(gi, mi),
           ),

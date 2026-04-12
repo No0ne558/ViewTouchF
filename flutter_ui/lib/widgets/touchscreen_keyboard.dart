@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:viewtouch_ui/generated/app_localizations.dart';
 
 /// A QWERTY on-screen keyboard widget for touchscreen-only POS terminals.
 /// Sends key taps to the provided [controller].
@@ -19,19 +20,15 @@ class TouchscreenKeyboard extends StatelessWidget {
     final base = sel.isValid ? sel.start : text.length;
     if (key == '⌫') {
       if (base > 0) {
-        controller.text =
-            text.substring(0, base - 1) + text.substring(base);
+        controller.text = '${text.substring(0, base - 1)}${text.substring(base)}';
         controller.selection = TextSelection.collapsed(offset: base - 1);
       }
     } else if (key == '␣') {
-      controller.text =
-          text.substring(0, base) + ' ' + text.substring(base);
+      controller.text = '${text.substring(0, base)} ${text.substring(base)}';
       controller.selection = TextSelection.collapsed(offset: base + 1);
     } else {
-      controller.text =
-          text.substring(0, base) + key + text.substring(base);
-      controller.selection =
-          TextSelection.collapsed(offset: base + key.length);
+      controller.text = '${text.substring(0, base)}$key${text.substring(base)}';
+      controller.selection = TextSelection.collapsed(offset: base + key.length);
     }
   }
 
@@ -82,7 +79,7 @@ class TouchscreenKeyboard extends StatelessWidget {
                               : null,
                         ),
                         child: Text(
-                          isSpace ? 'SPACE' : key,
+                          isSpace ? AppLocalizations.of(context)!.spaceLabel : key,
                           style: TextStyle(
                             fontSize: isSpace ? 16 : 18,
                             fontWeight: FontWeight.w500,
@@ -182,8 +179,8 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
                       height: 48,
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel',
-                            style: TextStyle(fontSize: 16)),
+                        child: Text(AppLocalizations.of(context)!.cancel,
+                            style: const TextStyle(fontSize: 16)),
                       ),
                     ),
                   ),
@@ -194,8 +191,8 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
                       child: FilledButton(
                         onPressed: () =>
                             Navigator.pop(context, _controller.text),
-                        child: const Text('Done',
-                            style: TextStyle(fontSize: 16)),
+                        child: Text(AppLocalizations.of(context)!.done,
+                          style: const TextStyle(fontSize: 16)),
                       ),
                     ),
                   ),
@@ -243,7 +240,7 @@ class TouchTextField extends StatelessWidget {
     super.key,
     required this.controller,
     this.decoration,
-    this.dialogTitle = 'Enter Text',
+    this.dialogTitle = '',
     this.numericOnly = false,
     this.style,
     this.enabled = true,
@@ -262,7 +259,7 @@ class TouchTextField extends StatelessWidget {
           ? () async {
               final result = await showTouchKeyboardDialog(
                 context,
-                title: dialogTitle,
+                title: dialogTitle.isNotEmpty ? dialogTitle : AppLocalizations.of(context)!.enterText,
                 initialValue: controller.text,
                 hintText: decoration?.hintText ?? '',
                 numericOnly: numericOnly,

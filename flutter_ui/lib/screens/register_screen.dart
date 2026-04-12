@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:viewtouch_ui/generated/app_localizations.dart';
+import 'package:intl/intl.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
 import '../utils/money.dart';
@@ -22,8 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Ticket? _ticket;
   bool _loading = true;
   String? _error;
-  String _restaurantName = 'ViewTouch POS';
-  bool _isFullscreen = true;
+  String _restaurantName = '';
   int _phoneOrderCount = 0;
 
   @override
@@ -43,8 +43,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _menu = menuResp.items;
         _ticket = ticketResp.ticket;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
-            ? settingsResp.settings.restaurantName
-            : 'ViewTouchF';
+          ? settingsResp.settings.restaurantName
+          : (mounted ? AppLocalizations.of(context)!.appTitle : '');
         _phoneOrderCount = phoneCountResp.count;
         _loading = false;
       });
@@ -66,8 +66,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         _menu = menuResp.items;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
-            ? settingsResp.settings.restaurantName
-            : 'ViewTouchF';
+          ? settingsResp.settings.restaurantName
+          : (mounted ? AppLocalizations.of(context)!.appTitle : '');
         _phoneOrderCount = phoneCountResp.count;
       });
     } catch (_) {}
@@ -111,7 +111,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final resp = await PosClient.instance.stub.addItem(req);
       setState(() => _ticket = resp.ticket);
     } catch (e) {
-      _showError('Failed to add item: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.addItemFailed, error: true);
+      // ignore: avoid_print
+      print('addItem error: $e');
     }
   }
 
@@ -128,7 +131,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final resp = await PosClient.instance.stub.addItem(req);
       setState(() => _ticket = resp.ticket);
     } catch (e) {
-      _showError('Failed to increase item: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.increaseItemFailed, error: true);
+      // ignore: avoid_print
+      print('increaseItem error: $e');
     }
   }
 
@@ -136,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     MenuItem item, {
     Map<String, ModifierAction>? initialSelections,
     String? initialSpecialInstructions,
-    String confirmLabel = 'Add to Order',
+    String confirmLabel = '',
   }) async {
     return showDialog<_ModifierResult>(
       context: context,
@@ -179,7 +185,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       fullItem,
       initialSelections: initialSelections,
       initialSpecialInstructions: ti.specialInstructions,
-      confirmLabel: 'Update Item',
+      confirmLabel: AppLocalizations.of(context)!.updateItem,
     );
     if (result == null) return; // cancelled
 
@@ -192,7 +198,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final resp = await PosClient.instance.stub.updateItem(req);
       setState(() => _ticket = resp.ticket);
     } catch (e) {
-      _showError('Failed to update item: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.updateItemFailed, error: true);
+      // ignore: avoid_print
+      print('updateItem error: $e');
     }
   }
 
@@ -206,7 +215,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final resp = await PosClient.instance.stub.decreaseItem(req);
       setState(() => _ticket = resp.ticket);
     } catch (e) {
-      _showError('Failed to decrease item: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.decreaseItemFailed, error: true);
+      // ignore: avoid_print
+      print('decreaseItem error: $e');
     }
   }
 
@@ -220,7 +232,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final resp = await PosClient.instance.stub.removeItem(req);
       setState(() => _ticket = resp.ticket);
     } catch (e) {
-      _showError('Failed to remove item: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.removeItemFailed, error: true);
+      // ignore: avoid_print
+      print('removeItem error: $e');
     }
   }
 
@@ -257,7 +272,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() => _ticket = resp.ticket);
       }
     } catch (e) {
-      _showError('Failed to set quantity: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.setQuantityFailed, error: true);
+      // ignore: avoid_print
+      print('setQuantity error: $e');
     }
   }
 
@@ -290,7 +308,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Change due: \$${(resp.ticket.changeDue / 100).toStringAsFixed(2)}'),
+                  '${AppLocalizations.of(context)!.changeDueLabel} ${formatMoney(resp.ticket.changeDue)}'),
               backgroundColor: Colors.green.shade700,
               duration: const Duration(seconds: 4),
             ),
@@ -309,7 +327,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _ticket = newT.ticket);
       await _refreshPhoneOrderCount();
     } catch (e) {
-      _showError('Checkout failed: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.checkoutFailed, error: true);
+      // ignore: avoid_print
+      print('checkout error: $e');
     }
   }
 
@@ -318,10 +339,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final req = PrintReceiptRequest()..ticketId = ticket.id;
       final resp = await PosClient.instance.stub.printReceipt(req);
       if (!resp.success) {
-        _showError('Print error: ${resp.error}');
+        if (!mounted) return;
+        _showError(AppLocalizations.of(context)!.printError);
+        // Log raw error for debugging
+        // ignore: avoid_print
+        print('printReceipt error: ${resp.error}');
       }
     } catch (e) {
-      _showError('Print error: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.printError);
+      // ignore: avoid_print
+      print('printReceipt exception: $e');
     }
   }
 
@@ -333,10 +361,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final req = PrintKitchenRequest()..ticketId = ticket.id;
       final resp = await PosClient.instance.stub.printKitchen(req);
       if (!resp.success) {
-        _showError('Kitchen print error: ${resp.error}');
+        if (!mounted) return;
+        _showError(AppLocalizations.of(context)!.kitchenPrintError);
+        // ignore: avoid_print
+        print('printKitchen error: ${resp.error}');
       }
     } catch (e) {
-      _showError('Kitchen print error: $e');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.kitchenPrintError);
+      // ignore: avoid_print
+      print('printKitchen exception: $e');
     }
   }
 
@@ -367,9 +401,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
       if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        final name = result.name.isNotEmpty ? result.name : loc.customerLabel;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Phone order created for ${result.name.isNotEmpty ? result.name : "customer"}'),
+            content: Text(loc.phoneOrderCreatedForName(name)),
             backgroundColor: Colors.orange.shade700,
             duration: const Duration(seconds: 3),
           ),
@@ -381,7 +417,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _ticket = newT.ticket);
       _refreshPhoneOrderCount();
     } catch (e) {
-      _showError('Phone order failed: $e');
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
+      _showError(loc.operationFailed(loc.phoneOrderTitle), error: true);
+      // ignore: avoid_print
+      print('phoneOrder error: $e');
     }
   }
 
@@ -404,7 +444,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         await _checkout(skipPrint: true);
         await _refreshPhoneOrderCount();
       } catch (e) {
-        _showError('Failed to load phone order ticket: $e');
+        if (!mounted) return;
+        _showError(AppLocalizations.of(context)!.loadPhoneOrderFailed, error: true);
+        // ignore: avoid_print
+        print('loadPhoneOrder error: $e');
       }
     } else if (result.action == 'EDIT') {
       // The ticket was restored as OPEN — load it for editing.
@@ -417,26 +460,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Phone order loaded for editing'),
+              content: Text(AppLocalizations.of(context)!.phoneOrderLoadedForEditing),
               backgroundColor: Colors.blue.shade700,
               duration: const Duration(seconds: 3),
             ),
           );
         }
       } catch (e) {
-        _showError('Failed to load phone order ticket: $e');
+        if (!mounted) return;
+        _showError(AppLocalizations.of(context)!.loadPhoneOrderFailed, error: true);
+        // ignore: avoid_print
+        print('loadPhoneOrder error: $e');
       }
     } else {
       await _refreshPhoneOrderCount();
     }
   }
 
-  void _showError(String msg) {
+  void _showError(String msg, {bool error = true}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: error ? Colors.red.shade700 : Colors.blue.shade700,
         duration: const Duration(seconds: 4),
       ),
     );
@@ -457,7 +503,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              Text('Cannot connect to POS daemon',
+              Text(AppLocalizations.of(context)!.cannotConnectToDaemon,
                   style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 8),
               SelectableText(_error!, style: const TextStyle(fontSize: 12)),
@@ -468,7 +514,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _bootstrap();
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),
@@ -478,15 +524,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_restaurantName),
+        title: Text(_restaurantName.isNotEmpty ? _restaurantName : AppLocalizations.of(context)!.appTitle),
         centerTitle: false,
         actions: [
-          Text('Ticket: ${_ticket?.id ?? "—"}',
+          Text('${AppLocalizations.of(context)!.ticketLabel} ${_ticket?.id ?? "—"}',
               style: const TextStyle(fontSize: 16)),
           const SizedBox(width: 16),
           IconButton(
             icon: const Icon(Icons.history),
-            tooltip: 'Past Orders',
+            tooltip: AppLocalizations.of(context)!.pastOrders,
             onPressed: _showPastOrders,
           ),
           Badge(
@@ -496,13 +542,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             backgroundColor: Colors.orange,
             child: IconButton(
               icon: const Icon(Icons.phone),
-              tooltip: 'Phone Orders',
+              tooltip: AppLocalizations.of(context)!.phoneOrders,
               onPressed: _showPhoneOrderList,
             ),
           ),
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
-            tooltip: 'Admin',
+            tooltip: AppLocalizations.of(context)!.admin,
             onPressed: _openAdmin,
           ),
           const SizedBox(width: 8),
@@ -556,7 +602,7 @@ class _ModifierDialog extends StatefulWidget {
     required this.item,
     this.initialSelections,
     this.initialSpecialInstructions,
-    this.confirmLabel = 'Add to Order',
+    this.confirmLabel = '',
   });
 
   @override
@@ -589,19 +635,6 @@ class _ModifierDialogState extends State<_ModifierDialog> {
       }
     }
   }
-
-  String _actionLabel(ModifierAction a) {
-    switch (a) {
-      case ModifierAction.MOD_NO:     return 'NO';
-      case ModifierAction.MOD_ADD:    return 'ADD';
-      case ModifierAction.MOD_EXTRA:  return 'EXTRA';
-      case ModifierAction.MOD_LIGHT:  return 'LIGHT';
-      case ModifierAction.MOD_SIDE:   return 'ON SIDE';
-      case ModifierAction.MOD_DOUBLE: return 'DOUBLE';
-      default: return '';
-    }
-  }
-
   String _money(int cents) => formatMoney(cents);
 
   List<AppliedModifier> _buildModifiers() {
@@ -640,7 +673,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
     final text = await showDialog<String>(
       context: context,
       builder: (ctx) => TouchKeyboardDialog(
-        title: 'Special Instructions',
+        title: AppLocalizations.of(ctx)!.specialInstructions,
         initialValue: _specialInstructions,
       ),
     );
@@ -684,7 +717,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
           height: 48,
           child: TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontSize: 16)),
           ),
         ),
         SizedBox(
@@ -701,8 +734,8 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                     : Colors.green),
             label: Text(
               _specialInstructions.isEmpty
-                  ? 'Special Instructions'
-                  : 'Instructions \u2713',
+                  ? AppLocalizations.of(context)!.specialInstructions
+                  : AppLocalizations.of(context)!.instructionsChecked,
               style: const TextStyle(fontSize: 14),
             ),
           ),
@@ -718,7 +751,12 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                 specialInstructions: _specialInstructions,
               ),
             ),
-            child: Text(widget.confirmLabel, style: const TextStyle(fontSize: 16)),
+            child: Text(
+              widget.confirmLabel.isNotEmpty
+                  ? widget.confirmLabel
+                  : AppLocalizations.of(context)!.addToOrder,
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
         ),
       ],
@@ -727,32 +765,44 @@ class _ModifierDialogState extends State<_ModifierDialog> {
 
   /// Single-select group (e.g. Cooking Temp) — radio buttons.
   Widget _buildSingleSelect(ModifierGroup group) {
+    // Use a chip/row-based selection UI instead of the deprecated Radio API.
     return Column(
       children: [
         for (final mod in group.modifiers)
-          RadioListTile<String>(
-            title: Text(mod.name, style: const TextStyle(fontSize: 16)),
-            subtitle: mod.priceCents > 0
-                ? Text('+${_money(mod.priceCents)}',
-                    style: const TextStyle(color: Colors.green, fontSize: 14))
-                : null,
-            secondary: mod.isDefault
-                ? const Chip(label: Text('Default', style: TextStyle(fontSize: 12)))
-                : null,
-            value: mod.id,
-            groupValue: _getRadioValue(group),
-            dense: false,
-            onChanged: (val) {
-              setState(() {
-                // Clear all in group, set selected one.
-                for (final m in group.modifiers) {
-                  _selections.remove(m.id);
-                }
-                if (val != null) {
-                  _selections[val] = ModifierAction.MOD_ADD;
-                }
-              });
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(mod.name, style: const TextStyle(fontSize: 16)),
+                      if (mod.priceCents > 0)
+                        Text('+${_money(mod.priceCents)}',
+                            style: const TextStyle(color: Colors.green, fontSize: 14)),
+                    ],
+                  ),
+                ),
+                if (mod.isDefault)
+                  Chip(label: Text(AppLocalizations.of(context)!.defaultLabel, style: const TextStyle(fontSize: 12))),
+                IconButton(
+                  icon: Icon(
+                    _getRadioValue(group) == mod.id
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      for (final m in group.modifiers) {
+                        _selections.remove(m.id);
+                      }
+                      _selections[mod.id] = ModifierAction.MOD_ADD;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
       ],
     );
@@ -781,8 +831,8 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                       Text(mod.name,
                           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
                       if (mod.isDefault)
-                        const Text('Included',
-                            style: TextStyle(fontSize: 13, color: Colors.grey)),
+                        Text(AppLocalizations.of(context)!.included,
+                            style: const TextStyle(fontSize: 13, color: Colors.grey)),
                       if (!mod.isDefault && mod.priceCents > 0)
                         Text('+${_money(mod.priceCents)}',
                             style: const TextStyle(
@@ -791,14 +841,14 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                   ),
                 ),
                 if (mod.isDefault)
-                  _actionChip(mod, ModifierAction.MOD_NO, 'NO', Colors.red),
+                  _actionChip(mod, ModifierAction.MOD_NO, AppLocalizations.of(context)!.modNo, Colors.red),
                 if (!mod.isDefault)
-                  _actionChip(mod, ModifierAction.MOD_ADD, 'ADD', Colors.green),
-                _actionChip(mod, ModifierAction.MOD_EXTRA, 'EXTRA', Colors.orange),
+                  _actionChip(mod, ModifierAction.MOD_ADD, AppLocalizations.of(context)!.modAdd, Colors.green),
+                _actionChip(mod, ModifierAction.MOD_EXTRA, AppLocalizations.of(context)!.modExtra, Colors.orange),
                 if (mod.isDefault)
-                  _actionChip(mod, ModifierAction.MOD_LIGHT, 'LIGHT', Colors.blue),
-                _actionChip(mod, ModifierAction.MOD_SIDE, 'SIDE', Colors.purple),
-                _actionChip(mod, ModifierAction.MOD_DOUBLE, 'DBL', Colors.deepOrange),
+                  _actionChip(mod, ModifierAction.MOD_LIGHT, AppLocalizations.of(context)!.modLight, Colors.blue),
+                _actionChip(mod, ModifierAction.MOD_SIDE, AppLocalizations.of(context)!.modSide, Colors.purple),
+                _actionChip(mod, ModifierAction.MOD_DOUBLE, AppLocalizations.of(context)!.modDouble, Colors.deepOrange),
               ],
             ),
           ),
@@ -989,13 +1039,13 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header
-              Text('Checkout', style: Theme.of(context).textTheme.headlineMedium),
+              Text(AppLocalizations.of(context)!.checkout, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 12),
               // Amount due
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total:', style: TextStyle(fontSize: 22)),
+                  Text('${AppLocalizations.of(context)!.total}:', style: const TextStyle(fontSize: 22)),
                   Text(_money(_totalBase),
                       style: const TextStyle(
                           fontSize: 32, fontWeight: FontWeight.bold)),
@@ -1006,7 +1056,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(children: [
-                      const Text('CC Fee:', style: TextStyle(fontSize: 16, color: Colors.orange)),
+                      Text('${AppLocalizations.of(context)!.ccFee}:', style: const TextStyle(fontSize: 16, color: Colors.orange)),
                       const SizedBox(width: 4),
                       if (_payments.isEmpty)
                         InkWell(
@@ -1021,8 +1071,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('New Total:',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text('${AppLocalizations.of(context)!.newTotal}:',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                     Text(_money(_totalDue),
                         style: const TextStyle(
                             fontSize: 28, fontWeight: FontWeight.bold)),
@@ -1036,7 +1086,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('${p.type} payment',
+                      Text(AppLocalizations.of(context)!.paymentLabel(p.type),
                           style: const TextStyle(fontSize: 14)),
                       Text(_money(p.amount),
                           style: const TextStyle(
@@ -1047,9 +1097,9 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Remaining:',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600)),
+                    Text('${AppLocalizations.of(context)!.remaining}:',
+                      style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w600)),
                     Text(_money(_remaining > 0 ? _remaining : 0),
                         style: TextStyle(
                             fontSize: 20,
@@ -1062,7 +1112,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                 TextButton.icon(
                   onPressed: _undoLastPayment,
                   icon: const Icon(Icons.undo, size: 16),
-                  label: const Text('Undo last payment'),
+                  label: Text(AppLocalizations.of(context)!.undoLastPayment),
                 ),
               ],
               const SizedBox(height: 8),
@@ -1099,7 +1149,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                       onPressed: _remaining > 0 ? _applyCcFee : null,
                       icon: const Icon(Icons.credit_score, size: 24),
                       label: Text(
-                        'Add Credit Card Fee (+${_money(_computeCcFee())})',
+                        '${AppLocalizations.of(context)!.addCreditCardFee} (+${_money(_computeCcFee())})',
                         style: const TextStyle(fontSize: 16),
                       ),
                       style: FilledButton.styleFrom(
@@ -1117,8 +1167,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                             ? () => _addPayment('CASH')
                             : null,
                         icon: const Icon(Icons.payments, size: 28),
-                        label: const Text('CASH',
-                            style: TextStyle(fontSize: 20)),
+                        label: Text(AppLocalizations.of(context)!.cash,
+                          style: const TextStyle(fontSize: 20)),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.green.shade700),
                       ),
@@ -1133,8 +1183,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                             ? () => _addPayment('CARD')
                             : null,
                         icon: const Icon(Icons.credit_card, size: 28),
-                        label: const Text('CARD',
-                            style: TextStyle(fontSize: 20)),
+                        label: Text(AppLocalizations.of(context)!.card,
+                          style: const TextStyle(fontSize: 20)),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.blue.shade700),
                       ),
@@ -1147,7 +1197,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                 height: 48,
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                  child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontSize: 16)),
                 ),
               ),
             ],
@@ -1169,9 +1219,9 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
         // Quick-amount row
         Row(
           children: [
-            _quickBtn('Exact', _payExact),
+            _quickBtn(AppLocalizations.of(context)!.exact, _payExact),
             const SizedBox(width: 6),
-            _quickBtn('Clear', _clear),
+            _quickBtn(AppLocalizations.of(context)!.clear, _clear),
           ],
         ),
         const SizedBox(height: 6),
@@ -1270,9 +1320,13 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
   String _time(dynamic epochMs) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
         epochMs is int ? epochMs : (epochMs as dynamic).toInt());
-    final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
-    return '${h.toString()}:${dt.minute.toString().padLeft(2, '0')} $ampm';
+    try {
+      return DateFormat.jm(Intl.defaultLocale).format(dt);
+    } catch (_) {
+      final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+      final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      return '${h.toString()}:${dt.minute.toString().padLeft(2, '0')} $ampm';
+    }
   }
 
   Color _statusColor(String status) {
@@ -1291,12 +1345,17 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
         PrintReceiptRequest()..ticketId = t.id,
       );
       if (!resp.success) {
-        _showMsg('Print error: ${resp.error}', Colors.red);
+        if (!mounted) return;
+        _showMsg(AppLocalizations.of(context)!.printError, Colors.red);
       } else {
-        _showMsg('Receipt reprinted (Job #${resp.jobId})', Colors.green);
+        if (!mounted) return;
+        _showMsg(AppLocalizations.of(context)!.receiptReprinted(resp.jobId), Colors.green);
       }
     } catch (e) {
-      _showMsg('Print error: $e', Colors.red);
+      if (!mounted) return;
+      _showMsg(AppLocalizations.of(context)!.printError, Colors.red);
+      // ignore: avoid_print
+      print('reprintTicket exception: $e');
     }
   }
 
@@ -1304,8 +1363,8 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
     final reason = await showDialog<String>(
       context: context,
       builder: (ctx) => TouchKeyboardDialog(
-        title: '$action Ticket #${t.id}',
-        hintText: 'Reason (optional)',
+        title: '${AppLocalizations.of(ctx)!.ticketLabel} ${t.id}',
+        hintText: AppLocalizations.of(ctx)!.reasonOptional,
       ),
     );
     if (reason == null) return; // cancelled
@@ -1318,7 +1377,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
           ..reason = reason,
       );
       if (!resp.success) {
-        _showMsg('${action} failed: ${resp.error}', Colors.red);
+        _showMsg('$action failed: ${resp.error}', Colors.red);
       } else {
         _showMsg('Ticket ${t.id} ${action.toLowerCase()}ed', Colors.green);
         _loadTickets(); // refresh
@@ -1349,8 +1408,8 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
               // Header
               Row(
                 children: [
-                  Text("Today's Orders",
-                      style: Theme.of(context).textTheme.headlineSmall),
+                        Text(AppLocalizations.of(context)!.todaysOrders,
+                          style: Theme.of(context).textTheme.headlineSmall),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.refresh),
@@ -1367,11 +1426,11 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
               Wrap(
                 spacing: 8,
                 children: [
-                  _filterChip('All', ''),
-                  _filterChip('Closed', 'CLOSED'),
-                  _filterChip('Voided', 'VOIDED'),
-                  _filterChip('Comped', 'COMPED'),
-                  _filterChip('Refunded', 'REFUNDED'),
+                  _filterChip(AppLocalizations.of(context)!.all, ''),
+                  _filterChip(AppLocalizations.of(context)!.closed, 'CLOSED'),
+                  _filterChip(AppLocalizations.of(context)!.voided, 'VOIDED'),
+                  _filterChip(AppLocalizations.of(context)!.comped, 'COMPED'),
+                  _filterChip(AppLocalizations.of(context)!.refunded, 'REFUNDED'),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1381,11 +1440,11 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
                     : _error != null
-                        ? Center(child: Text('Error: $_error'))
+                      ? Center(child: Text(AppLocalizations.of(context)!.errorOccurred(_error!)))
                         : _tickets.isEmpty
-                            ? const Center(
-                                child: Text('No orders found',
-                                    style: TextStyle(color: Colors.grey)))
+                        ? Center(
+                          child: Text(AppLocalizations.of(context)!.noOrdersFound,
+                            style: const TextStyle(color: Colors.grey)))
                             : ListView.builder(
                                 itemCount: _tickets.length,
                                 itemBuilder: (ctx, i) =>
@@ -1465,8 +1524,8 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                   if (t.ccFee > 0)
                     Row(
                       children: [
-                        const Text('CC Fee',
-                            style: TextStyle(
+                        Text(AppLocalizations.of(context)!.ccFee,
+                            style: const TextStyle(
                                 fontSize: 13, color: Colors.orange)),
                         const Spacer(),
                         Text(_money(t.ccFee),
@@ -1476,18 +1535,18 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                       ],
                     ),
                   for (final p in t.payments)
-                    Row(
-                      children: [
-                        Text('${p.paymentType} payment'),
-                        const Spacer(),
-                        Text(_money(p.amountCents)),
-                      ],
-                    ),
+                      Row(
+                        children: [
+                          Text(AppLocalizations.of(context)!.paymentLabel(p.paymentType)),
+                          const Spacer(),
+                          Text(_money(p.amountCents)),
+                        ],
+                      ),
                   if (t.changeDue > 0)
                     Row(
                       children: [
-                        const Text('Change',
-                            style: TextStyle(fontStyle: FontStyle.italic)),
+                        Text(AppLocalizations.of(context)!.changeLabel,
+                            style: const TextStyle(fontStyle: FontStyle.italic)),
                         const Spacer(),
                         Text(_money(t.changeDue),
                             style: const TextStyle(
@@ -1508,7 +1567,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                 OutlinedButton.icon(
                   onPressed: () => _reprintTicket(t),
                   icon: const Icon(Icons.print, size: 18),
-                  label: const Text('Reprint'),
+                  label: Text(AppLocalizations.of(context)!.reprint),
                 ),
                 const SizedBox(width: 8),
                 if (t.status == 'CLOSED') ...[
@@ -1516,21 +1575,21 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                     onPressed: () => _ticketAction(t, 'VOID'),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red),
-                    child: const Text('VOID'),
+                    child: Text(AppLocalizations.of(context)!.voidLabel),
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton(
                     onPressed: () => _ticketAction(t, 'COMP'),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.orange),
-                    child: const Text('COMP'),
+                    child: Text(AppLocalizations.of(context)!.comp),
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton(
                     onPressed: () => _ticketAction(t, 'REFUND'),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.purple),
-                    child: const Text('REFUND'),
+                    child: Text(AppLocalizations.of(context)!.refund),
                   ),
                 ],
               ],
@@ -1588,14 +1647,14 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Phone Order',
+                Text(AppLocalizations.of(context)!.phoneOrderTitle,
                   style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 24),
               // Name field — tap to open keyboard
               ListTile(
                 leading: const Icon(Icons.person, size: 28),
                 title: Text(
-                  _name.isEmpty ? 'Name' : _name,
+                  _name.isEmpty ? AppLocalizations.of(context)!.nameLabel : _name,
                   style: TextStyle(
                     fontSize: 20,
                     color: _name.isEmpty ? Colors.grey : null,
@@ -1606,14 +1665,14 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(color: Colors.grey.shade400),
                 ),
-                onTap: () => _editField('Customer Name', _name, (v) => _name = v),
+                onTap: () => _editField(AppLocalizations.of(context)!.nameLabel, _name, (v) => _name = v),
               ),
               const SizedBox(height: 12),
               // Comment field — tap to open keyboard
               ListTile(
                 leading: const Icon(Icons.comment, size: 28),
                 title: Text(
-                  _comment.isEmpty ? 'Comment' : _comment,
+                  _comment.isEmpty ? AppLocalizations.of(context)!.commentLabel : _comment,
                   style: TextStyle(
                     fontSize: 20,
                     color: _comment.isEmpty ? Colors.grey : null,
@@ -1624,7 +1683,7 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(color: Colors.grey.shade400),
                 ),
-                onTap: () => _editField('Comment', _comment, (v) => _comment = v),
+                onTap: () => _editField(AppLocalizations.of(context)!.commentLabel, _comment, (v) => _comment = v),
               ),
               const SizedBox(height: 24),
               // Done / Cancel
@@ -1635,8 +1694,8 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
                       height: 56,
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel',
-                            style: TextStyle(fontSize: 18)),
+                        child: Text(AppLocalizations.of(context)!.cancel,
+                          style: const TextStyle(fontSize: 18)),
                       ),
                     ),
                   ),
@@ -1654,8 +1713,8 @@ class _PhoneOrderDialogState extends State<_PhoneOrderDialog> {
                         ),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.orange.shade700),
-                        child: const Text('Done',
-                            style: TextStyle(fontSize: 18)),
+                        child: Text(AppLocalizations.of(context)!.done,
+                          style: const TextStyle(fontSize: 18)),
                       ),
                     ),
                   ),
@@ -1721,9 +1780,13 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
   String _time(dynamic epochMs) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
         epochMs is int ? epochMs : (epochMs as dynamic).toInt());
-    final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
-    return '${h.toString()}:${dt.minute.toString().padLeft(2, '0')} $ampm';
+    try {
+      return DateFormat.jm(Intl.defaultLocale).format(dt);
+    } catch (_) {
+      final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+      final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      return '${h.toString()}:${dt.minute.toString().padLeft(2, '0')} $ampm';
+    }
   }
 
   Future<void> _doAction(PhoneOrder order, String action) async {
@@ -1779,7 +1842,7 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                 children: [
                   const Icon(Icons.phone, color: Colors.orange),
                   const SizedBox(width: 8),
-                  Text('Phone Orders',
+                    Text(AppLocalizations.of(context)!.phoneOrders,
                       style: Theme.of(context).textTheme.headlineSmall),
                   const Spacer(),
                   IconButton(
@@ -1799,12 +1862,12 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
                     : _error != null
-                        ? Center(child: Text('Error: $_error'))
+                      ? Center(child: Text(AppLocalizations.of(context)!.errorOccurred(_error!)))
                         : _orders.isEmpty
-                            ? const Center(
-                                child: Text('No phone orders on hold',
-                                    style: TextStyle(
-                                        color: Colors.grey, fontSize: 16)))
+                            ? Center(
+                              child: Text(AppLocalizations.of(context)!.noOrdersFound,
+                                style: const TextStyle(
+                                  color: Colors.grey, fontSize: 16)))
                             : ListView.builder(
                                 itemCount: _orders.length,
                                 itemBuilder: (ctx, i) =>
@@ -1829,10 +1892,10 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
           backgroundColor: Colors.orange.shade100,
           child: Icon(Icons.phone, color: Colors.orange.shade700),
         ),
-        title: Text(
+          title: Text(
           order.customerName.isNotEmpty
               ? order.customerName
-              : 'Phone Order',
+              : AppLocalizations.of(context)!.phoneOrderTitle,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         subtitle: Column(
@@ -1845,7 +1908,7 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 13, color: Colors.grey)),
             if (order.comment.isNotEmpty)
-              Text('Note: ${order.comment}',
+              Text('${AppLocalizations.of(context)!.noteLabel} ${order.comment}',
                   style: const TextStyle(
                       fontSize: 13, fontStyle: FontStyle.italic)),
           ],
@@ -1870,8 +1933,8 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context)!.total,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     Text(_money(order.ticket.total),
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
@@ -1892,9 +1955,9 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                     child: OutlinedButton(
                       onPressed: () => _doAction(order, 'CANCEL'),
                       style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red),
-                      child: const Text('Cancel Order',
-                          style: TextStyle(fontSize: 16)),
+                        foregroundColor: Colors.red),
+                      child: Text(AppLocalizations.of(context)!.cancelOrder,
+                        style: const TextStyle(fontSize: 16)),
                     ),
                   ),
                 ),
@@ -1902,12 +1965,12 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                 Expanded(
                   child: SizedBox(
                     height: 48,
-                    child: FilledButton(
+                      child: FilledButton(
                       onPressed: () => _doAction(order, 'EDIT'),
                       style: FilledButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700),
-                      child: const Text('Edit Order',
-                          style: TextStyle(fontSize: 16)),
+                        backgroundColor: Colors.blue.shade700),
+                      child: Text(AppLocalizations.of(context)!.editOrder,
+                        style: const TextStyle(fontSize: 16)),
                     ),
                   ),
                 ),
@@ -1915,12 +1978,12 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                 Expanded(
                   child: SizedBox(
                     height: 48,
-                    child: FilledButton(
+                      child: FilledButton(
                       onPressed: () => _doAction(order, 'CHECKOUT'),
                       style: FilledButton.styleFrom(
-                          backgroundColor: Colors.green.shade700),
-                      child: const Text('Checkout',
-                          style: TextStyle(fontSize: 16)),
+                        backgroundColor: Colors.green.shade700),
+                      child: Text(AppLocalizations.of(context)!.checkout,
+                        style: const TextStyle(fontSize: 16)),
                     ),
                   ),
                 ),
