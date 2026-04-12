@@ -27,4 +27,8 @@ test:
 	cd flutter_ui && flutter test
 
 lint:
-	@echo "No linter configured. Add clang-format and dart format targets as needed."
+	@if command -v pre-commit >/dev/null 2>&1; then \
+		pre-commit run --all-files; \
+	else \
+		echo "pre-commit not found; install with 'pip3 install --user pre-commit'"; exit 1; \
+	fi
