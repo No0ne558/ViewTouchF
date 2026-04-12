@@ -1,5 +1,4 @@
 #include "core/pos_manager.h"
-#include "core/database.h"
 
 #include <algorithm>
 #include <chrono>
@@ -8,11 +7,12 @@
 #include <iostream>
 #include <sstream>
 
+#include "core/database.h"
+
 namespace viewtouch {
 
 PosManager::PosManager(int32_t tax_rate_bps, std::string restaurant_name)
-    : tax_rate_bps_(tax_rate_bps),
-      restaurant_name_(std::move(restaurant_name)) {}
+    : tax_rate_bps_(tax_rate_bps), restaurant_name_(std::move(restaurant_name)) {}
 
 void PosManager::set_database(Database* db) {
     std::lock_guard lock(mu_);
@@ -24,7 +24,7 @@ void PosManager::load_from_database() {
     std::lock_guard lock(mu_);
 
     // Restore sequences.
-    ticket_seq_      = db_->load_seq("ticket");
+    ticket_seq_ = db_->load_seq("ticket");
     phone_order_seq_ = db_->load_seq("phone_order");
 
     // Restore menu.
@@ -58,18 +58,17 @@ void PosManager::load_from_database() {
     if (!saved_name.empty()) restaurant_name_ = saved_name;
     auto saved_tax = db_->load_setting("tax_rate_bps");
     if (!saved_tax.empty()) tax_rate_bps_ = std::stoi(saved_tax);
-    receipt_printer_name_    = db_->load_setting("receipt_printer_name");
+    receipt_printer_name_ = db_->load_setting("receipt_printer_name");
     receipt_printer_enabled_ = db_->load_setting("receipt_printer_enabled") == "1";
-    kitchen_printer_name_    = db_->load_setting("kitchen_printer_name");
+    kitchen_printer_name_ = db_->load_setting("kitchen_printer_name");
     kitchen_printer_enabled_ = db_->load_setting("kitchen_printer_enabled") == "1";
     auto saved_cc_cents = db_->load_setting("cc_fee_cents");
     if (!saved_cc_cents.empty()) cc_fee_cents_ = std::stoi(saved_cc_cents);
     auto saved_cc_bps = db_->load_setting("cc_fee_bps");
     if (!saved_cc_bps.empty()) cc_fee_bps_ = std::stoi(saved_cc_bps);
 
-    std::cout << "[vt_daemon] restored " << tickets_.size() << " tickets, "
-              << phone_orders_.size() << " phone orders, "
-              << archived_reports_.size() << " reports from database\n";
+    std::cout << "[vt_daemon] restored " << tickets_.size() << " tickets, " << phone_orders_.size()
+              << " phone orders, " << archived_reports_.size() << " reports from database\n";
 }
 
 // ── Settings ─────────────────────────────────────────────────
@@ -201,7 +200,10 @@ bool PosManager::update_menu_item(const MenuItem& item) {
     // Save to DB first — if it throws, in-memory state is unchanged.
     auto updated = menu_;
     for (auto& m : updated) {
-        if (m.id == item.id) { m = item; break; }
+        if (m.id == item.id) {
+            m = item;
+            break;
+        }
     }
     if (db_) db_->save_menu(updated);
     menu_ = std::move(updated);
@@ -228,8 +230,8 @@ bool PosManager::delete_menu_item(const std::string& item_id) {
 // ── Tickets ──────────────────────────────────────────────────
 
 std::string PosManager::compute_line_key(const std::string& menu_item_id,
-                                          const std::vector<AppliedModifier>& modifiers,
-                                          const std::string& special_instructions) {
+                                         const std::vector<AppliedModifier>& modifiers,
+                                         const std::string& special_instructions) {
     if (modifiers.empty() && special_instructions.empty()) return menu_item_id;
 
     std::vector<std::string> parts;
@@ -237,13 +239,27 @@ std::string PosManager::compute_line_key(const std::string& menu_item_id,
     for (const auto& m : modifiers) {
         std::string act;
         switch (m.action) {
-            case ModifierAction::NO:     act = "NO"; break;
-            case ModifierAction::ADD:    act = "ADD"; break;
-            case ModifierAction::EXTRA:  act = "EXTRA"; break;
-            case ModifierAction::LIGHT:  act = "LIGHT"; break;
-            case ModifierAction::SIDE:   act = "SIDE"; break;
-            case ModifierAction::DOUBLE: act = "DOUBLE"; break;
-            default: act = "NONE"; break;
+            case ModifierAction::NO:
+                act = "NO";
+                break;
+            case ModifierAction::ADD:
+                act = "ADD";
+                break;
+            case ModifierAction::EXTRA:
+                act = "EXTRA";
+                break;
+            case ModifierAction::LIGHT:
+                act = "LIGHT";
+                break;
+            case ModifierAction::SIDE:
+                act = "SIDE";
+                break;
+            case ModifierAction::DOUBLE:
+                act = "DOUBLE";
+                break;
+            default:
+                act = "NONE";
+                break;
         }
         parts.push_back(act + ":" + m.modifier_id);
     }
@@ -268,7 +284,7 @@ std::string PosManager::generate_ticket_id() const {
 
 std::string PosManager::today_str() const {
     auto now = std::chrono::system_clock::now();
-    auto tt  = std::chrono::system_clock::to_time_t(now);
+    auto tt = std::chrono::system_clock::to_time_t(now);
     std::tm tm{};
     localtime_r(&tt, &tm);
     std::ostringstream os;
@@ -296,7 +312,8 @@ Ticket PosManager::new_ticket() {
     t.id = generate_ticket_id();
     t.status = TicketStatus::OPEN;
     t.created_at_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
+                          std::chrono::system_clock::now().time_since_epoch())
+                          .count();
 
     tickets_[t.id] = t;
     if (db_) {
@@ -315,10 +332,9 @@ std::optional<Ticket> PosManager::get_ticket(const std::string& ticket_id) const
 }
 
 std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
-                                            const std::string& menu_item_id,
-                                            int32_t quantity,
-                                            const std::vector<AppliedModifier>& modifiers,
-                                            const std::string& special_instructions) {
+                                           const std::string& menu_item_id, int32_t quantity,
+                                           const std::vector<AppliedModifier>& modifiers,
+                                           const std::string& special_instructions) {
     if (quantity <= 0) return std::nullopt;
 
     std::lock_guard lock(mu_);
@@ -334,16 +350,16 @@ std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
     auto lk = compute_line_key(menu_item_id, modifiers, special_instructions);
 
     auto existing = std::find_if(ticket.items.begin(), ticket.items.end(),
-        [&](const TicketItem& ti) { return ti.line_key == lk; });
+                                 [&](const TicketItem& ti) { return ti.line_key == lk; });
 
     if (existing != ticket.items.end()) {
         existing->quantity += quantity;
     } else {
         TicketItem ti;
-        ti.item                 = mit->second;
-        ti.quantity             = quantity;
-        ti.line_key             = lk;
-        ti.modifiers            = modifiers;
+        ti.item = mit->second;
+        ti.quantity = quantity;
+        ti.line_key = lk;
+        ti.modifiers = modifiers;
         ti.special_instructions = special_instructions;
         ticket.items.push_back(std::move(ti));
     }
@@ -354,8 +370,8 @@ std::optional<Ticket> PosManager::add_item(const std::string& ticket_id,
 }
 
 std::optional<Ticket> PosManager::remove_item(const std::string& ticket_id,
-                                               const std::string& menu_item_id,
-                                               const std::string& line_key) {
+                                              const std::string& menu_item_id,
+                                              const std::string& line_key) {
     std::lock_guard lock(mu_);
 
     auto tit = tickets_.find(ticket_id);
@@ -363,11 +379,9 @@ std::optional<Ticket> PosManager::remove_item(const std::string& ticket_id,
     auto& ticket = tit->second;
     if (ticket.status != TicketStatus::OPEN) return std::nullopt;
 
-    auto it = std::find_if(ticket.items.begin(), ticket.items.end(),
-        [&](const TicketItem& ti) {
-            return !line_key.empty() ? ti.line_key == line_key
-                                     : ti.item.id == menu_item_id;
-        });
+    auto it = std::find_if(ticket.items.begin(), ticket.items.end(), [&](const TicketItem& ti) {
+        return !line_key.empty() ? ti.line_key == line_key : ti.item.id == menu_item_id;
+    });
     if (it == ticket.items.end()) return std::nullopt;
 
     ticket.items.erase(it);
@@ -377,8 +391,8 @@ std::optional<Ticket> PosManager::remove_item(const std::string& ticket_id,
 }
 
 std::optional<Ticket> PosManager::decrease_item(const std::string& ticket_id,
-                                                 const std::string& menu_item_id,
-                                                 const std::string& line_key) {
+                                                const std::string& menu_item_id,
+                                                const std::string& line_key) {
     std::lock_guard lock(mu_);
 
     auto tit = tickets_.find(ticket_id);
@@ -386,11 +400,9 @@ std::optional<Ticket> PosManager::decrease_item(const std::string& ticket_id,
     auto& ticket = tit->second;
     if (ticket.status != TicketStatus::OPEN) return std::nullopt;
 
-    auto it = std::find_if(ticket.items.begin(), ticket.items.end(),
-        [&](const TicketItem& ti) {
-            return !line_key.empty() ? ti.line_key == line_key
-                                     : ti.item.id == menu_item_id;
-        });
+    auto it = std::find_if(ticket.items.begin(), ticket.items.end(), [&](const TicketItem& ti) {
+        return !line_key.empty() ? ti.line_key == line_key : ti.item.id == menu_item_id;
+    });
     if (it == ticket.items.end()) return std::nullopt;
 
     if (it->quantity > 1) {
@@ -404,8 +416,8 @@ std::optional<Ticket> PosManager::decrease_item(const std::string& ticket_id,
 }
 
 std::optional<Ticket> PosManager::checkout(const std::string& ticket_id,
-                                            const std::vector<Payment>& payments,
-                                            int32_t cc_fee_cents) {
+                                           const std::vector<Payment>& payments,
+                                           int32_t cc_fee_cents) {
     std::lock_guard lock(mu_);
 
     auto it = tickets_.find(ticket_id);
@@ -422,7 +434,7 @@ std::optional<Ticket> PosManager::checkout(const std::string& ticket_id,
     for (const auto& p : payments) {
         total_paid += p.amount_cents;
     }
-    if (total_paid < effective_total) return std::nullopt; // underpayment
+    if (total_paid < effective_total) return std::nullopt;  // underpayment
 
     ticket.payments = payments;
     ticket.amount_paid_cents = total_paid;
@@ -440,8 +452,7 @@ bool PosManager::void_ticket(const std::string& ticket_id) {
     auto it = tickets_.find(ticket_id);
     if (it == tickets_.end()) return false;
     auto& t = it->second;
-    if (t.status != TicketStatus::OPEN && t.status != TicketStatus::CLOSED)
-        return false;
+    if (t.status != TicketStatus::OPEN && t.status != TicketStatus::CLOSED) return false;
     t.status = TicketStatus::VOIDED;
     if (t.closed_date.empty()) t.closed_date = today_str();
     if (db_) db_->save_ticket(t);
@@ -471,7 +482,7 @@ std::optional<Ticket> PosManager::refund_ticket(const std::string& ticket_id) {
 }
 
 std::vector<Ticket> PosManager::list_tickets(const std::string& date,
-                                              const std::string& status_filter) const {
+                                             const std::string& status_filter) const {
     std::lock_guard lock(mu_);
     std::string target = date.empty() ? const_cast<PosManager*>(this)->today_str() : date;
     std::vector<Ticket> result;
@@ -484,11 +495,21 @@ std::vector<Ticket> PosManager::list_tickets(const std::string& date,
         if (!status_filter.empty()) {
             std::string ts;
             switch (ticket.status) {
-                case TicketStatus::OPEN: ts = "OPEN"; break;
-                case TicketStatus::CLOSED: ts = "CLOSED"; break;
-                case TicketStatus::VOIDED: ts = "VOIDED"; break;
-                case TicketStatus::COMPED: ts = "COMPED"; break;
-                case TicketStatus::REFUNDED: ts = "REFUNDED"; break;
+                case TicketStatus::OPEN:
+                    ts = "OPEN";
+                    break;
+                case TicketStatus::CLOSED:
+                    ts = "CLOSED";
+                    break;
+                case TicketStatus::VOIDED:
+                    ts = "VOIDED";
+                    break;
+                case TicketStatus::COMPED:
+                    ts = "COMPED";
+                    break;
+                case TicketStatus::REFUNDED:
+                    ts = "REFUNDED";
+                    break;
             }
             if (ts != status_filter) continue;
         }
@@ -496,7 +517,7 @@ std::vector<Ticket> PosManager::list_tickets(const std::string& date,
     }
     // Sort by created_at descending (newest first).
     std::sort(result.begin(), result.end(),
-        [](const auto& a, const auto& b) { return a.created_at_ms > b.created_at_ms; });
+              [](const auto& a, const auto& b) { return a.created_at_ms > b.created_at_ms; });
     return result;
 }
 
@@ -509,9 +530,9 @@ void accumulate_report(DailyReport& rpt, const Ticket& ticket,
     if (ticket.status == TicketStatus::CLOSED) {
         ++rpt.total_tickets;
         rpt.total_revenue_cents += ticket.total_cents;
-        rpt.total_tax_cents     += ticket.tax_cents;
-        rpt.subtotal_cents      += ticket.subtotal_cents;
-        rpt.cc_fee_total_cents  += ticket.cc_fee_cents;
+        rpt.total_tax_cents += ticket.tax_cents;
+        rpt.subtotal_cents += ticket.subtotal_cents;
+        rpt.cc_fee_total_cents += ticket.cc_fee_cents;
         for (const auto& p : ticket.payments) {
             if (p.payment_type == "CASH") {
                 ++rpt.cash_count;
@@ -523,14 +544,19 @@ void accumulate_report(DailyReport& rpt, const Ticket& ticket,
         }
         // If no payments (legacy), fall back to payment_type.
         if (ticket.payments.empty() && !ticket.payment_type.empty()) {
-            if (ticket.payment_type == "CASH") { ++rpt.cash_count; rpt.cash_total_cents += ticket.total_cents; }
-            else if (ticket.payment_type == "CARD") { ++rpt.card_count; rpt.card_total_cents += ticket.total_cents; }
+            if (ticket.payment_type == "CASH") {
+                ++rpt.cash_count;
+                rpt.cash_total_cents += ticket.total_cents;
+            } else if (ticket.payment_type == "CARD") {
+                ++rpt.card_count;
+                rpt.card_total_cents += ticket.total_cents;
+            }
         }
         for (const auto& ti : ticket.items) {
             auto& e = item_map[ti.item.id];
-            e.item_name      = ti.item.name;
-            e.quantity_sold  += ti.quantity;
-            e.revenue_cents  += ti.item.price_cents * ti.quantity;
+            e.item_name = ti.item.name;
+            e.quantity_sold += ti.quantity;
+            e.revenue_cents += ti.item.price_cents * ti.quantity;
         }
     } else if (ticket.status == TicketStatus::VOIDED) {
         ++rpt.voided_count;
@@ -543,17 +569,16 @@ void accumulate_report(DailyReport& rpt, const Ticket& ticket,
     }
 }
 
-void finalize_report(DailyReport& rpt,
-                     std::unordered_map<std::string, ItemSalesEntry>& item_map) {
-    rpt.net_revenue_cents = rpt.total_revenue_cents
-        - rpt.refunded_total_cents - rpt.comped_total_cents;
+void finalize_report(DailyReport& rpt, std::unordered_map<std::string, ItemSalesEntry>& item_map) {
+    rpt.net_revenue_cents =
+        rpt.total_revenue_cents - rpt.refunded_total_cents - rpt.comped_total_cents;
     rpt.total_collected_cents = rpt.net_revenue_cents + rpt.cc_fee_total_cents;
     rpt.item_sales.reserve(item_map.size());
     for (auto& [_, entry] : item_map) {
         rpt.item_sales.push_back(std::move(entry));
     }
     std::sort(rpt.item_sales.begin(), rpt.item_sales.end(),
-        [](const auto& a, const auto& b) { return a.revenue_cents > b.revenue_cents; });
+              [](const auto& a, const auto& b) { return a.revenue_cents > b.revenue_cents; });
 }
 }  // namespace
 
@@ -598,7 +623,10 @@ std::vector<DailyReport> PosManager::get_report_history(int days_back) const {
         // Skip if we already have an archived report for this date.
         bool have_archived = false;
         for (const auto& ar : archived_reports_) {
-            if (ar.date == date) { have_archived = true; break; }
+            if (ar.date == date) {
+                have_archived = true;
+                break;
+            }
         }
         if (have_archived) continue;
 
@@ -614,32 +642,31 @@ std::vector<DailyReport> PosManager::get_report_history(int days_back) const {
     }
 
     std::sort(reports.begin(), reports.end(),
-        [](const auto& a, const auto& b) { return a.date > b.date; });
+              [](const auto& a, const auto& b) { return a.date > b.date; });
 
-    if (static_cast<int>(reports.size()) > days_back)
-        reports.resize(days_back);
+    if (static_cast<int>(reports.size()) > days_back) reports.resize(days_back);
 
     return reports;
 }
 
 DailyReport PosManager::get_date_range_report(const std::string& start,
-                                               const std::string& end) const {
+                                              const std::string& end) const {
     auto all = get_report_history(365);
     DailyReport summary;
     summary.date = start + " to " + end;
     for (const auto& r : all) {
         if (r.date >= start && r.date <= end) {
-            summary.total_tickets       += r.total_tickets;
+            summary.total_tickets += r.total_tickets;
             summary.total_revenue_cents += r.total_revenue_cents;
-            summary.total_tax_cents     += r.total_tax_cents;
-            summary.cash_count          += r.cash_count;
-            summary.card_count          += r.card_count;
-            summary.voided_count        += r.voided_count;
-            summary.comped_count        += r.comped_count;
-            summary.refunded_count      += r.refunded_count;
-            summary.cash_total_cents    += r.cash_total_cents;
-            summary.card_total_cents    += r.card_total_cents;
-            summary.comped_total_cents  += r.comped_total_cents;
+            summary.total_tax_cents += r.total_tax_cents;
+            summary.cash_count += r.cash_count;
+            summary.card_count += r.card_count;
+            summary.voided_count += r.voided_count;
+            summary.comped_count += r.comped_count;
+            summary.refunded_count += r.refunded_count;
+            summary.cash_total_cents += r.cash_total_cents;
+            summary.card_total_cents += r.card_total_cents;
+            summary.comped_total_cents += r.comped_total_cents;
             summary.refunded_total_cents += r.refunded_total_cents;
             // Merge item sales.
             for (const auto& e : r.item_sales) {
@@ -656,10 +683,10 @@ DailyReport PosManager::get_date_range_report(const std::string& start,
             }
         }
     }
-    summary.net_revenue_cents = summary.total_revenue_cents
-        - summary.refunded_total_cents - summary.comped_total_cents;
+    summary.net_revenue_cents =
+        summary.total_revenue_cents - summary.refunded_total_cents - summary.comped_total_cents;
     std::sort(summary.item_sales.begin(), summary.item_sales.end(),
-        [](const auto& a, const auto& b) { return a.revenue_cents > b.revenue_cents; });
+              [](const auto& a, const auto& b) { return a.revenue_cents > b.revenue_cents; });
     return summary;
 }
 
@@ -682,17 +709,16 @@ DailyReport PosManager::end_day() {
 
     // 2. Archive the report.
     // Remove any existing archived report for today (shouldn't happen normally).
-    archived_reports_.erase(
-        std::remove_if(archived_reports_.begin(), archived_reports_.end(),
-            [&](const DailyReport& r) { return r.date == today; }),
-        archived_reports_.end());
+    archived_reports_.erase(std::remove_if(archived_reports_.begin(), archived_reports_.end(),
+                                           [&](const DailyReport& r) { return r.date == today; }),
+                            archived_reports_.end());
     archived_reports_.push_back(zrpt);
 
     // 3. Remove all closed/voided/comped/refunded tickets AND empty OPEN tickets.
-    for (auto it = tickets_.begin(); it != tickets_.end(); ) {
+    for (auto it = tickets_.begin(); it != tickets_.end();) {
         const auto& t = it->second;
-        bool should_delete = (t.status != TicketStatus::OPEN) ||
-                             (t.status == TicketStatus::OPEN && t.items.empty());
+        bool should_delete =
+            (t.status != TicketStatus::OPEN) || (t.status == TicketStatus::OPEN && t.items.empty());
         if (should_delete) {
             if (db_) db_->delete_ticket(t.id);
             it = tickets_.erase(it);
@@ -707,10 +733,9 @@ DailyReport PosManager::end_day() {
 
 // ── Phone Orders ─────────────────────────────────────────────
 
-std::optional<PhoneOrder> PosManager::create_phone_order(
-        const std::string& ticket_id,
-        const std::string& customer_name,
-        const std::string& comment) {
+std::optional<PhoneOrder> PosManager::create_phone_order(const std::string& ticket_id,
+                                                         const std::string& customer_name,
+                                                         const std::string& comment) {
     std::lock_guard lock(mu_);
 
     auto tit = tickets_.find(ticket_id);
@@ -724,13 +749,14 @@ std::optional<PhoneOrder> PosManager::create_phone_order(
     os << "PH-" << std::setw(6) << std::setfill('0') << phone_order_seq_;
 
     PhoneOrder po;
-    po.id            = os.str();
-    po.ticket        = ticket;  // snapshot
+    po.id = os.str();
+    po.ticket = ticket;  // snapshot
     po.customer_name = customer_name;
-    po.comment       = comment;
-    po.status        = PhoneOrderStatus::HOLDING;
+    po.comment = comment;
+    po.status = PhoneOrderStatus::HOLDING;
     po.created_at_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
 
     phone_orders_[po.id] = po;
 
@@ -756,7 +782,7 @@ std::vector<PhoneOrder> PosManager::list_phone_orders() const {
     }
     // Sort by created_at ascending (oldest first — FIFO).
     std::sort(result.begin(), result.end(),
-        [](const auto& a, const auto& b) { return a.created_at_ms < b.created_at_ms; });
+              [](const auto& a, const auto& b) { return a.created_at_ms < b.created_at_ms; });
     return result;
 }
 
@@ -770,9 +796,9 @@ int32_t PosManager::phone_order_count() const {
 }
 
 std::optional<Ticket> PosManager::update_item(const std::string& ticket_id,
-                                               const std::string& line_key,
-                                               const std::vector<AppliedModifier>& modifiers,
-                                               const std::string& special_instructions) {
+                                              const std::string& line_key,
+                                              const std::vector<AppliedModifier>& modifiers,
+                                              const std::string& special_instructions) {
     std::lock_guard lock(mu_);
 
     auto tit = tickets_.find(ticket_id);
@@ -781,22 +807,21 @@ std::optional<Ticket> PosManager::update_item(const std::string& ticket_id,
     if (ticket.status != TicketStatus::OPEN) return std::nullopt;
 
     auto it = std::find_if(ticket.items.begin(), ticket.items.end(),
-        [&](const TicketItem& ti) { return ti.line_key == line_key; });
+                           [&](const TicketItem& ti) { return ti.line_key == line_key; });
     if (it == ticket.items.end()) return std::nullopt;
 
     // Update modifiers, special instructions, and recompute line key.
-    it->modifiers            = modifiers;
+    it->modifiers = modifiers;
     it->special_instructions = special_instructions;
-    it->line_key             = compute_line_key(it->item.id, modifiers, special_instructions);
+    it->line_key = compute_line_key(it->item.id, modifiers, special_instructions);
 
     ticket.recalculate(tax_rate_bps_);
     if (db_) db_->save_ticket(ticket);
     return ticket;
 }
 
-std::optional<PhoneOrder> PosManager::phone_order_action(
-        const std::string& phone_order_id,
-        const std::string& action) {
+std::optional<PhoneOrder> PosManager::phone_order_action(const std::string& phone_order_id,
+                                                         const std::string& action) {
     std::lock_guard lock(mu_);
 
     auto it = phone_orders_.find(phone_order_id);
