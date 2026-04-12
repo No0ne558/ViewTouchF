@@ -39,8 +39,7 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-                backgroundColor: Colors.red.shade700),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             child: const Text('End Day'),
           ),
         ],
@@ -48,7 +47,10 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
     );
     if (confirmed != true) return;
 
-    setState(() { _processing = true; _zReport = null; });
+    setState(() {
+      _processing = true;
+      _zReport = null;
+    });
     try {
       final resp = await PosClient.instance.stub.endDay(EndDayRequest());
       if (!resp.success) {
@@ -72,7 +74,8 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
 
     final selected = await showDialog<_MonthOption>(
       context: context,
-      builder: (ctx) => _XReportMonthPicker(currentYear: now.year, currentMonth: now.month),
+      builder: (ctx) =>
+          _XReportMonthPicker(currentYear: now.year, currentMonth: now.month),
     );
     if (selected == null) return;
 
@@ -91,7 +94,8 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
           ..endDate = _fmt(endDate),
       );
       if (resp.success) {
-        _msg('X-Report for ${selected.label} sent to printer (Job #${resp.jobId})',
+        _msg(
+            'X-Report for ${selected.label} sent to printer (Job #${resp.jobId})',
             Colors.green);
       } else {
         _msg('Print error: ${resp.error}', Colors.red);
@@ -122,8 +126,7 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
           Icon(Icons.nightlight_round,
               size: 80, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 24),
-          Text('End of Day',
-              style: Theme.of(context).textTheme.headlineMedium),
+          Text('End of Day', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           const Text(
             'Close out the current business day.\n'
@@ -143,15 +146,16 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
                   style: TextStyle(fontSize: 18)),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red.shade700,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
           const SizedBox(height: 24),
           // ── X Report button ──
           if (_xPrinting)
             const SizedBox(
-              width: 32, height: 32,
+              width: 32,
+              height: 32,
               child: CircularProgressIndicator(strokeWidth: 3),
             )
           else
@@ -163,8 +167,8 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.blue.shade700,
                 side: BorderSide(color: Colors.blue.shade700),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
           if (_zReport != null) ...[
@@ -232,14 +236,16 @@ class _MonthOption {
   final int year;
   final int month;
   final String label;
-  const _MonthOption({required this.year, required this.month, required this.label});
+  const _MonthOption(
+      {required this.year, required this.month, required this.label});
 }
 
 /// Dialog that lets the user pick a year, then a month within that year.
 class _XReportMonthPicker extends StatefulWidget {
   final int currentYear;
   final int currentMonth;
-  const _XReportMonthPicker({required this.currentYear, required this.currentMonth});
+  const _XReportMonthPicker(
+      {required this.currentYear, required this.currentMonth});
   @override
   State<_XReportMonthPicker> createState() => _XReportMonthPickerState();
 }
@@ -248,8 +254,19 @@ class _XReportMonthPickerState extends State<_XReportMonthPicker> {
   late int _selectedYear;
 
   static const _monthNames = [
-    '', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    '',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
   ];
 
   @override
@@ -323,7 +340,9 @@ class _XReportMonthPickerState extends State<_XReportMonthPicker> {
                     color: isCurrent
                         ? Colors.blue.shade100
                         : enabled
-                            ? Theme.of(context).colorScheme.surfaceContainerHighest
+                            ? Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
                             : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(8),
                     child: InkWell(
@@ -343,9 +362,8 @@ class _XReportMonthPickerState extends State<_XReportMonthPicker> {
                           _monthNames[month].substring(0, 3),
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: isCurrent
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                            fontWeight:
+                                isCurrent ? FontWeight.bold : FontWeight.normal,
                             color: enabled
                                 ? Theme.of(context).colorScheme.onSurface
                                 : Colors.grey,

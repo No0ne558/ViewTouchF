@@ -31,7 +31,8 @@ class PosClient {
 
   /// Access the singleton.
   static PosClient get instance {
-    assert(_instance != null, 'Call PosClient.init() before accessing instance');
+    assert(
+        _instance != null, 'Call PosClient.init() before accessing instance');
     return _instance!;
   }
 

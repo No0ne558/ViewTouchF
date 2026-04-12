@@ -57,7 +57,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get kitchenPrinter => 'Impresora de cocina';
 
   @override
-  String get noCupsPrinters => 'No se encontraron impresoras CUPS en este sistema.';
+  String get noCupsPrinters =>
+      'No se encontraron impresoras CUPS en este sistema.';
 
   @override
   String get saveFailed => 'Error al guardar';
@@ -101,7 +102,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get phoneOrderCreated => 'Pedido telefónico creado';
 
   @override
-  String get phoneOrderLoadedForEditing => 'Pedido telefónico cargado para editar';
+  String get phoneOrderLoadedForEditing =>
+      'Pedido telefónico cargado para editar';
 
   @override
   String get phoneOrderTitle => 'Pedido telefónico';
@@ -329,7 +331,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sendToKitchen => 'Enviar a cocina';
 
   @override
-  String get sendToKitchenSubtitle => 'Imprimir este artículo en los tickets de cocina';
+  String get sendToKitchenSubtitle =>
+      'Imprimir este artículo en los tickets de cocina';
 
   @override
   String get modifierGroups => 'Grupos de modificadores';
@@ -338,7 +341,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addGroup => 'Agregar grupo';
 
   @override
-  String get noModifierGroups => 'No hay grupos de modificadores. Los artículos se agregarán tal cual.';
+  String get noModifierGroups =>
+      'No hay grupos de modificadores. Los artículos se agregarán tal cual.';
 
   @override
   String get groupIdLabel => 'ID del grupo';

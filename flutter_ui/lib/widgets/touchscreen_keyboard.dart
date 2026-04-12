@@ -5,6 +5,7 @@ import 'package:viewtouch_ui/generated/app_localizations.dart';
 /// Sends key taps to the provided [controller].
 class TouchscreenKeyboard extends StatelessWidget {
   final TextEditingController controller;
+
   /// If true, show a numeric-only layout instead of full QWERTY.
   final bool numericOnly;
 
@@ -20,7 +21,8 @@ class TouchscreenKeyboard extends StatelessWidget {
     final base = sel.isValid ? sel.start : text.length;
     if (key == '⌫') {
       if (base > 0) {
-        controller.text = '${text.substring(0, base - 1)}${text.substring(base)}';
+        controller.text =
+            '${text.substring(0, base - 1)}${text.substring(base)}';
         controller.selection = TextSelection.collapsed(offset: base - 1);
       }
     } else if (key == '␣') {
@@ -74,12 +76,13 @@ class TouchscreenKeyboard extends StatelessWidget {
                               : isSpace
                                   ? Colors.blueGrey.shade600
                                   : null,
-                          foregroundColor: (key == '⌫' || isSpace)
-                              ? Colors.white
-                              : null,
+                          foregroundColor:
+                              (key == '⌫' || isSpace) ? Colors.white : null,
                         ),
                         child: Text(
-                          isSpace ? AppLocalizations.of(context)!.spaceLabel : key,
+                          isSpace
+                              ? AppLocalizations.of(context)!.spaceLabel
+                              : key,
                           style: TextStyle(
                             fontSize: isSpace ? 16 : 18,
                             fontWeight: FontWeight.w500,
@@ -149,8 +152,7 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(widget.title,
-                  style: Theme.of(context).textTheme.titleLarge),
+              Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               TextField(
                 controller: _controller,
@@ -192,7 +194,7 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
                         onPressed: () =>
                             Navigator.pop(context, _controller.text),
                         child: Text(AppLocalizations.of(context)!.done,
-                          style: const TextStyle(fontSize: 16)),
+                            style: const TextStyle(fontSize: 16)),
                       ),
                     ),
                   ),
@@ -259,7 +261,9 @@ class TouchTextField extends StatelessWidget {
           ? () async {
               final result = await showTouchKeyboardDialog(
                 context,
-                title: dialogTitle.isNotEmpty ? dialogTitle : AppLocalizations.of(context)!.enterText,
+                title: dialogTitle.isNotEmpty
+                    ? dialogTitle
+                    : AppLocalizations.of(context)!.enterText,
                 initialValue: controller.text,
                 hintText: decoration?.hintText ?? '',
                 numericOnly: numericOnly,

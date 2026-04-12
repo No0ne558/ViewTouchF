@@ -53,7 +53,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
 
   Future<void> _loadSettings() async {
     try {
-      final resp = await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      final resp =
+          await PosClient.instance.stub.getSettings(GetSettingsRequest());
       final s = resp.settings;
       _nameCtrl.text = s.restaurantName;
       _taxCtrl.text = (s.taxRateBps / 100.0).toStringAsFixed(2);
@@ -61,24 +62,24 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       _receiptPrinterEnabled = s.receiptPrinterEnabled;
       _kitchenPrinterName = s.kitchenPrinterName;
       _kitchenPrinterEnabled = s.kitchenPrinterEnabled;
-      _ccFeeCentsCtrl.text = s.ccFeeCents > 0
-          ? (s.ccFeeCents / 100.0).toStringAsFixed(2)
-          : '';
-      _ccFeePctCtrl.text = s.ccFeeBps > 0
-          ? (s.ccFeeBps / 100.0).toStringAsFixed(2)
-          : '';
+      _ccFeeCentsCtrl.text =
+          s.ccFeeCents > 0 ? (s.ccFeeCents / 100.0).toStringAsFixed(2) : '';
+      _ccFeePctCtrl.text =
+          s.ccFeeBps > 0 ? (s.ccFeeBps / 100.0).toStringAsFixed(2) : '';
       setState(() => _loading = false);
     } catch (e) {
       setState(() => _loading = false);
       if (!mounted) return;
-      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon, error: true);
+      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon,
+          error: true);
     }
   }
 
   Future<void> _loadPrinters() async {
     setState(() => _loadingPrinters = true);
     try {
-      final resp = await PosClient.instance.stub.listPrinters(ListPrintersRequest());
+      final resp =
+          await PosClient.instance.stub.listPrinters(ListPrintersRequest());
       setState(() {
         _availablePrinters = resp.printers.toList();
         _loadingPrinters = false;
@@ -86,7 +87,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     } catch (e) {
       setState(() => _loadingPrinters = false);
       if (!mounted) return;
-      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon, error: true);
+      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon,
+          error: true);
     }
   }
 
@@ -194,9 +196,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: _availablePrinters.any((p) => p.name == selectedPrinter)
-                  ? selectedPrinter
-                  : null,
+              initialValue:
+                  _availablePrinters.any((p) => p.name == selectedPrinter)
+                      ? selectedPrinter
+                      : null,
               decoration: InputDecoration(
                 labelText: '$label Name',
                 border: const OutlineInputBorder(),
@@ -238,7 +241,9 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: Provider.of<LocaleProvider>(context).locale?.languageCode ?? 'en',
+              initialValue:
+                  Provider.of<LocaleProvider>(context).locale?.languageCode ??
+                      'en',
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.language,
                 border: const OutlineInputBorder(),
@@ -336,7 +341,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 TextButton.icon(
                   onPressed: _loadPrinters,
                   icon: const Icon(Icons.refresh, size: 18),
-                    label: Text(AppLocalizations.of(context)!.refresh),
+                  label: Text(AppLocalizations.of(context)!.refresh),
                 ),
               ],
             ),
@@ -355,8 +360,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               selectedPrinter: _receiptPrinterName,
               onEnabledChanged: (v) =>
                   setState(() => _receiptPrinterEnabled = v),
-              onPrinterChanged: (v) =>
-                  setState(() => _receiptPrinterName = v),
+              onPrinterChanged: (v) => setState(() => _receiptPrinterName = v),
             ),
             const SizedBox(height: 12),
             _buildPrinterTarget(
@@ -366,8 +370,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               selectedPrinter: _kitchenPrinterName,
               onEnabledChanged: (v) =>
                   setState(() => _kitchenPrinterEnabled = v),
-              onPrinterChanged: (v) =>
-                  setState(() => _kitchenPrinterName = v),
+              onPrinterChanged: (v) => setState(() => _kitchenPrinterName = v),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -377,7 +380,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 onPressed: _saving ? null : _save,
                 icon: _saving
                     ? const SizedBox(
-                        width: 20, height: 20,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.save),
                 label: Text(AppLocalizations.of(context)!.saveSettings),

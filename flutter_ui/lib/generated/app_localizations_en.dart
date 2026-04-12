@@ -338,7 +338,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addGroup => 'Add Group';
 
   @override
-  String get noModifierGroups => 'No modifier groups. Items will be added as-is.';
+  String get noModifierGroups =>
+      'No modifier groups. Items will be added as-is.';
 
   @override
   String get groupIdLabel => 'Group ID';

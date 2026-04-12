@@ -67,25 +67,39 @@ class _TicketPanelState extends State<TicketPanel> {
   String _actionLabel(ModifierAction a) {
     final loc = AppLocalizations.of(context)!;
     switch (a) {
-      case ModifierAction.MOD_NO:     return loc.modNo;
-      case ModifierAction.MOD_ADD:    return loc.modAdd;
-      case ModifierAction.MOD_EXTRA:  return loc.modExtra;
-      case ModifierAction.MOD_LIGHT:  return loc.modLight;
-      case ModifierAction.MOD_SIDE:   return loc.modSide;
-      case ModifierAction.MOD_DOUBLE: return loc.modDouble;
-      default: return '';
+      case ModifierAction.MOD_NO:
+        return loc.modNo;
+      case ModifierAction.MOD_ADD:
+        return loc.modAdd;
+      case ModifierAction.MOD_EXTRA:
+        return loc.modExtra;
+      case ModifierAction.MOD_LIGHT:
+        return loc.modLight;
+      case ModifierAction.MOD_SIDE:
+        return loc.modSide;
+      case ModifierAction.MOD_DOUBLE:
+        return loc.modDouble;
+      default:
+        return '';
     }
   }
 
   Color _actionColor(ModifierAction a) {
     switch (a) {
-      case ModifierAction.MOD_NO:     return Colors.red;
-      case ModifierAction.MOD_ADD:    return Colors.green;
-      case ModifierAction.MOD_EXTRA:  return Colors.orange;
-      case ModifierAction.MOD_LIGHT:  return Colors.blue;
-      case ModifierAction.MOD_SIDE:   return Colors.purple;
-      case ModifierAction.MOD_DOUBLE: return Colors.deepOrange;
-      default: return Colors.grey;
+      case ModifierAction.MOD_NO:
+        return Colors.red;
+      case ModifierAction.MOD_ADD:
+        return Colors.green;
+      case ModifierAction.MOD_EXTRA:
+        return Colors.orange;
+      case ModifierAction.MOD_LIGHT:
+        return Colors.blue;
+      case ModifierAction.MOD_SIDE:
+        return Colors.purple;
+      case ModifierAction.MOD_DOUBLE:
+        return Colors.deepOrange;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -101,9 +115,9 @@ class _TicketPanelState extends State<TicketPanel> {
         // ── Line items ────────────────────────────────────────
         Expanded(
           child: t.items.isEmpty
-                ? Center(
+              ? Center(
                   child: Text(AppLocalizations.of(context)!.tapMenuToBegin,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                      style: const TextStyle(fontSize: 16, color: Colors.grey)),
                 )
               : ScrollConfiguration(
                   behavior: ScrollConfiguration.of(context).copyWith(
@@ -115,113 +129,119 @@ class _TicketPanelState extends State<TicketPanel> {
                     },
                   ),
                   child: ListView.separated(
-                  controller: _scrollCtrl,
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(12),
-                  itemCount: t.items.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (ctx, i) {
-                    final ti = t.items[i];
-                    // Calculate line total including modifier adjustments.
-                    int modAdj = 0;
-                    for (final m in ti.modifiers) {
-                      modAdj += m.priceAdjustmentCents;
-                    }
-                    final adjLineTotal = (ti.item.priceCents + modAdj) * ti.quantity;
-                    return Padding(
-                      key: ValueKey('${ti.lineKey}-${ti.quantity}'),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── Top row: item name (tappable) ──
-                          GestureDetector(
-                            onTap: widget.onItemTap != null ? () => widget.onItemTap!(ti) : null,
-                            child: Text(ti.item.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 15)),
-                          ),
-                          // ── Modifiers + special instructions ──
-                          if (ti.modifiers.isNotEmpty)
-                            ...ti.modifiers.map((m) {
-                              final label = _actionLabel(m.action);
-                              final price = m.priceAdjustmentCents > 0
-                                  ? ' +${_money(m.priceAdjustmentCents)}'
-                                  : '';
-                              return Text(
-                                '  $label ${m.modifierName}$price',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: _actionColor(m.action),
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              );
-                            }),
-                          if (ti.specialInstructions.isNotEmpty)
-                            Text(
-                              '  \u{1F4DD} ${ti.specialInstructions}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.deepPurple,
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w500,
-                              ),
+                    controller: _scrollCtrl,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(12),
+                    itemCount: t.items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (ctx, i) {
+                      final ti = t.items[i];
+                      // Calculate line total including modifier adjustments.
+                      int modAdj = 0;
+                      for (final m in ti.modifiers) {
+                        modAdj += m.priceAdjustmentCents;
+                      }
+                      final adjLineTotal =
+                          (ti.item.priceCents + modAdj) * ti.quantity;
+                      return Padding(
+                        key: ValueKey('${ti.lineKey}-${ti.quantity}'),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Top row: item name (tappable) ──
+                            GestureDetector(
+                              onTap: widget.onItemTap != null
+                                  ? () => widget.onItemTap!(ti)
+                                  : null,
+                              child: Text(ti.item.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15)),
                             ),
-                          const SizedBox(height: 4),
-                          // ── Bottom row: [-] qty [+]  🗑  price ──
-                          Row(
-                            children: [
-                              // Minus button
-                              _QuantityButton(
-                                icon: Icons.remove,
-                                color: Colors.orange.shade700,
-                                onTap: () => widget.onDecreaseItem(ti),
-                              ),
-                              // Quantity counter (tappable for custom input)
-                              GestureDetector(
-                                onTap: () => _showQuantityPad(ctx, ti),
-                                child: Container(
-                                  width: 44,
-                                  height: 36,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade400),
+                            // ── Modifiers + special instructions ──
+                            if (ti.modifiers.isNotEmpty)
+                              ...ti.modifiers.map((m) {
+                                final label = _actionLabel(m.action);
+                                final price = m.priceAdjustmentCents > 0
+                                    ? ' +${_money(m.priceAdjustmentCents)}'
+                                    : '';
+                                return Text(
+                                  '  $label ${m.modifierName}$price',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _actionColor(m.action),
+                                    fontStyle: FontStyle.italic,
                                   ),
-                                  child: Text(
-                                    '${ti.quantity}',
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
-                                  ),
+                                );
+                              }),
+                            if (ti.specialInstructions.isNotEmpty)
+                              Text(
+                                '  \u{1F4DD} ${ti.specialInstructions}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.deepPurple,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              // Plus button
-                              _QuantityButton(
-                                icon: Icons.add,
-                                color: Colors.green.shade700,
-                                onTap: () => widget.onIncreaseItem(ti),
-                              ),
-                              const SizedBox(width: 8),
-                              // Trash button
-                              _QuantityButton(
-                                icon: Icons.delete_outline,
-                                color: Colors.red.shade700,
-                                onTap: () => _confirmRemove(ctx, ti),
-                              ),
-                              const Spacer(),
-                              // Price
-                              Text(
-                                _money(adjLineTotal),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                            const SizedBox(height: 4),
+                            // ── Bottom row: [-] qty [+]  🗑  price ──
+                            Row(
+                              children: [
+                                // Minus button
+                                _QuantityButton(
+                                  icon: Icons.remove,
+                                  color: Colors.orange.shade700,
+                                  onTap: () => widget.onDecreaseItem(ti),
+                                ),
+                                // Quantity counter (tappable for custom input)
+                                GestureDetector(
+                                  onTap: () => _showQuantityPad(ctx, ti),
+                                  child: Container(
+                                    width: 44,
+                                    height: 36,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Colors.grey.shade400),
+                                    ),
+                                    child: Text(
+                                      '${ti.quantity}',
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                // Plus button
+                                _QuantityButton(
+                                  icon: Icons.add,
+                                  color: Colors.green.shade700,
+                                  onTap: () => widget.onIncreaseItem(ti),
+                                ),
+                                const SizedBox(width: 8),
+                                // Trash button
+                                _QuantityButton(
+                                  icon: Icons.delete_outline,
+                                  color: Colors.red.shade700,
+                                  onTap: () => _confirmRemove(ctx, ti),
+                                ),
+                                const Spacer(),
+                                // Price
+                                Text(
+                                  _money(adjLineTotal),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
         ),
         // ── Totals + Checkout ─────────────────────────────────
@@ -230,8 +250,12 @@ class _TicketPanelState extends State<TicketPanel> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             children: [
-              _TotalRow(label: AppLocalizations.of(context)!.subtotal, value: _money(t.subtotal)),
-              _TotalRow(label: AppLocalizations.of(context)!.tax, value: _money(t.tax)),
+              _TotalRow(
+                  label: AppLocalizations.of(context)!.subtotal,
+                  value: _money(t.subtotal)),
+              _TotalRow(
+                  label: AppLocalizations.of(context)!.tax,
+                  value: _money(t.tax)),
               const Divider(),
               _TotalRow(
                 label: 'TOTAL',
@@ -249,7 +273,7 @@ class _TicketPanelState extends State<TicketPanel> {
                         onPressed: t.items.isEmpty ? null : widget.onPhoneOrder,
                         icon: const Icon(Icons.phone),
                         label: Text(AppLocalizations.of(context)!.phoneOrder,
-                          style: const TextStyle(fontSize: 16)),
+                            style: const TextStyle(fontSize: 16)),
                         style: FilledButton.styleFrom(
                             backgroundColor: Colors.orange.shade700),
                       ),
@@ -301,7 +325,8 @@ class _TicketPanelState extends State<TicketPanel> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(AppLocalizations.of(context)!.removeItemTitle),
-            content: Text(AppLocalizations.of(context)!.removeItemConfirm(ti.item.name, ti.quantity)),
+          content: Text(AppLocalizations.of(context)!
+              .removeItemConfirm(ti.item.name, ti.quantity)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),

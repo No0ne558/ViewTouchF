@@ -16,8 +16,8 @@ Future<void> main() async {
   await localeProvider.loadLocale();
 
   // Allow override via env var; default to /opt/viewtouchf install path.
-  final socketPath = Platform.environment['VT_SOCKET']
-      ?? '/opt/viewtouchf/run/pos.sock';
+  final socketPath =
+      Platform.environment['VT_SOCKET'] ?? '/opt/viewtouchf/run/pos.sock';
   PosClient.init(socketPath: socketPath);
 
   runApp(
@@ -60,10 +60,12 @@ class ViewTouchApp extends StatelessWidget {
         final screenH = mq.size.height;
 
         // Uniform scale — pick the smaller axis so nothing overflows.
-        final scale = math.max(1.0, math.min(
-          screenW / _baseWidth,
-          screenH / _baseHeight,
-        ));
+        final scale = math.max(
+            1.0,
+            math.min(
+              screenW / _baseWidth,
+              screenH / _baseHeight,
+            ));
 
         // At 1920×1080 or below, render 1:1 — no scaling needed.
         if (scale <= 1.0) return child!;

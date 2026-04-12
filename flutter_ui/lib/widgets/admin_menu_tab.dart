@@ -79,9 +79,12 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(ctx)!.deleteMenuItemTitle),
-        content: Text(AppLocalizations.of(ctx)!.deleteMenuItemConfirm(item.name)),
+        content:
+            Text(AppLocalizations.of(ctx)!.deleteMenuItemConfirm(item.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(ctx)!.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AppLocalizations.of(ctx)!.cancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -126,7 +129,8 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-                Text('${AppLocalizations.of(context)!.menuItems} (${_items.length})',
+              Text(
+                  '${AppLocalizations.of(context)!.menuItems} (${_items.length})',
                   style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
               FilledButton.icon(
@@ -138,7 +142,7 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
           ),
         ),
         Expanded(
-            child: _items.isEmpty
+          child: _items.isEmpty
               ? Center(child: Text(AppLocalizations.of(context)!.noMenuItems))
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -149,8 +153,8 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                     final modCount = item.modifierGroups.length;
                     return ListTile(
                       leading: CircleAvatar(
-                        child: Text(item.id.substring(0,
-                            item.id.length > 3 ? 3 : item.id.length)),
+                        child: Text(item.id.substring(
+                            0, item.id.length > 3 ? 3 : item.id.length)),
                       ),
                       title: Text(item.name),
                       subtitle: Text(
@@ -297,11 +301,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   void _addModifier(int groupIndex) {
     setState(() {
       _groups[groupIndex].modifiers.add(_EditableModifier(
-        idCtrl: TextEditingController(text: _uniqueId('MOD')),
-        nameCtrl: TextEditingController(),
-        priceCtrl: TextEditingController(),
-        isDefault: false,
-      ));
+            idCtrl: TextEditingController(text: _uniqueId('MOD')),
+            nameCtrl: TextEditingController(),
+            priceCtrl: TextEditingController(),
+            isDefault: false,
+          ));
     });
   }
 
@@ -346,12 +350,16 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? AppLocalizations.of(context)!.editMenuItem : AppLocalizations.of(context)!.newMenuItem),
+        title: Text(_isEdit
+            ? AppLocalizations.of(context)!.editMenuItem
+            : AppLocalizations.of(context)!.newMenuItem),
         actions: [
           FilledButton.icon(
             onPressed: () => Navigator.pop(context, _buildMenuItem()),
             icon: const Icon(Icons.save),
-            label: Text(_isEdit ? AppLocalizations.of(context)!.save : AppLocalizations.of(context)!.add),
+            label: Text(_isEdit
+                ? AppLocalizations.of(context)!.save
+                : AppLocalizations.of(context)!.add),
           ),
           const SizedBox(width: 12),
         ],
@@ -360,9 +368,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
         padding: const EdgeInsets.all(16),
         children: [
           // ── Basic fields ─────────────────────────────────
-            Text(AppLocalizations.of(context)!.itemDetails,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context)!.itemDetails,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -435,9 +445,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(height: 24),
           Row(
             children: [
-                Text(AppLocalizations.of(context)!.modifierGroups,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context)!.modifierGroups,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold)),
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: _addGroup,
@@ -455,8 +467,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                     style: const TextStyle(color: Colors.grey)),
               ),
             ),
-          for (int gi = 0; gi < _groups.length; gi++)
-            _buildGroupCard(gi),
+          for (int gi = 0; gi < _groups.length; gi++) _buildGroupCard(gi),
         ],
       ),
     );
@@ -552,10 +563,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             // Add modifier button
             Align(
               alignment: Alignment.centerLeft,
-                child: TextButton.icon(
+              child: TextButton.icon(
                 onPressed: () => _addModifier(gi),
                 icon: const Icon(Icons.add, size: 16),
-                label: Text(AppLocalizations.of(context)!.addModifier, style: const TextStyle(fontSize: 13)),
+                label: Text(AppLocalizations.of(context)!.addModifier,
+                    style: const TextStyle(fontSize: 13)),
               ),
             ),
           ],
@@ -616,7 +628,8 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(width: 6),
           Column(
             children: [
-              Text(AppLocalizations.of(context)!.defaultLabel, style: const TextStyle(fontSize: 10)),
+              Text(AppLocalizations.of(context)!.defaultLabel,
+                  style: const TextStyle(fontSize: 10)),
               Switch(
                 value: m.isDefault,
                 onChanged: (v) => setState(() => m.isDefault = v),

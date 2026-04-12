@@ -57,7 +57,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get kitchenPrinter => 'Impresora de cocina';
 
   @override
-  String get noCupsPrinters => 'No se encontraron impresoras CUPS en este sistema.';
+  String get noCupsPrinters =>
+      'No se encontraron impresoras CUPS en este sistema.';
 
   @override
   String get saveFailed => 'Error al guardar';
@@ -101,7 +102,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get phoneOrderCreated => 'Pedido telefónico creado';
 
   @override
-  String get phoneOrderLoadedForEditing => 'Pedido telefónico cargado para editar';
+  String get phoneOrderLoadedForEditing =>
+      'Pedido telefónico cargado para editar';
 
   @override
   String get phoneOrderTitle => 'Pedido telefónico';
