@@ -36,6 +36,7 @@ message AppliedModifier {
     string         modifier_name          = 2;
     ModifierAction action                 = 3;
     int32          price_adjustment_cents  = 4;
+    string         group_id               = 5; // optional: id of the ModifierGroup containing this modifier
 }
 
 // ─── Data Types ──────────────────────────────────────────────

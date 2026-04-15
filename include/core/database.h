@@ -56,6 +56,7 @@ class Database {
     void migrate_to_1();  ///< v2.6.0 — initial 12-table schema.
     void migrate_to_2();  ///< v2.7.3 — add cc_fee_cents to tickets.
     void migrate_to_3();  ///< v2.8.0 — add report accounting fields.
+    void migrate_to_4();  ///< v2.9.0 — add group_id to ticket_item_modifiers
     void exec(const char* sql);
     int get_user_version();
     void set_user_version(int v);

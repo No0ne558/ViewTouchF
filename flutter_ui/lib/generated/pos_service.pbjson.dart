@@ -97,6 +97,7 @@ const AppliedModifier$json = {
       '5': 5,
       '10': 'priceAdjustmentCents'
     },
+    {'1': 'group_id', '3': 5, '4': 1, '5': 9, '10': 'groupId'},
   ],
 };
 
@@ -105,7 +106,7 @@ final $typed_data.Uint8List appliedModifierDescriptor = $convert.base64Decode(
     'Cg9BcHBsaWVkTW9kaWZpZXISHwoLbW9kaWZpZXJfaWQYASABKAlSCm1vZGlmaWVySWQSIwoNbW'
     '9kaWZpZXJfbmFtZRgCIAEoCVIMbW9kaWZpZXJOYW1lEjAKBmFjdGlvbhgDIAEoDjIYLnZ0X3By'
     'b3RvLk1vZGlmaWVyQWN0aW9uUgZhY3Rpb24SNAoWcHJpY2VfYWRqdXN0bWVudF9jZW50cxgEIA'
-    'EoBVIUcHJpY2VBZGp1c3RtZW50Q2VudHM=');
+    'EoBVIUcHJpY2VBZGp1c3RtZW50Q2VudHMSGQoIZ3JvdXBfaWQYBSABKAlSB2dyb3VwSWQ=');
 
 @$core.Deprecated('Use menuItemDescriptor instead')
 const MenuItem$json = {

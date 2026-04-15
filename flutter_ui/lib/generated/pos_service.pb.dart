@@ -213,6 +213,7 @@ class AppliedModifier extends $pb.GeneratedMessage {
     $core.String? modifierName,
     ModifierAction? action,
     $core.int? priceAdjustmentCents,
+    $core.String? groupId,
   }) {
     final result = create();
     if (modifierId != null) result.modifierId = modifierId;
@@ -220,6 +221,7 @@ class AppliedModifier extends $pb.GeneratedMessage {
     if (action != null) result.action = action;
     if (priceAdjustmentCents != null)
       result.priceAdjustmentCents = priceAdjustmentCents;
+    if (groupId != null) result.groupId = groupId;
     return result;
   }
 
@@ -241,6 +243,7 @@ class AppliedModifier extends $pb.GeneratedMessage {
     ..aE<ModifierAction>(3, _omitFieldNames ? '' : 'action',
         enumValues: ModifierAction.values)
     ..aI(4, _omitFieldNames ? '' : 'priceAdjustmentCents')
+    ..aOS(5, _omitFieldNames ? '' : 'groupId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -297,6 +300,15 @@ class AppliedModifier extends $pb.GeneratedMessage {
   $core.bool hasPriceAdjustmentCents() => $_has(3);
   @$pb.TagNumber(4)
   void clearPriceAdjustmentCents() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get groupId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set groupId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasGroupId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearGroupId() => $_clearField(5);
 }
 
 class MenuItem extends $pb.GeneratedMessage {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' show PointerDeviceKind;
 import 'package:viewtouch_ui/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../generated/pos_service.pb.dart';
@@ -25,12 +26,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _error;
   String _restaurantName = '';
   int _phoneOrderCount = 0;
+  // Category switching
+  List<String> _categories = [];
+  int _selectedCategoryIndex = 0; // 0 == All
 
   @override
   void initState() {
     super.initState();
+    _categoryController = ScrollController();
     _bootstrap();
   }
+
+  late ScrollController _categoryController;
+  PointerDeviceKind? _categoryPointerKind;
 
   Future<void> _bootstrap() async {
     try {
@@ -51,6 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _phoneOrderCount = phoneCountResp.count;
         _loading = false;
       });
+      _updateCategories();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -75,7 +84,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             : (mounted ? AppLocalizations.of(context)!.appTitle : '');
         _phoneOrderCount = phoneCountResp.count;
       });
+      _updateCategories();
     } catch (_) {}
+  }
+
+  void _updateCategories() {
+    final seen = <String>{};
+    final cats = <String>[];
+    for (final item in _menu) {
+      final c = item.category.trim();
+      if (c.isEmpty) continue;
+      if (!seen.contains(c)) {
+        seen.add(c);
+        cats.add(c);
+      }
+    }
+    setState(() {
+      _categories = cats;
+      if (_selectedCategoryIndex > _categories.length) _selectedCategoryIndex = 0;
+    });
   }
 
   Future<void> _refreshPhoneOrderCount() async {
@@ -92,6 +119,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       MaterialPageRoute(builder: (_) => const AdminScreen()),
     );
     _refreshMenu();
+  }
+
+  @override
+  void dispose() {
+    _categoryController.dispose();
+    super.dispose();
   }
 
   Future<void> _addItem(MenuItem item) async {
@@ -576,12 +609,85 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: Row(
         children: [
-          // ── Left: Menu grid (≈65% width) ──────────────────
+          // ── Left: Menu grid with category selector (≈65% width) ───
           Expanded(
             flex: 65,
-            child: MenuGrid(
-              items: _menu,
-              onItemTap: _addItem,
+            child: Column(
+              children: [
+                // Category selector bar
+                SizedBox(
+                  height: 64,
+                  child: Listener(
+                    onPointerDown: (e) => _categoryPointerKind = e.kind,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onHorizontalDragUpdate: (details) {
+                        if (!_categoryController.hasClients) return;
+                        final newOffset = _categoryController.offset - details.delta.dx;
+                        final max = _categoryController.position.hasContentDimensions
+                            ? _categoryController.position.maxScrollExtent
+                            : 0.0;
+                        final target = (newOffset).clamp(0.0, max) as double;
+                        _categoryController.jumpTo(target);
+                      },
+                      onHorizontalDragEnd: (details) {
+                        if (!_categoryController.hasClients) return;
+                        final v = details.velocity.pixelsPerSecond.dx;
+                        if (v.abs() < 50) return;
+                        final multiplier = _categoryPointerKind == PointerDeviceKind.mouse ? 0.25 : 0.6;
+                        final projected = v * multiplier;
+                        final max = _categoryController.position.hasContentDimensions
+                            ? _categoryController.position.maxScrollExtent
+                            : 0.0;
+                        final target = (_categoryController.offset - projected).clamp(0.0, max) as double;
+                        int durationMs = (v.abs() * 0.2).round();
+                        if (durationMs < 200) durationMs = 200;
+                        if (durationMs > 1000) durationMs = 1000;
+                        _categoryController.animateTo(target, duration: Duration(milliseconds: durationMs), curve: Curves.decelerate);
+                      },
+                      child: SingleChildScrollView(
+                        controller: _categoryController,
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: const Text('All'),
+                                selected: _selectedCategoryIndex == 0,
+                                onSelected: (_) => setState(() => _selectedCategoryIndex = 0),
+                              ),
+                            ),
+                            for (var ci = 0; ci < _categories.length; ci++) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(_categories[ci]),
+                                  selected: _selectedCategoryIndex == ci + 1,
+                                  onSelected: (v) => setState(() => _selectedCategoryIndex = v ? ci + 1 : 0),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Filtered menu grid
+                Expanded(
+                  child: MenuGrid(
+                    items: _selectedCategoryIndex == 0
+                        ? _menu
+                        : _menu
+                            .where((it) => it.category ==
+                                _categories[_selectedCategoryIndex - 1])
+                            .toList(),
+                    onItemTap: _addItem,
+                  ),
+                ),
+              ],
             ),
           ),
           const VerticalDivider(width: 1),
@@ -634,6 +740,99 @@ class _ModifierDialogState extends State<_ModifierDialog> {
   // null / absent = no action (keep default as-is, skip non-default).
   final Map<String, ModifierAction> _selections = {};
   String _specialInstructions = '';
+  late final List<GlobalKey> _groupKeys;
+  late int _currentGroupIndex;
+
+  int _selectedCountForGroup(ModifierGroup group) {
+    var c = 0;
+    for (final m in group.modifiers) {
+      if (_selections.containsKey(m.id)) c++;
+    }
+    return c;
+  }
+
+  bool _isGroupValid(int gi) {
+    final group = widget.item.modifierGroups[gi];
+    final sel = _selectedCountForGroup(group);
+    if (sel < group.minSelect) return false;
+    if (group.maxSelect > 0 && sel > group.maxSelect) return false;
+    return true;
+  }
+
+  late int _lastGroupIndex;
+  bool _transitionForward = true;
+
+  void _setCurrentGroupIndex(int next) {
+    if (next < 0 || next >= widget.item.modifierGroups.length) return;
+    _transitionForward = next > _currentGroupIndex;
+    setState(() {
+      _lastGroupIndex = _currentGroupIndex;
+      _currentGroupIndex = next;
+    });
+  }
+
+  Widget _buildStepperRow() {
+    final groups = widget.item.modifierGroups;
+    return SizedBox(
+      height: 72,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            for (var gi = 0; gi < groups.length; gi++) ...[
+              GestureDetector(
+                onTap: () => _setCurrentGroupIndex(gi),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: gi == _currentGroupIndex
+                            ? Theme.of(context).colorScheme.primary
+                            : (_isGroupValid(gi)
+                                ? Colors.green.shade600
+                                : Colors.grey.shade300),
+                        child: Text(
+                          '${gi + 1}',
+                          style: TextStyle(
+                              color: gi == _currentGroupIndex
+                                  ? Colors.white
+                                  : Colors.black),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        groups[gi].name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: gi == _currentGroupIndex
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.black87),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (gi < groups.length - 1)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(Icons.chevron_right, color: Colors.grey),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -654,6 +853,18 @@ class _ModifierDialogState extends State<_ModifierDialog> {
         }
       }
     }
+    _groupKeys = List.generate(widget.item.modifierGroups.length, (_) => GlobalKey());
+    _currentGroupIndex = 0;
+    for (var gi = 0; gi < widget.item.modifierGroups.length; gi++) {
+      final g = widget.item.modifierGroups[gi];
+      final sel = _selectedCountForGroup(g);
+      if (sel < g.minSelect) {
+        _currentGroupIndex = gi;
+        break;
+      }
+    }
+    _lastGroupIndex = _currentGroupIndex;
+    _transitionForward = true;
   }
 
   String _money(int cents) => formatMoney(cents);
@@ -683,6 +894,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
         result.add(AppliedModifier()
           ..modifierId = mod.id
           ..modifierName = mod.name
+          ..groupId = group.id
           ..action = action
           ..priceAdjustmentCents = priceAdj);
       }
@@ -715,22 +927,59 @@ class _ModifierDialogState extends State<_ModifierDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final group in widget.item.modifierGroups) ...[
-                Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 8),
-                  child: Text(
-                    group.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+              // Visual stepper showing progress across modifier groups
+              _buildStepperRow(),
+              // Animated group content — clip overflow and use a small slide + fade
+              ClipRect(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeInOut,
+                  switchOutCurve: Curves.easeInOut,
+                  transitionBuilder: (child, animation) {
+                    final offsetBegin = _transitionForward
+                        ? const Offset(0.22, 0)
+                        : const Offset(-0.22, 0);
+                    final tween = Tween<Offset>(begin: offsetBegin, end: Offset.zero)
+                        .chain(CurveTween(curve: Curves.easeInOut));
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: animation.drive(tween),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    key: ValueKey<int>(_currentGroupIndex),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16, bottom: 8),
+                          child: Text(
+                            widget.item.modifierGroups[_currentGroupIndex].name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        if (widget.item
+                                .modifierGroups[_currentGroupIndex].maxSelect ==
+                            1)
+                          _buildSingleSelect(widget
+                              .item.modifierGroups[_currentGroupIndex],
+                              _currentGroupIndex)
+                        else
+                          _buildMultiSelect(widget
+                              .item.modifierGroups[_currentGroupIndex],
+                              _currentGroupIndex),
+                      ],
+                    ),
                   ),
                 ),
-                if (group.maxSelect == 1)
-                  _buildSingleSelect(group)
-                else
-                  _buildMultiSelect(group),
-              ],
+              ),
             ],
           ),
         ),
@@ -763,21 +1012,45 @@ class _ModifierDialogState extends State<_ModifierDialog> {
             ),
           ),
         ),
+        if (_currentGroupIndex > 0)
+              SizedBox(
+            height: 48,
+            width: 120,
+            child: OutlinedButton.icon(
+              onPressed: () => _setCurrentGroupIndex(_currentGroupIndex - 1),
+              icon: const Icon(Icons.arrow_back),
+              label: Text('Back', style: const TextStyle(fontSize: 14)),
+            ),
+          ),
+        const SizedBox(width: 8),
         SizedBox(
           height: 48,
-          width: 180,
+          width: _currentGroupIndex < widget.item.modifierGroups.length - 1
+              ? 120
+              : 180,
           child: FilledButton(
-            onPressed: () => Navigator.pop(
-              context,
-              _ModifierResult(
-                modifiers: _buildModifiers(),
-                specialInstructions: _specialInstructions,
-              ),
-            ),
+            onPressed: !_isGroupValid(_currentGroupIndex)
+                ? null
+                : () {
+                    if (_currentGroupIndex <
+                        widget.item.modifierGroups.length - 1) {
+                      _setCurrentGroupIndex(_currentGroupIndex + 1);
+                    } else {
+                      Navigator.pop(
+                        context,
+                        _ModifierResult(
+                          modifiers: _buildModifiers(),
+                          specialInstructions: _specialInstructions,
+                        ),
+                      );
+                    }
+                  },
             child: Text(
-              widget.confirmLabel.isNotEmpty
-                  ? widget.confirmLabel
-                  : AppLocalizations.of(context)!.addToOrder,
+                _currentGroupIndex < widget.item.modifierGroups.length - 1
+                  ? 'Next'
+                  : (widget.confirmLabel.isNotEmpty
+                    ? widget.confirmLabel
+                    : AppLocalizations.of(context)!.addToOrder),
               style: const TextStyle(fontSize: 16),
             ),
           ),
@@ -787,7 +1060,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
   }
 
   /// Single-select group (e.g. Cooking Temp) — radio buttons.
-  Widget _buildSingleSelect(ModifierGroup group) {
+  Widget _buildSingleSelect(ModifierGroup group, int gi) {
     // Use a chip/row-based selection UI instead of the deprecated Radio API.
     return Column(
       children: [
@@ -825,6 +1098,12 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                       }
                       _selections[mod.id] = ModifierAction.MOD_ADD;
                     });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final nextIndex = gi + 1;
+                      if (nextIndex < widget.item.modifierGroups.length) {
+                        _setCurrentGroupIndex(nextIndex);
+                      }
+                    });
                   },
                 ),
               ],
@@ -842,7 +1121,7 @@ class _ModifierDialogState extends State<_ModifierDialog> {
   }
 
   /// Multi-select group (e.g. Toppings) — each modifier gets action chips.
-  Widget _buildMultiSelect(ModifierGroup group) {
+  Widget _buildMultiSelect(ModifierGroup group, int gi) {
     return Column(
       children: [
         for (final mod in group.modifiers)
@@ -870,19 +1149,19 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                 ),
                 if (mod.isDefault)
                   _actionChip(mod, ModifierAction.MOD_NO,
-                      AppLocalizations.of(context)!.modNo, Colors.red),
+                      AppLocalizations.of(context)!.modNo, Colors.red, group),
                 if (!mod.isDefault)
                   _actionChip(mod, ModifierAction.MOD_ADD,
-                      AppLocalizations.of(context)!.modAdd, Colors.green),
+                      AppLocalizations.of(context)!.modAdd, Colors.green, group),
                 _actionChip(mod, ModifierAction.MOD_EXTRA,
-                    AppLocalizations.of(context)!.modExtra, Colors.orange),
+                    AppLocalizations.of(context)!.modExtra, Colors.orange, group),
                 if (mod.isDefault)
                   _actionChip(mod, ModifierAction.MOD_LIGHT,
-                      AppLocalizations.of(context)!.modLight, Colors.blue),
+                      AppLocalizations.of(context)!.modLight, Colors.blue, group),
                 _actionChip(mod, ModifierAction.MOD_SIDE,
-                    AppLocalizations.of(context)!.modSide, Colors.purple),
+                    AppLocalizations.of(context)!.modSide, Colors.purple, group),
                 _actionChip(mod, ModifierAction.MOD_DOUBLE,
-                    AppLocalizations.of(context)!.modDouble, Colors.deepOrange),
+                    AppLocalizations.of(context)!.modDouble, Colors.deepOrange, group),
               ],
             ),
           ),
@@ -890,8 +1169,8 @@ class _ModifierDialogState extends State<_ModifierDialog> {
     );
   }
 
-  Widget _actionChip(
-      Modifier mod, ModifierAction action, String label, Color color) {
+  Widget _actionChip(Modifier mod, ModifierAction action, String label,
+      Color color, ModifierGroup group) {
     final isSelected = _selections[mod.id] == action;
     return Padding(
       padding: const EdgeInsets.only(left: 6),
@@ -905,6 +1184,11 @@ class _ModifierDialogState extends State<_ModifierDialog> {
         onSelected: (selected) {
           setState(() {
             if (selected) {
+              final cur = _selectedCountForGroup(group);
+              if (group.maxSelect > 0 && !isSelected && cur >= group.maxSelect) {
+                // Can't select more than maxSelect — ignore the tap.
+                return;
+              }
               _selections[mod.id] = action;
             } else {
               _selections.remove(mod.id);

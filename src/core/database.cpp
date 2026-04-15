@@ -130,7 +130,7 @@ void Database::exec(const char* sql) {
 // Migrations run inside a transaction; if one fails the DB is
 // left at the last successful version.
 
-static constexpr int kLatestVersion = 3;
+static constexpr int kLatestVersion = 4;
 
 int Database::get_user_version() {
     sqlite3_stmt* stmt = nullptr;
@@ -167,6 +167,9 @@ void Database::migrate() {
                 break;
             case 3:
                 migrate_to_3();
+                break;
+            case 4:
+                migrate_to_4();
                 break;
             // case 4: migrate_to_4(); break;
             default:
@@ -304,6 +307,13 @@ void Database::migrate_to_3() {
     exec(
         "ALTER TABLE archived_reports ADD COLUMN total_collected_cents INTEGER NOT NULL DEFAULT 0");
     exec("ALTER TABLE archived_reports ADD COLUMN subtotal_cents INTEGER NOT NULL DEFAULT 0");
+}
+
+// Migration 4 — add group_id to ticket_item_modifiers (v2.9.0)
+void Database::migrate_to_4() {
+    exec("ALTER TABLE ticket_item_modifiers ADD COLUMN group_id TEXT NOT NULL DEFAULT ''");
+    // Backfill group_id for existing ticket modifiers when the modifier still exists in the menu
+    exec("UPDATE ticket_item_modifiers SET group_id = (SELECT group_id FROM modifiers WHERE modifiers.id = ticket_item_modifiers.modifier_id) WHERE group_id = ''");
 }
 
 // ── Sequences ────────────────────────────────────────────────
@@ -532,8 +542,8 @@ void Database::save_ticket(const Ticket& t) {
     sqlite3_prepare_v2(
         db_,
         "INSERT INTO "
-        "ticket_item_modifiers(ticket_id,line_key,modifier_id,modifier_name,action,price_adj) "
-        "VALUES(?,?,?,?,?,?)",
+        "ticket_item_modifiers(ticket_id,line_key,modifier_id,modifier_name,group_id,action,price_adj) "
+        "VALUES(?,?,?,?,?,?,?)",
         -1, &ins_mod, nullptr);
 
     for (const auto& ti : t.items) {
@@ -555,9 +565,10 @@ void Database::save_ticket(const Ticket& t) {
             sqlite3_bind_text(ins_mod, 2, ti.line_key.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(ins_mod, 3, m.modifier_id.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(ins_mod, 4, m.modifier_name.c_str(), -1, SQLITE_TRANSIENT);
-            sqlite3_bind_text(ins_mod, 5, mod_action_to_str(m.action).c_str(), -1,
+            sqlite3_bind_text(ins_mod, 5, m.group_id.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(ins_mod, 6, mod_action_to_str(m.action).c_str(), -1,
                               SQLITE_TRANSIENT);
-            sqlite3_bind_int(ins_mod, 6, m.price_adjustment_cents);
+            sqlite3_bind_int(ins_mod, 7, m.price_adjustment_cents);
             sqlite3_step(ins_mod);
         }
     }
@@ -652,7 +663,7 @@ std::vector<Ticket> Database::load_all_tickets() {
         for (auto& ti : t.items) {
             stmt = nullptr;
             sqlite3_prepare_v2(db_,
-                               "SELECT modifier_id,modifier_name,action,price_adj "
+                               "SELECT modifier_id,modifier_name,group_id,action,price_adj "
                                "FROM ticket_item_modifiers WHERE ticket_id=? AND line_key=?",
                                -1, &stmt, nullptr);
             sqlite3_bind_text(stmt, 1, t.id.c_str(), -1, SQLITE_TRANSIENT);
@@ -661,8 +672,9 @@ std::vector<Ticket> Database::load_all_tickets() {
                 AppliedModifier m;
                 m.modifier_id = col_text(stmt, 0);
                 m.modifier_name = col_text(stmt, 1);
-                m.action = str_to_mod_action(col_text(stmt, 2));
-                m.price_adjustment_cents = sqlite3_column_int(stmt, 3);
+                m.group_id = col_text(stmt, 2);
+                m.action = str_to_mod_action(col_text(stmt, 3));
+                m.price_adjustment_cents = sqlite3_column_int(stmt, 4);
                 ti.modifiers.push_back(std::move(m));
             }
             sqlite3_finalize(stmt);

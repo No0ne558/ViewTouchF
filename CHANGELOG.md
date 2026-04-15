@@ -269,6 +269,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [2.0.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.0.0
 [2.9.0]: https://github.com/No0ne558/ViewTouchF/releases/tag/v2.9.0
 
+## [2.9.1] — 2026-04-15
+
+### Added
+- Tap-and-drag and click-and-drag scrolling for the menu grid and category chips in the register UI (supports both touch and mouse drag interactions).
+- Tap-and-drag / click-and-drag scrolling added to the Admin → Menu list and the Menu Item editor form for consistent admin UX.
+- Pointer-kind detection (mouse vs touch) to apply pointer-specific fling behavior.
+
+### Changed
+- `flutter_ui/lib/widgets/menu_grid.dart`: converted `MenuGrid` to a `StatefulWidget` using a `ScrollController` and gesture handlers to support vertical drag-to-scroll and inertial flings.
+- `flutter_ui/lib/screens/register_screen.dart`: category selector now supports horizontal drag-to-scroll and pointer-aware fling smoothing.
+- `flutter_ui/lib/widgets/admin_menu_tab.dart`: admin menu list and the menu-item editor now support vertical drag-to-scroll with pointer-specific fling heuristics.
+- Replaced experimental ballistic simulation usage with a safe `animateTo`-based heuristic fling to ensure compatibility across Flutter SDKs.
+
+### Fixed
+- Ensure fling behavior is robust on desktop and touch devices by tuning multipliers and clamped durations; avoids incompatible API calls on older Flutter SDKs.
+
 ## [2.9.0] — 2026-04-11
 
 ### Added

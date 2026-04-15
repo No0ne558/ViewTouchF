@@ -129,6 +129,7 @@ void PosServiceImpl::fill_proto_ticket(const core::Ticket& src, pb::Ticket* dst)
             pm->set_modifier_name(am.modifier_name);
             pm->set_action(to_proto_action(am.action));
             pm->set_price_adjustment_cents(am.price_adjustment_cents);
+            if (!am.group_id.empty()) pm->set_group_id(am.group_id);
         }
         if (!ti.special_instructions.empty()) {
             proto_item->set_special_instructions(ti.special_instructions);
@@ -168,8 +169,24 @@ grpc::Status PosServiceImpl::AddItem(grpc::ServerContext* /*ctx*/, const pb::Add
         core::AppliedModifier am;
         am.modifier_id = pm.modifier_id();
         am.modifier_name = pm.modifier_name();
+        am.group_id = pm.group_id();
         am.action = parse_modifier_action(pm.action());
         am.price_adjustment_cents = pm.price_adjustment_cents();
+        if (am.group_id.empty()) {
+            // Try to infer the group_id from the current menu by modifier id.
+            for (const auto& mi : mgr_->get_menu()) {
+                for (const auto& mg : mi.modifier_groups) {
+                    for (const auto& mod : mg.modifiers) {
+                        if (mod.id == am.modifier_id) {
+                            am.group_id = mg.id;
+                            break;
+                        }
+                    }
+                    if (!am.group_id.empty()) break;
+                }
+                if (!am.group_id.empty()) break;
+            }
+        }
         mods.push_back(std::move(am));
     }
     auto result = mgr_->add_item(req->ticket_id(), req->menu_item_id(), req->quantity(), mods,
@@ -191,8 +208,23 @@ grpc::Status PosServiceImpl::UpdateItem(grpc::ServerContext* /*ctx*/,
         core::AppliedModifier am;
         am.modifier_id = pm.modifier_id();
         am.modifier_name = pm.modifier_name();
+        am.group_id = pm.group_id();
         am.action = parse_modifier_action(pm.action());
         am.price_adjustment_cents = pm.price_adjustment_cents();
+        if (am.group_id.empty()) {
+            for (const auto& mi : mgr_->get_menu()) {
+                for (const auto& mg : mi.modifier_groups) {
+                    for (const auto& mod : mg.modifiers) {
+                        if (mod.id == am.modifier_id) {
+                            am.group_id = mg.id;
+                            break;
+                        }
+                    }
+                    if (!am.group_id.empty()) break;
+                }
+                if (!am.group_id.empty()) break;
+            }
+        }
         mods.push_back(std::move(am));
     }
     auto result =

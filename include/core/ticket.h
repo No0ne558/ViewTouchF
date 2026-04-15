@@ -15,6 +15,7 @@ struct AppliedModifier {
     std::string modifier_name;
     ModifierAction action = ModifierAction::NONE;
     int32_t price_adjustment_cents = 0;
+    std::string group_id; // optional: id of the ModifierGroup this modifier belonged to
 };
 
 struct TicketItem {

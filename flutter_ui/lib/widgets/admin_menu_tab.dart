@@ -1,4 +1,5 @@
-import 'dart:math';
+import 'dart:math' as math;
+import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
 import 'package:viewtouch_ui/generated/app_localizations.dart';
@@ -17,11 +18,20 @@ class AdminMenuTab extends StatefulWidget {
 class _AdminMenuTabState extends State<AdminMenuTab> {
   List<MenuItem> _items = [];
   bool _loading = true;
+  late final ScrollController _listController;
+  PointerDeviceKind? _listPointerKind;
 
   @override
   void initState() {
     super.initState();
+    _listController = ScrollController();
     _loadMenu();
+  }
+
+  @override
+  void dispose() {
+    _listController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMenu() async {
@@ -144,38 +154,68 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
         Expanded(
           child: _items.isEmpty
               ? Center(child: Text(AppLocalizations.of(context)!.noMenuItems))
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _items.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (ctx, i) {
-                    final item = _items[i];
-                    final modCount = item.modifierGroups.length;
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(item.id.substring(
-                            0, item.id.length > 3 ? 3 : item.id.length)),
-                      ),
-                      title: Text(item.name),
-                      subtitle: Text(
-                        '${item.category}  •  ${_money(item.priceCents)}'
-                        '${modCount > 0 ? '  •  $modCount mod group${modCount > 1 ? 's' : ''}' : ''}',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _editItem(item),
+              : Listener(
+                  onPointerDown: (e) => _listPointerKind = e.kind,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragUpdate: (details) {
+                      if (!_listController.hasClients) return;
+                      final newOffset = _listController.offset - details.delta.dy;
+                      final max = _listController.position.hasContentDimensions
+                          ? _listController.position.maxScrollExtent
+                          : 0.0;
+                      final target = (newOffset).clamp(0.0, max) as double;
+                      _listController.jumpTo(target);
+                    },
+                    onVerticalDragEnd: (details) {
+                      if (!_listController.hasClients) return;
+                      final v = details.velocity.pixelsPerSecond.dy;
+                      if (v.abs() < 50) return;
+                      final multiplier = _listPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
+                      final projected = v * multiplier;
+                      final max = _listController.position.hasContentDimensions
+                          ? _listController.position.maxScrollExtent
+                          : 0.0;
+                      final target = (_listController.offset - projected).clamp(0.0, max) as double;
+                      int durationMs = (v.abs() * 0.2).round();
+                      durationMs = math.max(200, math.min(1000, durationMs));
+                      _listController.animateTo(target, duration: Duration(milliseconds: durationMs), curve: Curves.decelerate);
+                    },
+                    child: ListView.separated(
+                      controller: _listController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _items.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (ctx, i) {
+                        final item = _items[i];
+                        final modCount = item.modifierGroups.length;
+                        return ListTile(
+                          leading: CircleAvatar(
+                            child: Text(item.id.substring(
+                                0, item.id.length > 3 ? 3 : item.id.length)),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteItem(item),
+                          title: Text(item.name),
+                          subtitle: Text(
+                            '${item.category}  •  ${_money(item.priceCents)}'
+                            '${modCount > 0 ? '  •  $modCount mod group${modCount > 1 ? 's' : ''}' : ''}',
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _editItem(item),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteItem(item),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
         ),
       ],
@@ -205,9 +245,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
 
   // Mutable list of modifier groups being edited.
   late List<_EditableModifierGroup> _groups;
+  late final ScrollController _editorScrollController;
+  PointerDeviceKind? _editorPointerKind;
 
   static String _uniqueId(String prefix) {
-    final r = Random();
+    final r = math.Random();
     final hex = List.generate(8, (_) => r.nextInt(16).toRadixString(16)).join();
     return '${prefix}_$hex';
   }
@@ -249,6 +291,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
     } else {
       _groups = [];
     }
+    _editorScrollController = ScrollController();
   }
 
   @override
@@ -268,6 +311,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
         m.priceCtrl.dispose();
       }
     }
+    _editorScrollController.dispose();
     super.dispose();
   }
 
@@ -346,6 +390,47 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
     return item;
   }
 
+  void _showSnack(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: error ? Colors.red.shade700 : Colors.green.shade700,
+      ),
+    );
+  }
+
+  void _saveAndClose() {
+    // Basic validation: ID and name required
+    if (_idCtrl.text.trim().isEmpty) {
+      _showSnack('Item ID is required', error: true);
+      return;
+    }
+    if (_nameCtrl.text.trim().isEmpty) {
+      _showSnack('Item name is required', error: true);
+      return;
+    }
+
+    // Ensure unique modifier IDs across all groups
+    final seen = <String>{};
+    for (final g in _groups) {
+      for (final m in g.modifiers) {
+        final id = m.idCtrl.text.trim();
+        if (id.isEmpty) {
+          _showSnack('Modifier ID cannot be empty', error: true);
+          return;
+        }
+        if (seen.contains(id)) {
+          _showSnack('Duplicate modifier ID: $id', error: true);
+          return;
+        }
+        seen.add(id);
+      }
+    }
+
+    Navigator.pop(context, _buildMenuItem());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -355,7 +440,7 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             : AppLocalizations.of(context)!.newMenuItem),
         actions: [
           FilledButton.icon(
-            onPressed: () => Navigator.pop(context, _buildMenuItem()),
+            onPressed: _saveAndClose,
             icon: const Icon(Icons.save),
             label: Text(_isEdit
                 ? AppLocalizations.of(context)!.save
@@ -364,9 +449,37 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(width: 12),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: Listener(
+        onPointerDown: (e) => _editorPointerKind = e.kind,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragUpdate: (details) {
+            if (!_editorScrollController.hasClients) return;
+            final newOffset = _editorScrollController.offset - details.delta.dy;
+            final max = _editorScrollController.position.hasContentDimensions
+                ? _editorScrollController.position.maxScrollExtent
+                : 0.0;
+            final target = (newOffset).clamp(0.0, max) as double;
+            _editorScrollController.jumpTo(target);
+          },
+          onVerticalDragEnd: (details) {
+            if (!_editorScrollController.hasClients) return;
+            final v = details.velocity.pixelsPerSecond.dy;
+            if (v.abs() < 50) return;
+            final multiplier = _editorPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
+            final projected = v * multiplier;
+            final max = _editorScrollController.position.hasContentDimensions
+                ? _editorScrollController.position.maxScrollExtent
+                : 0.0;
+            final target = (_editorScrollController.offset - projected).clamp(0.0, max) as double;
+            int durationMs = (v.abs() * 0.2).round();
+            durationMs = math.max(200, math.min(1000, durationMs));
+            _editorScrollController.animateTo(target, duration: Duration(milliseconds: durationMs), curve: Curves.decelerate);
+          },
+          child: ListView(
+            controller: _editorScrollController,
+            padding: const EdgeInsets.all(16),
+            children: [
           // ── Basic fields ─────────────────────────────────
           Text(AppLocalizations.of(context)!.itemDetails,
               style: Theme.of(context)
@@ -456,6 +569,31 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 icon: const Icon(Icons.add, size: 18),
                 label: Text(AppLocalizations.of(context)!.addGroup),
               ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // Quick-add a named "Choice N" group
+                  final next = _groups.length + 1;
+                  setState(() {
+                    _groups.add(_EditableModifierGroup(
+                      idCtrl: TextEditingController(text: _uniqueId('MG')),
+                      nameCtrl: TextEditingController(text: 'Choice $next'),
+                      minSelectCtrl: TextEditingController(text: '0'),
+                      maxSelectCtrl: TextEditingController(text: '1'),
+                      modifiers: [
+                        _EditableModifier(
+                          idCtrl: TextEditingController(text: _uniqueId('MOD')),
+                          nameCtrl: TextEditingController(),
+                          priceCtrl: TextEditingController(),
+                          isDefault: false,
+                        )
+                      ],
+                    ));
+                  });
+                },
+                icon: const Icon(Icons.playlist_add, size: 18),
+                label: const Text('Add Choice'),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -468,7 +606,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
               ),
             ),
           for (int gi = 0; gi < _groups.length; gi++) _buildGroupCard(gi),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

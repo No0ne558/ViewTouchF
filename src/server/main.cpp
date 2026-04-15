@@ -168,6 +168,55 @@ int main(int argc, char* argv[]) {
             demo_menu.push_back(std::move(item));
         }
 
+        // ── Build-A-Bowl (demonstrates Choice 1/Choice 2 groups) ───
+        {
+            viewtouch::MenuItem item;
+            item.id = "BWL01";
+            item.name = "Build-A-Bowl";
+            item.price_cents = 1099;
+            item.category = "Entrees";
+            item.modifier_groups = {
+                {"MG06",
+                 "Choice 1: Base",
+                 {
+                     {"MOD100", "Rice", 0, true},
+                     {"MOD101", "Greens", 0, false},
+                     {"MOD102", "Noodles", 0, false},
+                 },
+                 1,
+                 1},
+                {"MG07",
+                 "Choice 2: Protein",
+                 {
+                     {"MOD110", "Chicken", 0, true},
+                     {"MOD111", "Tofu", 0, false},
+                     {"MOD112", "Steak", 200, false},
+                 },
+                 1,
+                 1},
+                {"MG08",
+                 "Choice 3: Toppings",
+                 {
+                     {"MOD120", "Corn", 0, true},
+                     {"MOD121", "Black Beans", 0, true},
+                     {"MOD122", "Avocado", 150, false},
+                     {"MOD123", "Salsa", 0, false},
+                 },
+                 0,
+                 0},
+                {"MG09",
+                 "Choice 4: Sauce",
+                 {
+                     {"MOD130", "Chipotle", 0, true},
+                     {"MOD131", "Cilantro Lime", 0, false},
+                     {"MOD132", "Peanut", 0, false},
+                 },
+                 0,
+                 1},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
         // ── Beverages & Sides (no modifiers) ─────────────────────
         {
             viewtouch::MenuItem bev1;
@@ -190,10 +239,324 @@ int main(int argc, char* argv[]) {
         demo_menu.push_back({"SID01", "Fries", 499, "Sides", {}, true});
         demo_menu.push_back({"SID02", "Rice & Beans", 399, "Sides", {}, true});
 
+        // ── Additional demo items covering multiple food truck types ──
+        // Coffee & Tea
+        {
+            viewtouch::MenuItem item;
+            item.id = "COF01";
+            item.name = "Latte";
+            item.price_cents = 399;
+            item.category = "Coffee & Tea";
+            item.modifier_groups = {
+                {"MG_COF_SIZE",
+                 "Size",
+                 {
+                     {"MODCOF_S", "Small", 0, false},
+                     {"MODCOF_M", "Medium", 50, true},
+                     {"MODCOF_L", "Large", 100, false},
+                 },
+                 1,
+                 1},
+                {"MG_COF_MILK",
+                 "Milk",
+                 {
+                     {"MODCOF_REG", "Whole", 0, true},
+                     {"MODCOF_SKIM", "Skim", 0, false},
+                     {"MODCOF_OAT", "Oat Milk", 50, false},
+                 },
+                 0,
+                 1},
+            };
+            item.send_to_kitchen = false;
+            demo_menu.push_back(std::move(item));
+        }
+        {
+            viewtouch::MenuItem item;
+            item.id = "COF02";
+            item.name = "Cold Brew";
+            item.price_cents = 349;
+            item.category = "Coffee & Tea";
+            item.send_to_kitchen = false;
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Smoothies & Juices
+        {
+            viewtouch::MenuItem item;
+            item.id = "SMO01";
+            item.name = "Strawberry Smoothie";
+            item.price_cents = 599;
+            item.category = "Smoothies";
+            item.modifier_groups = {
+                {"MG_SMO_SIZE",
+                 "Size",
+                 {{"MODSMO_M", "Medium", 0, true}, {"MODSMO_L", "Large", 150, false}},
+                 1,
+                 1},
+                {"MG_SMO_ADD",
+                 "Add-ons",
+                 {{"MODSMO_PRO", "Protein", 100, false}, {"MODSMO_CHA", "Chia Seeds", 50, false}},
+                 0,
+                 2},
+            };
+            item.send_to_kitchen = false;
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Pizza
+        {
+            viewtouch::MenuItem item;
+            item.id = "PIZ01";
+            item.name = "Margherita Pizza";
+            item.price_cents = 1099;
+            item.category = "Pizza";
+            item.modifier_groups = {
+                {"MG_PIZ_SIZE",
+                 "Size",
+                 {{"MODPIZ_S", "Small", 0, true}, {"MODPIZ_M", "Medium", 300, false}, {"MODPIZ_L", "Large", 600, false}},
+                 1,
+                 1},
+                {"MG_PIZ_TOPP",
+                 "Toppings",
+                 {{"MODPIZ_BS", "Basil", 0, true}, {"MODPIZ_EXC", "Extra Cheese", 150, false}, {"MODPIZ_OLV", "Olives", 100, false}},
+                 0,
+                 4},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Sandwiches
+        {
+            viewtouch::MenuItem item;
+            item.id = "SAN01";
+            item.name = "Pulled Pork Sandwich";
+            item.price_cents = 1299;
+            item.category = "Sandwiches";
+            item.modifier_groups = {
+                {"MG_SAN_SAUCE",
+                 "Sauce",
+                 {{"MODSAN_BBQ", "BBQ", 0, true}, {"MODSAN_SPICY", "Spicy", 0, false}, {"MODSAN_MILD", "Mild", 0, false}},
+                 0,
+                 1},
+                {"MG_SAN_ADD",
+                 "Add-ons",
+                 {{"MODSAN_CHEE", "Extra Cheese", 100, false}, {"MODSAN_BAC", "Bacon", 199, false}},
+                 0,
+                 2},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Salads
+        {
+            viewtouch::MenuItem item;
+            item.id = "SAL01";
+            item.name = "Caesar Salad";
+            item.price_cents = 799;
+            item.category = "Salads";
+            item.modifier_groups = {
+                {"MG_SAL_PROT",
+                 "Add Protein",
+                 {{"MODSAL_CHK", "Chicken", 250, false}, {"MODSAL_SHR", "Shrimp", 300, false}},
+                 0,
+                 1},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Asian / Ramen
+        {
+            viewtouch::MenuItem item;
+            item.id = "RAM01";
+            item.name = "Ramen Bowl";
+            item.price_cents = 1299;
+            item.category = "Entrees";
+            item.modifier_groups = {
+                {"MG_RAM_BROTH",
+                 "Broth",
+                 {{"MODRAM_CHIX", "Chicken", 0, true}, {"MODRAM_PORK", "Pork", 0, false}, {"MODRAM_MISO", "Miso", 0, false}},
+                 1,
+                 1},
+                {"MG_RAM_PROT",
+                 "Protein",
+                 {{"MODRAM_EGG", "Soft Egg", 0, false}, {"MODRAM_PORKB", "Pork Belly", 250, false}, {"MODRAM_CHIK", "Chicken", 0, false}},
+                 0,
+                 1},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
+        // BBQ / Plates
+        {
+            viewtouch::MenuItem item;
+            item.id = "BBQ01";
+            item.name = "Smoked Brisket Plate";
+            item.price_cents = 1599;
+            item.category = "BBQ";
+            item.modifier_groups = {
+                {"MG_BBQ_SIDE",
+                 "Choose a Side",
+                 {{"MODBBQ_FRIES", "Fries", 0, true}, {"MODBBQ_COLE", "Coleslaw", 0, false}, {"MODBBQ_BNS", "Baked Beans", 0, false}},
+                 1,
+                 1},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Desserts
+        {
+            viewtouch::MenuItem item;
+            item.id = "DES01";
+            item.name = "Churros";
+            item.price_cents = 399;
+            item.category = "Desserts";
+            demo_menu.push_back(std::move(item));
+        }
+        {
+            viewtouch::MenuItem item;
+            item.id = "DES02";
+            item.name = "Ice Cream Scoop";
+            item.price_cents = 199;
+            item.category = "Desserts";
+            item.modifier_groups = {
+                {"MG_ICE_FLAV",
+                 "Flavor",
+                 {{"MODICE_VAN", "Vanilla", 0, true}, {"MODICE_CHO", "Chocolate", 0, false}, {"MODICE_STR", "Strawberry", 0, false}},
+                 1,
+                 1},
+            };
+            demo_menu.push_back(std::move(item));
+        }
+
+        // Beverages (alcohol & soda)
+        {
+            viewtouch::MenuItem item;
+            item.id = "ALC01";
+            item.name = "Local IPA";
+            item.price_cents = 599;
+            item.category = "Alcohol";
+            item.send_to_kitchen = false;
+            demo_menu.push_back(std::move(item));
+        }
+        {
+            viewtouch::MenuItem item;
+            item.id = "SOD01";
+            item.name = "Soda";
+            item.price_cents = 199;
+            item.category = "Beverages";
+            item.modifier_groups = {
+                {"MG_SOD_SIZE",
+                 "Size",
+                 {{"MODSOD_M", "Medium", 0, true}, {"MODSOD_L", "Large", 100, false}},
+                 1,
+                 1},
+            };
+            item.send_to_kitchen = false;
+            demo_menu.push_back(std::move(item));
+        }
+
         mgr->load_menu(std::move(demo_menu));
         db.save_setting("menu_seeded", "1");
         std::cout << "[vt_daemon] seeded demo menu (" << mgr->get_menu().size() << " items)\n";
     }  // end first-run seed
+
+    // Ensure Grande Combination Plate exists (up to 3 items, choose meat for each)
+    if (!mgr->find_menu_item("GCP01")) {
+        viewtouch::MenuItem plate;
+        plate.id = "GCP01";
+        plate.name = "Grande Combination Plate";
+        plate.price_cents = 1599;
+        plate.category = "Combination Plates";
+        plate.modifier_groups = {
+            // Slot 1: choose an item
+            {"GCP1_ITEM",
+             "Choice 1: Item",
+             {
+                 {"GCP1_ENC", "Enchilada", 0, false},
+                 {"GCP1_TAC", "Taco", 0, false},
+                 {"GCP1_TOS", "Tostada", 0, false},
+                 {"GCP1_TAM", "Tamal", 0, false},
+                 {"GCP1_BUR", "Burrito", 0, false},
+                 {"GCP1_CHAL", "Chalupa", 0, false},
+                 {"GCP1_CHIM", "Chimichanga", 0, false},
+                 {"GCP1_CHRL", "Chile Relleno", 0, false},
+             },
+             0,
+             1},
+            // Slot 1: choose meat for the selected item
+            {"GCP1_MEAT",
+             "Choice 1: Meat",
+             {
+                 {"GCP1_CHK", "Chicken", 0, false},
+                 {"GCP1_BEF", "Beef", 0, false},
+                 {"GCP1_PRK", "Pork", 0, false},
+                 {"GCP1_CRN", "Carnitas", 0, false},
+                 {"GCP1_SHR", "Shrimp", 200, false},
+                 {"GCP1_VEG", "Vegetarian", 0, false},
+             },
+             0,
+             1},
+
+            // Slot 2
+            {"GCP2_ITEM",
+             "Choice 2: Item",
+             {
+                 {"GCP2_ENC", "Enchilada", 0, false},
+                 {"GCP2_TAC", "Taco", 0, false},
+                 {"GCP2_TOS", "Tostada", 0, false},
+                 {"GCP2_TAM", "Tamal", 0, false},
+                 {"GCP2_BUR", "Burrito", 0, false},
+                 {"GCP2_CHAL", "Chalupa", 0, false},
+                 {"GCP2_CHIM", "Chimichanga", 0, false},
+                 {"GCP2_CHRL", "Chile Relleno", 0, false},
+             },
+             0,
+             1},
+            {"GCP2_MEAT",
+             "Choice 2: Meat",
+             {
+                 {"GCP2_CHK", "Chicken", 0, false},
+                 {"GCP2_BEF", "Beef", 0, false},
+                 {"GCP2_PRK", "Pork", 0, false},
+                 {"GCP2_CRN", "Carnitas", 0, false},
+                 {"GCP2_SHR", "Shrimp", 200, false},
+                 {"GCP2_VEG", "Vegetarian", 0, false},
+             },
+             0,
+             1},
+
+            // Slot 3
+            {"GCP3_ITEM",
+             "Choice 3: Item",
+             {
+                 {"GCP3_ENC", "Enchilada", 0, false},
+                 {"GCP3_TAC", "Taco", 0, false},
+                 {"GCP3_TOS", "Tostada", 0, false},
+                 {"GCP3_TAM", "Tamal", 0, false},
+                 {"GCP3_BUR", "Burrito", 0, false},
+                 {"GCP3_CHAL", "Chalupa", 0, false},
+                 {"GCP3_CHIM", "Chimichanga", 0, false},
+                 {"GCP3_CHRL", "Chile Relleno", 0, false},
+             },
+             0,
+             1},
+            {"GCP3_MEAT",
+             "Choice 3: Meat",
+             {
+                 {"GCP3_CHK", "Chicken", 0, false},
+                 {"GCP3_BEF", "Beef", 0, false},
+                 {"GCP3_PRK", "Pork", 0, false},
+                 {"GCP3_CRN", "Carnitas", 0, false},
+                 {"GCP3_SHR", "Shrimp", 200, false},
+                 {"GCP3_VEG", "Vegetarian", 0, false},
+             },
+             0,
+             1},
+        };
+        plate.send_to_kitchen = true;
+        mgr->add_menu_item(plate);
+        std::cout << "[vt_daemon] added Grande Combination Plate\n";
+    }
 
     // ── Build and start gRPC server ──────────────────────────
     PosServiceImpl service(mgr, printer);
