@@ -38,7 +38,7 @@ class CupsPrinter {
     /// @param printer_name  CUPS queue name.  Empty string = use default.
     /// @param store_name    Header line printed at the top of each receipt.
     explicit CupsPrinter(std::string printer_name = "",
-                         std::string store_name = "El Mirador Express");
+                         std::string store_name = "Demo Restaurant");
 
     void set_store_name(const std::string& name);
 

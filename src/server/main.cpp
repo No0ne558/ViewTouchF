@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     viewtouch::Database db(data_dir + "/data/viewtouchf.db");
 
     auto mgr = std::make_shared<viewtouch::PosManager>(
-        /*tax_rate_bps=*/825, /*restaurant_name=*/"El Mirador Express");
+        /*tax_rate_bps=*/825, /*restaurant_name=*/"Demo Restaurant");
     mgr->set_database(&db);
     mgr->load_from_database();
 
