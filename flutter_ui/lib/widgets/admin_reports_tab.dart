@@ -839,14 +839,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: IconButton(
-                        constraints:
-                            const BoxConstraints(minWidth: 48, minHeight: 48),
-                        padding: const EdgeInsets.all(8),
-                        iconSize: 20,
-                        icon: const Icon(Icons.arrow_forward, size: 20),
-                        onPressed: () => setState(() => _detailReport = r),
-                      ),
+                      child: Icon(Icons.arrow_forward, size: 20),
                     ),
                     Text(
                       _fmtShort(_end),
