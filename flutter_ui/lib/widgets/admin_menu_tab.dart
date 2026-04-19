@@ -163,8 +163,8 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                     behavior: HitTestBehavior.opaque,
                     onVerticalDragUpdate: (details) {
                       if (!_listController.hasClients) return;
-                      final newOffset =
-                          _listController.offset - details.delta.dy;
+                  final newOffset =
+                      _listController.offset - details.delta.dy;
                       final max = _listController.position.hasContentDimensions
                           ? _listController.position.maxScrollExtent
                           : 0.0;
@@ -194,7 +194,7 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                         curve: Curves.decelerate,
                       );
                     },
-                    child: ListView.separated(
+        child: ListView.separated(
                       controller: _listController,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: _items.length,
@@ -220,10 +220,16 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
+                                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                padding: const EdgeInsets.all(8),
+                                iconSize: 20,
                                 icon: const Icon(Icons.edit),
                                 onPressed: () => _editItem(item),
                               ),
                               IconButton(
+                                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                padding: const EdgeInsets.all(8),
+                                iconSize: 20,
                                 icon: const Icon(
                                   Icons.delete,
                                   color: Colors.red,
@@ -731,6 +737,9 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
                 ),
                 const SizedBox(width: 4),
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.all(8),
+                  iconSize: 20,
                   icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                   tooltip: AppLocalizations.of(context)!.removeGroup,
                   onPressed: () => _removeGroup(gi),
@@ -835,13 +844,15 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             ],
           ),
           IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: const EdgeInsets.all(8),
+            iconSize: 20,
             icon: const Icon(
               Icons.remove_circle_outline,
               color: Colors.red,
               size: 18,
             ),
             tooltip: AppLocalizations.of(context)!.remove,
-            visualDensity: VisualDensity.compact,
             onPressed: () => _removeModifier(gi, mi),
           ),
         ],

@@ -615,6 +615,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           const SizedBox(width: 16),
           IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: const EdgeInsets.all(12),
+            iconSize: 24,
             icon: const Icon(Icons.history),
             tooltip: AppLocalizations.of(context)!.pastOrders,
             onPressed: _showPastOrders,
@@ -626,13 +629,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.orange,
-            child: IconButton(
-              icon: const Icon(Icons.phone),
-              tooltip: AppLocalizations.of(context)!.phoneOrders,
-              onPressed: _showPhoneOrderList,
-            ),
+              child: IconButton(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                padding: const EdgeInsets.all(12),
+                iconSize: 24,
+                icon: const Icon(Icons.phone),
+                tooltip: AppLocalizations.of(context)!.phoneOrders,
+                onPressed: _showPhoneOrderList,
+              ),
           ),
           IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: const EdgeInsets.all(12),
+            iconSize: 24,
             icon: const Icon(Icons.admin_panel_settings),
             tooltip: AppLocalizations.of(context)!.admin,
             onPressed: _openAdmin,
@@ -851,9 +860,14 @@ class _ModifierDialogState extends State<_ModifierDialog> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             for (var gi = 0; gi < groups.length; gi++) ...[
-              GestureDetector(
-                onTap: () => _setCurrentGroupIndex(gi),
-                child: Column(
+                // Use InkWell instead of GestureDetector so the touch
+                // target is Material-aware and shows ink ripple. This
+                // also gives a larger, more consistent hit area on
+                // touchscreens.
+                InkWell(
+                  onTap: () => _setCurrentGroupIndex(gi),
+                  borderRadius: BorderRadius.circular(48),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
@@ -1174,6 +1188,9 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                     ),
                   ),
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.all(8),
+                  iconSize: 20,
                   icon: Icon(
                     _getRadioValue(group) == mod.id
                         ? Icons.radio_button_checked
@@ -1541,13 +1558,17 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         ),
                         const SizedBox(width: 4),
                         if (_payments.isEmpty)
-                          InkWell(
-                            onTap: _removeCcFee,
-                            child: const Icon(
+                          IconButton(
+                            constraints:
+                                const BoxConstraints(minWidth: 48, minHeight: 48),
+                            padding: const EdgeInsets.all(12),
+                            iconSize: 16,
+                            icon: const Icon(
                               Icons.close,
                               size: 16,
                               color: Colors.red,
                             ),
+                            onPressed: _removeCcFee,
                           ),
                       ],
                     ),
@@ -1953,10 +1974,16 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                   ),
                   const Spacer(),
                   IconButton(
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
                     icon: const Icon(Icons.refresh),
                     onPressed: _loadTickets,
                   ),
                   IconButton(
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -2452,14 +2479,20 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: _loadOrders,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+                   IconButton(
+                     constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                     padding: const EdgeInsets.all(12),
+                     iconSize: 24,
+                     icon: const Icon(Icons.refresh),
+                     onPressed: _loadOrders,
+                   ),
+                   IconButton(
+                     constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                     padding: const EdgeInsets.all(12),
+                     iconSize: 24,
+                     icon: const Icon(Icons.close),
+                     onPressed: () => Navigator.pop(context),
+                   ),
                 ],
               ),
               const SizedBox(height: 8),

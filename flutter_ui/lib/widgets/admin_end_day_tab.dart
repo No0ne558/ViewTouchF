@@ -324,6 +324,9 @@ class _XReportMonthPickerState extends State<_XReportMonthPicker> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.all(12),
+                  iconSize: 24,
                   icon: const Icon(Icons.chevron_left),
                   onPressed: _selectedYear > 2020
                       ? () => setState(() => _selectedYear--)
@@ -341,6 +344,9 @@ class _XReportMonthPickerState extends State<_XReportMonthPicker> {
                   },
                 ),
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.all(12),
+                  iconSize: 24,
                   icon: const Icon(Icons.chevron_right),
                   onPressed: _selectedYear < widget.currentYear
                       ? () => setState(() => _selectedYear++)

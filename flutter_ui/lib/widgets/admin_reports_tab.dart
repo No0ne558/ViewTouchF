@@ -230,11 +230,14 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                   ),
                 ),
               const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                tooltip: AppLocalizations.of(context)!.refresh,
-                onPressed: _loadReport,
-              ),
+               IconButton(
+                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                 padding: const EdgeInsets.all(12),
+                 iconSize: 24,
+                 icon: const Icon(Icons.refresh),
+                 tooltip: AppLocalizations.of(context)!.refresh,
+                 onPressed: _loadReport,
+               ),
               const SizedBox(width: 4),
               FilledButton.icon(
                 onPressed: _report != null ? _printReport : null,
@@ -565,6 +568,9 @@ class _CalendarGridState extends State<_CalendarGrid> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: const EdgeInsets.all(8),
+              iconSize: 28,
               icon: const Icon(Icons.chevron_left, size: 28),
               onPressed: _year > 2020 || _month > 1 ? _prev : null,
             ),
@@ -603,10 +609,13 @@ class _CalendarGridState extends State<_CalendarGrid> {
               },
             ),
             const SizedBox(width: 4),
-            IconButton(
-              icon: const Icon(Icons.chevron_right, size: 28),
-              onPressed: canGoNext ? _next : null,
-            ),
+               IconButton(
+                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                 padding: const EdgeInsets.all(12),
+                 iconSize: 28,
+                 icon: const Icon(Icons.chevron_right, size: 28),
+                 onPressed: canGoNext ? _next : null,
+               ),
           ],
         ),
         const SizedBox(height: 8),

@@ -152,15 +152,21 @@ class _TicketPanelState extends State<TicketPanel> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── Top row: item name (tappable) ──
-                            GestureDetector(
+                            // Make the item name a larger, Material-aware
+                            // tappable target so it's comfortable on touch.
+                            InkWell(
                               onTap: widget.onItemTap != null
                                   ? () => widget.onItemTap!(ti)
                                   : null,
-                              child: Text(
-                                ti.item.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
+                              borderRadius: BorderRadius.circular(4),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                                child: Text(
+                                  ti.item.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
                             ),
