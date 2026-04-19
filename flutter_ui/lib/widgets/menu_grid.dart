@@ -85,9 +85,13 @@ class _MenuGridState extends State<MenuGrid> {
       ));
     });
 
-    return CustomScrollView(
-      controller: _controller,
-      slivers: slivers,
+    // Apply the previous ListView padding around the scrollable content.
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: CustomScrollView(
+        controller: _controller,
+        slivers: slivers,
+      ),
     );
   }
 }
