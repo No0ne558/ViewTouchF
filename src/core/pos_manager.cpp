@@ -278,7 +278,11 @@ std::string PosManager::compute_line_key(const std::string& menu_item_id,
 
 std::string PosManager::generate_ticket_id() const {
     std::ostringstream os;
-    os << "T-" << std::setw(6) << std::setfill('0') << (ticket_seq_ + 1);
+    // ticket_seq_ is incremented by the caller (new_ticket()), so
+    // use the current sequence value directly here. The previous
+    // implementation added an extra +1 which skipped the first id
+    // (producing T-000002 when ticket_seq_ was incremented from 0→1).
+    os << "T-" << std::setw(6) << std::setfill('0') << ticket_seq_;
     return os.str();
 }
 

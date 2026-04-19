@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Default restaurant name changed from "El Mirador Express" to "Demo Restaurant" — updated `include/printing/cups_printer.h` and `src/server/main.cpp`.
 
+### Fixed
+- Fix ticket ID off-by-one: `PosManager::generate_ticket_id` previously used `ticket_seq_ + 1` while `ticket_seq_` is incremented by `new_ticket()`, causing ticket IDs to skip. Now uses `ticket_seq_` directly. (src/core/pos_manager.cpp)
+
 ## [2.8.0] — 2026-04-06
 
 ### Added
