@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// provider is not used in this file; remove the import to satisfy analyzer.
+// import 'package:provider/provider.dart';
 import 'dart:ui' show PointerDeviceKind;
 import 'package:viewtouch_ui/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +23,10 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   List<MenuItem> _menu = [];
-  Ticket? _ticket;
+  // Use a ValueNotifier for the ticket so we can update only the ticket
+  // subtree when it changes, avoiding full-screen rebuilds on every update.
+  final ValueNotifier<Ticket?> _ticketNotifier = ValueNotifier<Ticket?>(null);
+  Ticket? get _ticket => _ticketNotifier.value;
   bool _loading = true;
   String? _error;
   String _restaurantName = '';
@@ -53,15 +58,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         PhoneOrderCountRequest(),
       );
       if (!mounted) return;
+      // Update menu and ticket separately; ticket is assigned to the
+      // ValueNotifier so only widgets listening to it rebuild.
       setState(() {
         _menu = menuResp.items;
-        _ticket = ticketResp.ticket;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
             ? settingsResp.settings.restaurantName
             : (mounted ? AppLocalizations.of(context)!.appTitle : '');
         _phoneOrderCount = phoneCountResp.count;
         _loading = false;
       });
+      _ticketNotifier.value = ticketResp.ticket;
       _updateCategories();
     } catch (e) {
       if (!mounted) return;
@@ -132,6 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _categoryController.dispose();
+    _ticketNotifier.dispose();
     super.dispose();
   }
 
@@ -156,7 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..specialInstructions = specialInstructions;
       req.modifiers.addAll(mods);
       final resp = await PosClient.instance.stub.addItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.addItemFailed, error: true);
@@ -176,7 +184,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Pass same modifiers so it matches the same line_key.
       req.modifiers.addAll(ti.modifiers);
       final resp = await PosClient.instance.stub.addItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.increaseItemFailed, error: true);
@@ -243,7 +251,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..specialInstructions = result.specialInstructions;
       req.modifiers.addAll(result.modifiers);
       final resp = await PosClient.instance.stub.updateItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.updateItemFailed, error: true);
@@ -260,7 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..menuItemId = ti.item.id
         ..lineKey = ti.lineKey;
       final resp = await PosClient.instance.stub.decreaseItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.decreaseItemFailed, error: true);
@@ -277,7 +285,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..menuItemId = ti.item.id
         ..lineKey = ti.lineKey;
       final resp = await PosClient.instance.stub.removeItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.removeItemFailed, error: true);
@@ -304,7 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ..specialInstructions = ti.specialInstructions;
         req.modifiers.addAll(ti.modifiers);
         final resp = await PosClient.instance.stub.addItem(req);
-        setState(() => _ticket = resp.ticket);
+        _ticketNotifier.value = resp.ticket;
       } else {
         // Remove then re-add with the new quantity.
         final removeReq = RemoveItemRequest()
@@ -319,7 +327,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ..specialInstructions = ti.specialInstructions;
         addReq.modifiers.addAll(ti.modifiers);
         final resp = await PosClient.instance.stub.addItem(addReq);
-        setState(() => _ticket = resp.ticket);
+        _ticketNotifier.value = resp.ticket;
       }
     } catch (e) {
       if (!mounted) return;
@@ -331,10 +339,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _checkout({bool skipPrint = false}) async {
     if (_ticket == null || _ticket!.items.isEmpty) return;
+    final currentTicket = _ticketNotifier.value;
+    if (currentTicket == null) return;
     final result = await showDialog<_CheckoutResult>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _CheckoutDialog(ticket: _ticket!),
+      builder: (ctx) => _CheckoutDialog(ticket: currentTicket),
     );
     if (result == null) return; // cancelled
 
@@ -377,7 +387,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Open a new ticket for the next customer.
       final newT = await PosClient.instance.stub.newTicket(NewTicketRequest());
       if (!mounted) return;
-      setState(() => _ticket = newT.ticket);
+      _ticketNotifier.value = newT.ticket;
       await _refreshPhoneOrderCount();
     } catch (e) {
       if (!mounted) return;
@@ -469,7 +479,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Open a new ticket for the next customer.
       final newT = await PosClient.instance.stub.newTicket(NewTicketRequest());
       if (!mounted) return;
-      setState(() => _ticket = newT.ticket);
+      _ticketNotifier.value = newT.ticket;
       _refreshPhoneOrderCount();
     } catch (e) {
       if (!mounted) return;
@@ -494,7 +504,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GetTicketRequest()..ticketId = result.ticketId,
         );
         if (!mounted) return;
-        setState(() => _ticket = ticketResp.ticket);
+        _ticketNotifier.value = ticketResp.ticket;
         // Skip printing — receipt was already printed when the phone order was created.
         await _checkout(skipPrint: true);
         await _refreshPhoneOrderCount();
@@ -514,7 +524,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GetTicketRequest()..ticketId = result.ticketId,
         );
         if (!mounted) return;
-        setState(() => _ticket = ticketResp.ticket);
+        _ticketNotifier.value = ticketResp.ticket;
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -597,12 +607,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         centerTitle: false,
         actions: [
-          Text(
-            '${AppLocalizations.of(context)!.ticketLabel} ${_ticket?.id ?? "—"}',
-            style: const TextStyle(fontSize: 16),
+          ValueListenableBuilder<Ticket?>(
+            valueListenable: _ticketNotifier,
+            builder: (ctx, ticket, _) => Text(
+              '${AppLocalizations.of(context)!.ticketLabel} ${ticket?.id ?? "—"}',
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
           const SizedBox(width: 16),
           IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: const EdgeInsets.all(12),
+            iconSize: 24,
             icon: const Icon(Icons.history),
             tooltip: AppLocalizations.of(context)!.pastOrders,
             onPressed: _showPastOrders,
@@ -615,12 +631,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             backgroundColor: Colors.orange,
             child: IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: const EdgeInsets.all(12),
+              iconSize: 24,
               icon: const Icon(Icons.phone),
               tooltip: AppLocalizations.of(context)!.phoneOrders,
               onPressed: _showPhoneOrderList,
             ),
           ),
           IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: const EdgeInsets.all(12),
+            iconSize: 24,
             icon: const Icon(Icons.admin_panel_settings),
             tooltip: AppLocalizations.of(context)!.admin,
             onPressed: _openAdmin,
@@ -695,6 +717,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: ChoiceChip(
                                 label: const Text('All'),
                                 selected: _selectedCategoryIndex == 0,
+                                labelStyle: const TextStyle(fontSize: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                                 onSelected: (_) =>
                                     setState(() => _selectedCategoryIndex = 0),
                               ),
@@ -705,6 +732,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 child: ChoiceChip(
                                   label: Text(_categories[ci]),
                                   selected: _selectedCategoryIndex == ci + 1,
+                                  labelStyle: const TextStyle(fontSize: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   onSelected: (v) => setState(
                                     () =>
                                         _selectedCategoryIndex = v ? ci + 1 : 0,
@@ -740,15 +772,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // ── Right: Current ticket (≈35% width) ────────────
           Expanded(
             flex: 35,
-            child: TicketPanel(
-              ticket: _ticket,
-              onCheckout: _checkout,
-              onPhoneOrder: _showPhoneOrderDialog,
-              onDecreaseItem: _decreaseItem,
-              onIncreaseItem: _increaseItem,
-              onRemoveItem: _removeItem,
-              onSetQuantity: _setItemQuantity,
-              onItemTap: _editItem,
+            child: ValueListenableBuilder<Ticket?>(
+              valueListenable: _ticketNotifier,
+              builder: (ctx, ticket, _) => RepaintBoundary(
+                child: TicketPanel(
+                  ticket: ticket,
+                  onCheckout: _checkout,
+                  onPhoneOrder: _showPhoneOrderDialog,
+                  onDecreaseItem: _decreaseItem,
+                  onIncreaseItem: _increaseItem,
+                  onRemoveItem: _removeItem,
+                  onSetQuantity: _setItemQuantity,
+                  onItemTap: _editItem,
+                ),
+              ),
             ),
           ),
         ],
@@ -824,26 +861,39 @@ class _ModifierDialogState extends State<_ModifierDialog> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             for (var gi = 0; gi < groups.length; gi++) ...[
-              GestureDetector(
+              // Use InkWell instead of GestureDetector so the touch
+              // target is Material-aware and shows ink ripple. This
+              // also gives a larger, more consistent hit area on
+              // touchscreens.
+              InkWell(
                 onTap: () => _setCurrentGroupIndex(gi),
+                borderRadius: BorderRadius.circular(48),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Ensure the circular stepper indicator has a minimum
+                    // 48x48 hit target for comfortable finger tapping on
+                    // small touchscreens while preserving the visual size
+                    // of the inner CircleAvatar (radius 18).
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 6),
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: gi == _currentGroupIndex
-                            ? Theme.of(context).colorScheme.primary
-                            : (_isGroupValid(gi)
-                                ? Colors.green.shade600
-                                : Colors.grey.shade300),
-                        child: Text(
-                          '${gi + 1}',
-                          style: TextStyle(
-                            color: gi == _currentGroupIndex
-                                ? Colors.white
-                                : Colors.black,
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: gi == _currentGroupIndex
+                              ? Theme.of(context).colorScheme.primary
+                              : (_isGroupValid(gi)
+                                  ? Colors.green.shade600
+                                  : Colors.grey.shade300),
+                          child: Text(
+                            '${gi + 1}',
+                            style: TextStyle(
+                              color: gi == _currentGroupIndex
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
                           ),
                         ),
                       ),
@@ -1147,6 +1197,10 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                     ),
                   ),
                 IconButton(
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.all(8),
+                  iconSize: 20,
                   icon: Icon(
                     _getRadioValue(group) == mod.id
                         ? Icons.radio_button_checked
@@ -1514,13 +1568,19 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         ),
                         const SizedBox(width: 4),
                         if (_payments.isEmpty)
-                          InkWell(
-                            onTap: _removeCcFee,
-                            child: const Icon(
+                          IconButton(
+                            // Small inline icon: keep 48x48 hit target but use
+                            // slightly tighter padding and a 20dp icon size so
+                            // the button is comfortable for finger tapping.
+                            constraints: const BoxConstraints(
+                                minWidth: 48, minHeight: 48),
+                            padding: const EdgeInsets.all(8),
+                            iconSize: 20,
+                            icon: const Icon(
                               Icons.close,
-                              size: 16,
                               color: Colors.red,
                             ),
+                            onPressed: _removeCcFee,
                           ),
                       ],
                     ),
@@ -1926,10 +1986,18 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                   ),
                   const Spacer(),
                   IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
                     icon: const Icon(Icons.refresh),
                     onPressed: _loadTickets,
                   ),
                   IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -2426,10 +2494,18 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                   ),
                   const Spacer(),
                   IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
                     icon: const Icon(Icons.refresh),
                     onPressed: _loadOrders,
                   ),
                   IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
                   ),

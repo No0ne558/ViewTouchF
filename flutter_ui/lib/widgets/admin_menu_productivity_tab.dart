@@ -185,6 +185,9 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
                 ),
               const Spacer(),
               IconButton(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                padding: const EdgeInsets.all(12),
+                iconSize: 24,
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Refresh',
                 onPressed: _load,

@@ -7,6 +7,7 @@ import 'package:viewtouch_ui/generated/app_localizations.dart';
 
 import 'services/pos_client.dart';
 import 'services/locale_provider.dart';
+// touch_mode_provider was removed; keep imports minimal
 import 'screens/register_screen.dart';
 
 Future<void> main() async {
@@ -60,12 +61,22 @@ class ViewTouchApp extends StatelessWidget {
         final screenH = mq.size.height;
 
         // Uniform scale — pick the smaller axis so nothing overflows.
-        final scale = math.max(
-          1.0,
-          math.min(screenW / _baseWidth, screenH / _baseHeight),
-        );
+        final baseScale = math.min(screenW / _baseWidth, screenH / _baseHeight);
 
-        // At 1920×1080 or below, render 1:1 — no scaling needed.
+        // Allow a global override multiplier via environment for small/resistive
+        // touch panels. Set VT_UI_SCALE=1.2 to enlarge UI by 20%.
+        final configuredScale = double.tryParse(
+              Platform.environment['VT_UI_SCALE'] ?? '',
+            ) ??
+            1.0;
+        // Clamp to a reasonable range to avoid extreme layouts.
+        final clampedConfigured = configuredScale.clamp(0.8, 2.0);
+
+        // Final scale must be at least 1.0 (we don't scale down below 1.0),
+        // but the configured multiplier can push it above 1.0 on small screens.
+        final scale = math.max(1.0, baseScale * clampedConfigured);
+
+        // If no scaling required, just return child.
         if (scale <= 1.0) return child!;
 
         // Logical resolution the child tree lays out at.

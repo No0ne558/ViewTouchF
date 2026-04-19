@@ -152,15 +152,22 @@ class _TicketPanelState extends State<TicketPanel> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── Top row: item name (tappable) ──
-                            GestureDetector(
+                            // Make the item name a larger, Material-aware
+                            // tappable target so it's comfortable on touch.
+                            InkWell(
                               onTap: widget.onItemTap != null
                                   ? () => widget.onItemTap!(ti)
                                   : null,
-                              child: Text(
-                                ti.item.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
+                              borderRadius: BorderRadius.circular(4),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 4),
+                                child: Text(
+                                  ti.item.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
                             ),
@@ -201,16 +208,20 @@ class _TicketPanelState extends State<TicketPanel> {
                                   onTap: () => widget.onDecreaseItem(ti),
                                 ),
                                 // Quantity counter (tappable for custom input)
-                                GestureDetector(
+                                // Make quantity counter at least 48x48 so it's
+                                // comfortable to tap on small touchscreens.
+                                InkWell(
                                   onTap: () => _showQuantityPad(ctx, ti),
+                                  borderRadius: BorderRadius.circular(6),
                                   child: Container(
-                                    width: 44,
-                                    height: 36,
+                                    width: 48,
+                                    height: 48,
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       border: Border.all(
                                         color: Colors.grey.shade400,
                                       ),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       '${ti.quantity}',
@@ -381,16 +392,17 @@ class _QuantityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Increase touch target to 48×48 for touchscreen friendliness.
     return SizedBox(
-      width: 36,
-      height: 36,
+      width: 48,
+      height: 48,
       child: Material(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           onTap: onTap,
-          child: Icon(icon, color: color, size: 20),
+          child: Center(child: Icon(icon, color: color, size: 24)),
         ),
       ),
     );

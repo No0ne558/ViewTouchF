@@ -8,6 +8,7 @@ import '../generated/pos_service.pbgrpc.dart';
 import '../services/pos_client.dart';
 import '../services/locale_provider.dart';
 import 'touchscreen_keyboard.dart';
+// Touch mode is always enabled on touchscreen-first devices; no provider.
 
 class AdminSettingsTab extends StatefulWidget {
   const AdminSettingsTab({super.key});
@@ -283,6 +284,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 prefixIcon: Icon(Icons.store),
               ),
             ),
+            const SizedBox(height: 16),
             const SizedBox(height: 16),
             TouchTextField(
               controller: _taxCtrl,

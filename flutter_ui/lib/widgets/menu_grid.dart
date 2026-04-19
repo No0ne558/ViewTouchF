@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' show PointerDeviceKind;
-import 'dart:math' as math;
+// 'dart:math' is unused in this file; leave it commented to keep the
+// possibility of using it for responsive calculations without failing
+// analyzer in CI.
+// import 'dart:math' as math;
 import '../generated/pos_service.pb.dart';
 import '../utils/money.dart';
+// Touch-friendly by default: no provider required.
 
 /// A responsive grid of tappable menu item buttons.
 class MenuGrid extends StatefulWidget {
@@ -24,7 +27,9 @@ class MenuGrid extends StatefulWidget {
 class _MenuGridState extends State<MenuGrid> {
   late final ScrollController _controller;
   late final bool _ownController;
-  PointerDeviceKind? _lastPointerKind;
+  // Using the native scrolling behavior provided by ListView is more
+  // efficient on low-powered devices than handling pointer drag events
+  // manually. Keep a single ScrollController (optionally provided).
 
   @override
   void initState() {
@@ -47,76 +52,52 @@ class _MenuGridState extends State<MenuGrid> {
       categories.putIfAbsent(item.category, () => []).add(item);
     }
 
-    final children = <Widget>[];
+    // Build slivers — a SliverToBoxAdapter header followed by a SliverGrid
+    // for each category. This keeps the list virtualized: only visible
+    // children and the nearby ones are instantiated, which reduces memory
+    // pressure on small devices.
+    final slivers = <Widget>[];
     categories.forEach((cat, items) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+      slivers.add(SliverPadding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        sliver: SliverToBoxAdapter(
           child: Text(
             cat,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
-      );
-      children.add(
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+      ));
+
+      slivers.add(SliverPadding(
+        padding: const EdgeInsets.only(bottom: 12),
+        sliver: SliverGrid(
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) {
+              final item = items[i];
+              return _MenuButton(
+                  item: item, onTap: () => widget.onItemTap(item));
+            },
+            childCount: items.length,
+          ),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 220,
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
             childAspectRatio: 1.15,
           ),
-          itemCount: items.length,
-          itemBuilder: (ctx, i) {
-            final item = items[i];
-            return _MenuButton(item: item, onTap: () => widget.onItemTap(item));
-          },
         ),
-      );
+      ));
     });
 
-    return Listener(
-      onPointerDown: (e) => _lastPointerKind = e.kind,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onVerticalDragUpdate: (details) {
-          if (!_controller.hasClients) return;
-          final newOffset = _controller.offset - details.delta.dy;
-          final max = _controller.position.hasContentDimensions
-              ? _controller.position.maxScrollExtent
-              : 0.0;
-          final target = (newOffset).clamp(0.0, max).toDouble();
-          _controller.jumpTo(target);
-        },
-        onVerticalDragEnd: (details) {
-          if (!_controller.hasClients) return;
-          final v = details.velocity.pixelsPerSecond.dy;
-          if (v.abs() < 50) return;
-          final multiplier =
-              _lastPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
-          final projected = v * multiplier;
-          final max = _controller.position.hasContentDimensions
-              ? _controller.position.maxScrollExtent
-              : 0.0;
-          final target =
-              (_controller.offset - projected).clamp(0.0, max).toDouble();
-          int durationMs = (v.abs() * 0.2).round();
-          durationMs = math.max(200, math.min(1000, durationMs));
-          _controller.animateTo(
-            target,
-            duration: Duration(milliseconds: durationMs),
-            curve: Curves.decelerate,
-          );
-        },
-        child: ListView(
-          controller: _controller,
-          padding: const EdgeInsets.all(12),
-          children: children,
-        ),
+    // Apply the previous ListView padding around the scrollable content.
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: CustomScrollView(
+        controller: _controller,
+        slivers: slivers,
       ),
     );
   }
@@ -130,6 +111,13 @@ class _MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Touch-first: use larger padding and slightly larger text for readability
+    // on a capacitive touchscreen by default.
+    final pad = 18.0;
+    final nameStyle = Theme.of(context)
+        .textTheme
+        .bodyLarge
+        ?.copyWith(fontWeight: FontWeight.w600, fontSize: 18);
     return Material(
       color: Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(12),
@@ -137,7 +125,7 @@ class _MenuButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(pad),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -147,9 +135,7 @@ class _MenuButton extends StatelessWidget {
                 softWrap: true,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                style: nameStyle,
               ),
               const SizedBox(height: 4),
               Text(
