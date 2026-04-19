@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Default restaurant name changed from "El Mirador Express" to "Demo Restaurant" — updated `include/printing/cups_printer.h` and `src/server/main.cpp`.
 
+### UX (Touch)
+- Normalize touch targets across the Flutter UI to guarantee comfortable 48×48 logical pixel hit areas on touchscreen devices. Small, incremental changes were applied to improve tappable areas while preserving visual layout and behavior:
+  - flutter_ui/lib/widgets/ticket_panel.dart: ensure quantity buttons and inline icon tappables have 48×48 hit targets.
+  - flutter_ui/lib/screens/register_screen.dart: ensure modifier dialog stepper indicators and the CC-fee inline close icon use touch-friendly hit areas.
+  - flutter_ui/lib/widgets/menu_grid.dart: minor formatting/lint cleanups and confirmed touch-friendly grid items.
+
+These edits preserve the existing VT_UI_SCALE behavior (UI scaling via MediaQuery + FittedBox in `flutter_ui/lib/main.dart`). Each change was kept minimal and committed per-file to simplify review.
+
 ### Fixed
 - Fix ticket ID off-by-one: `PosManager::generate_ticket_id` previously used `ticket_seq_ + 1` while `ticket_seq_` is incremented by `new_ticket()`, causing ticket IDs to skip. Now uses `ticket_seq_` directly. (src/core/pos_manager.cpp)
  - Suppress noisy XDG desktop portal warnings on Linux: installed a GLib log filter in `flutter_ui/linux/runner/main.cc` to ignore repeated "Failed to read XDG desktop portal settings: GDBus.Error:org.freedesktop.portal.Error.NotFound" messages which are benign on some systems. This reduces console spam during UI startup.
