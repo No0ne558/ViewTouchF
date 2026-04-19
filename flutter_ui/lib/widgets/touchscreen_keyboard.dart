@@ -70,7 +70,8 @@ class TouchscreenKeyboard extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           backgroundColor: key == '⌫'
                               ? Colors.blueGrey.shade700
                               : isSpace
@@ -162,7 +163,8 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
                 decoration: InputDecoration(
                   hintText: widget.hintText,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 style: const TextStyle(fontSize: 22),
               ),
@@ -181,8 +183,10 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
                       height: 48,
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text(AppLocalizations.of(context)!.cancel,
-                            style: const TextStyle(fontSize: 16)),
+                        child: Text(
+                          AppLocalizations.of(context)!.cancel,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                       ),
                     ),
                   ),
@@ -193,8 +197,10 @@ class _TouchKeyboardDialogState extends State<TouchKeyboardDialog> {
                       child: FilledButton(
                         onPressed: () =>
                             Navigator.pop(context, _controller.text),
-                        child: Text(AppLocalizations.of(context)!.done,
-                            style: const TextStyle(fontSize: 16)),
+                        child: Text(
+                          AppLocalizations.of(context)!.done,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                       ),
                     ),
                   ),

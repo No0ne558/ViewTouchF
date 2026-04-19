@@ -313,12 +313,16 @@ int main(int argc, char* argv[]) {
             item.modifier_groups = {
                 {"MG_PIZ_SIZE",
                  "Size",
-                 {{"MODPIZ_S", "Small", 0, true}, {"MODPIZ_M", "Medium", 300, false}, {"MODPIZ_L", "Large", 600, false}},
+                 {{"MODPIZ_S", "Small", 0, true},
+                  {"MODPIZ_M", "Medium", 300, false},
+                  {"MODPIZ_L", "Large", 600, false}},
                  1,
                  1},
                 {"MG_PIZ_TOPP",
                  "Toppings",
-                 {{"MODPIZ_BS", "Basil", 0, true}, {"MODPIZ_EXC", "Extra Cheese", 150, false}, {"MODPIZ_OLV", "Olives", 100, false}},
+                 {{"MODPIZ_BS", "Basil", 0, true},
+                  {"MODPIZ_EXC", "Extra Cheese", 150, false},
+                  {"MODPIZ_OLV", "Olives", 100, false}},
                  0,
                  4},
             };
@@ -335,7 +339,9 @@ int main(int argc, char* argv[]) {
             item.modifier_groups = {
                 {"MG_SAN_SAUCE",
                  "Sauce",
-                 {{"MODSAN_BBQ", "BBQ", 0, true}, {"MODSAN_SPICY", "Spicy", 0, false}, {"MODSAN_MILD", "Mild", 0, false}},
+                 {{"MODSAN_BBQ", "BBQ", 0, true},
+                  {"MODSAN_SPICY", "Spicy", 0, false},
+                  {"MODSAN_MILD", "Mild", 0, false}},
                  0,
                  1},
                 {"MG_SAN_ADD",
@@ -374,12 +380,16 @@ int main(int argc, char* argv[]) {
             item.modifier_groups = {
                 {"MG_RAM_BROTH",
                  "Broth",
-                 {{"MODRAM_CHIX", "Chicken", 0, true}, {"MODRAM_PORK", "Pork", 0, false}, {"MODRAM_MISO", "Miso", 0, false}},
+                 {{"MODRAM_CHIX", "Chicken", 0, true},
+                  {"MODRAM_PORK", "Pork", 0, false},
+                  {"MODRAM_MISO", "Miso", 0, false}},
                  1,
                  1},
                 {"MG_RAM_PROT",
                  "Protein",
-                 {{"MODRAM_EGG", "Soft Egg", 0, false}, {"MODRAM_PORKB", "Pork Belly", 250, false}, {"MODRAM_CHIK", "Chicken", 0, false}},
+                 {{"MODRAM_EGG", "Soft Egg", 0, false},
+                  {"MODRAM_PORKB", "Pork Belly", 250, false},
+                  {"MODRAM_CHIK", "Chicken", 0, false}},
                  0,
                  1},
             };
@@ -396,7 +406,9 @@ int main(int argc, char* argv[]) {
             item.modifier_groups = {
                 {"MG_BBQ_SIDE",
                  "Choose a Side",
-                 {{"MODBBQ_FRIES", "Fries", 0, true}, {"MODBBQ_COLE", "Coleslaw", 0, false}, {"MODBBQ_BNS", "Baked Beans", 0, false}},
+                 {{"MODBBQ_FRIES", "Fries", 0, true},
+                  {"MODBBQ_COLE", "Coleslaw", 0, false},
+                  {"MODBBQ_BNS", "Baked Beans", 0, false}},
                  1,
                  1},
             };
@@ -421,7 +433,9 @@ int main(int argc, char* argv[]) {
             item.modifier_groups = {
                 {"MG_ICE_FLAV",
                  "Flavor",
-                 {{"MODICE_VAN", "Vanilla", 0, true}, {"MODICE_CHO", "Chocolate", 0, false}, {"MODICE_STR", "Strawberry", 0, false}},
+                 {{"MODICE_VAN", "Vanilla", 0, true},
+                  {"MODICE_CHO", "Chocolate", 0, false},
+                  {"MODICE_STR", "Strawberry", 0, false}},
                  1,
                  1},
             };

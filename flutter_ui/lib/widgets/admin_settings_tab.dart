@@ -53,8 +53,9 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
 
   Future<void> _loadSettings() async {
     try {
-      final resp =
-          await PosClient.instance.stub.getSettings(GetSettingsRequest());
+      final resp = await PosClient.instance.stub.getSettings(
+        GetSettingsRequest(),
+      );
       final s = resp.settings;
       _nameCtrl.text = s.restaurantName;
       _taxCtrl.text = (s.taxRateBps / 100.0).toStringAsFixed(2);
@@ -70,16 +71,19 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     } catch (e) {
       setState(() => _loading = false);
       if (!mounted) return;
-      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon,
-          error: true);
+      _showSnack(
+        AppLocalizations.of(context)!.cannotConnectToDaemon,
+        error: true,
+      );
     }
   }
 
   Future<void> _loadPrinters() async {
     setState(() => _loadingPrinters = true);
     try {
-      final resp =
-          await PosClient.instance.stub.listPrinters(ListPrintersRequest());
+      final resp = await PosClient.instance.stub.listPrinters(
+        ListPrintersRequest(),
+      );
       setState(() {
         _availablePrinters = resp.printers.toList();
         _loadingPrinters = false;
@@ -87,8 +91,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     } catch (e) {
       setState(() => _loadingPrinters = false);
       if (!mounted) return;
-      _showSnack(AppLocalizations.of(context)!.cannotConnectToDaemon,
-          error: true);
+      _showSnack(
+        AppLocalizations.of(context)!.cannotConnectToDaemon,
+        error: true,
+      );
     }
   }
 
@@ -140,7 +146,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(ctx)!.shutdownSystem),
         content: Text(
-            '${AppLocalizations.of(ctx)!.shutdownSystem}\n\n${AppLocalizations.of(ctx)!.retry}'),
+          '${AppLocalizations.of(ctx)!.shutdownSystem}\n\n${AppLocalizations.of(ctx)!.retry}',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -184,14 +191,15 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               children: [
                 Icon(icon, size: 20),
                 const SizedBox(width: 8),
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600)),
-                const Spacer(),
-                Switch(
-                  value: enabled,
-                  onChanged: onEnabledChanged,
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+                const Spacer(),
+                Switch(value: enabled, onChanged: onEnabledChanged),
               ],
             ),
             const SizedBox(height: 8),
@@ -208,9 +216,11 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               items: _availablePrinters.map((p) {
                 return DropdownMenuItem(
                   value: p.name,
-                  child: Text(p.description.isNotEmpty
-                      ? '${p.name} — ${p.description}'
-                      : p.name),
+                  child: Text(
+                    p.description.isNotEmpty
+                        ? '${p.name} — ${p.description}'
+                        : p.name,
+                  ),
                 );
               }).toList(),
               onChanged: enabled
@@ -237,8 +247,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context)!.restaurantSettings,
-                style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              AppLocalizations.of(context)!.restaurantSettings,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue:
@@ -254,8 +266,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               ],
               onChanged: (val) {
                 if (val != null) {
-                  Provider.of<LocaleProvider>(context, listen: false)
-                      .setLocale(Locale(val));
+                  Provider.of<LocaleProvider>(
+                    context,
+                    listen: false,
+                  ).setLocale(Locale(val));
                 }
               },
             ),
@@ -284,8 +298,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             const SizedBox(height: 32),
 
             // ── Credit Card Fee Section ──
-            Text('Credit Card Fee',
-                style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Credit Card Fee',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
             const Text(
               'Set a flat dollar amount, a percentage, or both. '
@@ -329,14 +345,17 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             // ── Printer Section ──
             Row(
               children: [
-                Text('Printers',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  'Printers',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(width: 12),
                 if (_loadingPrinters)
                   const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2)),
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _loadPrinters,
@@ -382,7 +401,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.save),
                 label: Text(AppLocalizations.of(context)!.saveSettings),
               ),

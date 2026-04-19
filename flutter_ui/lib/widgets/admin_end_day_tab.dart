@@ -22,8 +22,11 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.warning_amber_rounded,
-            size: 48, color: Colors.orange),
+        icon: const Icon(
+          Icons.warning_amber_rounded,
+          size: 48,
+          color: Colors.orange,
+        ),
         title: const Text('End Day'),
         content: const Text(
           'This will:\n\n'
@@ -95,8 +98,9 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
       );
       if (resp.success) {
         _msg(
-            'X-Report for ${selected.label} sent to printer (Job #${resp.jobId})',
-            Colors.green);
+          'X-Report for ${selected.label} sent to printer (Job #${resp.jobId})',
+          Colors.green,
+        );
       } else {
         _msg('Print error: ${resp.error}', Colors.red);
       }
@@ -111,9 +115,9 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
 
   void _msg(String msg, Color color) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   @override
@@ -123,8 +127,11 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
       child: Column(
         children: [
           const SizedBox(height: 32),
-          Icon(Icons.nightlight_round,
-              size: 80, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.nightlight_round,
+            size: 80,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 24),
           Text('End of Day', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
@@ -142,12 +149,16 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
             FilledButton.icon(
               onPressed: _endDay,
               icon: const Icon(Icons.nightlight_round),
-              label: const Text('End Day & Print Z-Report',
-                  style: TextStyle(fontSize: 18)),
+              label: const Text(
+                'End Day & Print Z-Report',
+                style: TextStyle(fontSize: 18),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red.shade700,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           const SizedBox(height: 24),
@@ -162,21 +173,27 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
             OutlinedButton.icon(
               onPressed: _xReport,
               icon: const Icon(Icons.summarize, size: 22),
-              label: const Text('X Report (Monthly)',
-                  style: TextStyle(fontSize: 18)),
+              label: const Text(
+                'X Report (Monthly)',
+                style: TextStyle(fontSize: 18),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.blue.shade700,
                 side: BorderSide(color: Colors.blue.shade700),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           if (_zReport != null) ...[
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 16),
-            Text('Z-Report — ${_zReport!.date}',
-                style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Z-Report — ${_zReport!.date}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 20),
             _buildZReport(_zReport!),
           ],
@@ -208,8 +225,10 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
             const Divider(),
             _row('Voided', '${r.voidedCount}'),
             _row('Comped', '${r.compedCount} — ${_money(r.compedTotalCents)}'),
-            _row('Refunded',
-                '${r.refundedCount} — ${_money(r.refundedTotalCents)}'),
+            _row(
+              'Refunded',
+              '${r.refundedCount} — ${_money(r.refundedTotalCents)}',
+            ),
           ],
         ),
       ),
@@ -223,9 +242,10 @@ class _AdminEndDayTabState extends State<AdminEndDayTab> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 16)),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
@@ -236,16 +256,21 @@ class _MonthOption {
   final int year;
   final int month;
   final String label;
-  const _MonthOption(
-      {required this.year, required this.month, required this.label});
+  const _MonthOption({
+    required this.year,
+    required this.month,
+    required this.label,
+  });
 }
 
 /// Dialog that lets the user pick a year, then a month within that year.
 class _XReportMonthPicker extends StatefulWidget {
   final int currentYear;
   final int currentMonth;
-  const _XReportMonthPicker(
-      {required this.currentYear, required this.currentMonth});
+  const _XReportMonthPicker({
+    required this.currentYear,
+    required this.currentMonth,
+  });
   @override
   State<_XReportMonthPicker> createState() => _XReportMonthPickerState();
 }
@@ -266,7 +291,7 @@ class _XReportMonthPickerState extends State<_XReportMonthPicker> {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
 
   @override

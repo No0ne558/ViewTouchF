@@ -10,7 +10,12 @@ class MenuGrid extends StatefulWidget {
   final ValueChanged<MenuItem> onItemTap;
   final ScrollController? controller;
 
-  const MenuGrid({super.key, required this.items, required this.onItemTap, this.controller});
+  const MenuGrid({
+    super.key,
+    required this.items,
+    required this.onItemTap,
+    this.controller,
+  });
 
   @override
   State<MenuGrid> createState() => _MenuGridState();
@@ -44,30 +49,34 @@ class _MenuGridState extends State<MenuGrid> {
 
     final children = <Widget>[];
     categories.forEach((cat, items) {
-      children.add(Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(
-          cat,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+      children.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            cat,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
-      ));
-      children.add(GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 220,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 1.15,
+      );
+      children.add(
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 220,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 1.15,
+          ),
+          itemCount: items.length,
+          itemBuilder: (ctx, i) {
+            final item = items[i];
+            return _MenuButton(item: item, onTap: () => widget.onItemTap(item));
+          },
         ),
-        itemCount: items.length,
-        itemBuilder: (ctx, i) {
-          final item = items[i];
-          return _MenuButton(item: item, onTap: () => widget.onItemTap(item));
-        },
-      ));
+      );
     });
 
     return Listener(
@@ -80,22 +89,28 @@ class _MenuGridState extends State<MenuGrid> {
           final max = _controller.position.hasContentDimensions
               ? _controller.position.maxScrollExtent
               : 0.0;
-          final target = (newOffset).clamp(0.0, max) as double;
+          final target = (newOffset).clamp(0.0, max).toDouble();
           _controller.jumpTo(target);
         },
         onVerticalDragEnd: (details) {
           if (!_controller.hasClients) return;
           final v = details.velocity.pixelsPerSecond.dy;
           if (v.abs() < 50) return;
-          final multiplier = _lastPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
+          final multiplier =
+              _lastPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
           final projected = v * multiplier;
           final max = _controller.position.hasContentDimensions
               ? _controller.position.maxScrollExtent
               : 0.0;
-          final target = (_controller.offset - projected).clamp(0.0, max) as double;
+          final target =
+              (_controller.offset - projected).clamp(0.0, max).toDouble();
           int durationMs = (v.abs() * 0.2).round();
           durationMs = math.max(200, math.min(1000, durationMs));
-          _controller.animateTo(target, duration: Duration(milliseconds: durationMs), curve: Curves.decelerate);
+          _controller.animateTo(
+            target,
+            duration: Duration(milliseconds: durationMs),
+            curve: Curves.decelerate,
+          );
         },
         child: ListView(
           controller: _controller,
@@ -132,9 +147,9 @@ class _MenuButton extends StatelessWidget {
                 softWrap: true,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
               Text(

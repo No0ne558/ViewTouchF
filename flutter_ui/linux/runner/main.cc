@@ -1,13 +1,15 @@
-#include "my_application.h"
 #include <glib.h>
+
+#include "my_application.h"
 
 // Global GLib log handler that filters out noisy XDG portal warnings which
 // are benign on some systems where the desktop portal lacks certain settings.
 // This prevents spamming the console with repeated:
 //   Failed to read XDG desktop portal settings: GDBus.Error:org.freedesktop.portal.Error.NotFound
-static void gtk_log_filter(const gchar* log_domain, GLogLevelFlags log_level,
-                           const gchar* message, gpointer user_data) {
-    if (message && g_strstr_len(message, -1, "Failed to read XDG desktop portal settings") != nullptr) {
+static void gtk_log_filter(const gchar* log_domain, GLogLevelFlags log_level, const gchar* message,
+                           gpointer user_data) {
+    if (message &&
+        g_strstr_len(message, -1, "Failed to read XDG desktop portal settings") != nullptr) {
         // Silently ignore this specific message.
         return;
     }
