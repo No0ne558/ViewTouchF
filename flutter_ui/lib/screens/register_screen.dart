@@ -661,10 +661,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 64,
                   child: Listener(
                     onPointerDown: (e) => _categoryPointerKind = e.kind,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onHorizontalDragUpdate: (details) {
-                        if (!_categoryController.hasClients) return;
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragUpdate: (details) {
+                      if (!_categoryController.hasClients) return;
                         final newOffset =
                             _categoryController.offset - details.delta.dx;
                         final max =

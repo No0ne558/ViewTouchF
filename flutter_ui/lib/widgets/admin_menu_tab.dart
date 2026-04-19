@@ -159,10 +159,10 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
               ? Center(child: Text(AppLocalizations.of(context)!.noMenuItems))
               : Listener(
                   onPointerDown: (e) => _listPointerKind = e.kind,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onVerticalDragUpdate: (details) {
-                      if (!_listController.hasClients) return;
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragUpdate: (details) {
+            if (!_listController.hasClients) return;
                   final newOffset =
                       _listController.offset - details.delta.dy;
                       final max = _listController.position.hasContentDimensions
@@ -202,7 +202,7 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                       itemBuilder: (ctx, i) {
                         final item = _items[i];
                         final modCount = item.modifierGroups.length;
-                        return ListTile(
+        return ListTile(
                           leading: CircleAvatar(
                             child: Text(
                               item.id.substring(
