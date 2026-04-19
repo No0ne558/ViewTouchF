@@ -109,6 +109,7 @@ void PosServiceImpl::fill_proto_ticket(const core::Ticket& src, pb::Ticket* dst)
     dst->set_amount_paid(src.amount_paid_cents);
     dst->set_change_due(src.change_due_cents);
     dst->set_cc_fee(src.cc_fee_cents);
+    dst->set_receipt_printed(src.receipt_printed);
     for (const auto& p : src.payments) {
         auto* pp = dst->add_payments();
         pp->set_payment_type(p.payment_type);
@@ -305,6 +306,9 @@ grpc::Status PosServiceImpl::PrintReceipt(grpc::ServerContext* /*ctx*/,
     resp->set_success(pr.success);
     resp->set_error(pr.error);
     resp->set_job_id(pr.job_id);
+    if (pr.success) {
+        mgr_->mark_ticket_printed(ticket->id);
+    }
     return grpc::Status::OK;
 }
 
@@ -326,6 +330,9 @@ grpc::Status PosServiceImpl::WatchPrintStatus(grpc::ServerContext* ctx,
         writer->Write(ev);
         return grpc::Status::OK;
     }
+
+    // Mark persisted ticket as printed when print was submitted successfully.
+    mgr_->mark_ticket_printed(ticket->id);
 
     // Poll CUPS job status and stream updates to the client.
     // In production, replace polling with CUPS subscription API or inotify
@@ -775,7 +782,10 @@ grpc::Status PosServiceImpl::CreatePhoneOrder(grpc::ServerContext* /*ctx*/,
 
     // Print a receipt for the phone order (with customer name/comment).
     if (mgr_->get_receipt_printer_enabled()) {
-        printer_->print_receipt(result->ticket, req->customer_name(), req->comment());
+        auto pr = printer_->print_receipt(result->ticket, req->customer_name(), req->comment());
+        if (pr.success) {
+            mgr_->mark_ticket_printed(result->ticket.id);
+        }
     }
 
     // Send to kitchen like a normal order.

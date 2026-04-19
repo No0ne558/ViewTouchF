@@ -130,7 +130,7 @@ void Database::exec(const char* sql) {
 // Migrations run inside a transaction; if one fails the DB is
 // left at the last successful version.
 
-static constexpr int kLatestVersion = 4;
+static constexpr int kLatestVersion = 5;
 
 int Database::get_user_version() {
     sqlite3_stmt* stmt = nullptr;
@@ -170,6 +170,9 @@ void Database::migrate() {
                 break;
             case 4:
                 migrate_to_4();
+                break;
+            case 5:
+                migrate_to_5();
                 break;
             // case 4: migrate_to_4(); break;
             default:
@@ -316,6 +319,15 @@ void Database::migrate_to_4() {
     exec(
         "UPDATE ticket_item_modifiers SET group_id = (SELECT group_id FROM modifiers WHERE "
         "modifiers.id = ticket_item_modifiers.modifier_id) WHERE group_id = ''");
+}
+
+// Migration 5 — add receipt_printed to tickets (v2.10.0)
+void Database::migrate_to_5() {
+    // Add persisted flag to avoid duplicate receipts after restart / across clients.
+    exec("ALTER TABLE tickets ADD COLUMN receipt_printed INTEGER NOT NULL DEFAULT 0");
+    // Backfill printed=1 for tickets that are referenced by phone_orders, since phone order
+    // creation already printed a receipt on the server for the snapshot ticket.
+    exec("UPDATE tickets SET receipt_printed = 1 WHERE id IN (SELECT ticket_id FROM phone_orders)");
 }
 
 // ── Sequences ────────────────────────────────────────────────
@@ -502,14 +514,15 @@ void Database::save_ticket(const Ticket& t) {
     sqlite3_prepare_v2(
         db_,
         "INSERT INTO tickets(id,status,payment_type,created_at_ms,closed_date,"
-        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents,cc_fee_cents) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents,cc_fee_cents,"
+        "receipt_printed) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(id) DO UPDATE SET "
         "status=excluded.status, payment_type=excluded.payment_type, "
         "closed_date=excluded.closed_date, subtotal_cents=excluded.subtotal_cents, "
         "tax_cents=excluded.tax_cents, total_cents=excluded.total_cents, "
         "amount_paid_cents=excluded.amount_paid_cents, change_due_cents=excluded.change_due_cents, "
-        "cc_fee_cents=excluded.cc_fee_cents",
+        "cc_fee_cents=excluded.cc_fee_cents, receipt_printed=excluded.receipt_printed",
         -1, &stmt, nullptr);
     sqlite3_bind_text(stmt, 1, t.id.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, status_to_str(t.status).c_str(), -1, SQLITE_TRANSIENT);
@@ -522,6 +535,7 @@ void Database::save_ticket(const Ticket& t) {
     sqlite3_bind_int(stmt, 9, t.amount_paid_cents);
     sqlite3_bind_int(stmt, 10, t.change_due_cents);
     sqlite3_bind_int(stmt, 11, t.cc_fee_cents);
+    sqlite3_bind_int(stmt, 12, t.receipt_printed ? 1 : 0);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
@@ -613,12 +627,12 @@ std::vector<Ticket> Database::load_all_tickets() {
     std::vector<Ticket> tickets;
 
     sqlite3_stmt* stmt = nullptr;
-    sqlite3_prepare_v2(
-        db_,
-        "SELECT id,status,payment_type,created_at_ms,closed_date,"
-        "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents,cc_fee_cents "
-        "FROM tickets",
-        -1, &stmt, nullptr);
+    sqlite3_prepare_v2(db_,
+                       "SELECT id,status,payment_type,created_at_ms,closed_date,"
+                       "subtotal_cents,tax_cents,total_cents,amount_paid_cents,change_due_cents,cc_"
+                       "fee_cents,receipt_printed "
+                       "FROM tickets",
+                       -1, &stmt, nullptr);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Ticket t;
@@ -633,6 +647,7 @@ std::vector<Ticket> Database::load_all_tickets() {
         t.amount_paid_cents = sqlite3_column_int(stmt, 8);
         t.change_due_cents = sqlite3_column_int(stmt, 9);
         t.cc_fee_cents = sqlite3_column_int(stmt, 10);
+        t.receipt_printed = sqlite3_column_int(stmt, 11) != 0;
         tickets.push_back(std::move(t));
     }
     sqlite3_finalize(stmt);
@@ -836,6 +851,16 @@ void Database::save_report(const DailyReport& rpt) {
     sqlite3_finalize(ins);
 
     txn.commit();
+}
+
+void Database::set_ticket_printed(const std::string& ticket_id, bool printed) {
+    sqlite3_stmt* stmt = nullptr;
+    sqlite3_prepare_v2(db_, "UPDATE tickets SET receipt_printed = ? WHERE id = ?", -1, &stmt,
+                       nullptr);
+    sqlite3_bind_int(stmt, 1, printed ? 1 : 0);
+    sqlite3_bind_text(stmt, 2, ticket_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
 }
 
 std::vector<DailyReport> Database::load_all_reports() {

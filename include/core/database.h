@@ -33,6 +33,8 @@ class Database {
     void save_ticket(const Ticket& t);
     void delete_ticket(const std::string& ticket_id);
     std::vector<Ticket> load_all_tickets();
+    // Set the persisted receipt_printed flag for a ticket (0/1).
+    void set_ticket_printed(const std::string& ticket_id, bool printed);
 
     // ── Phone‑order persistence ──────────────────────────────
     void save_phone_order(const PhoneOrder& po);
@@ -57,6 +59,7 @@ class Database {
     void migrate_to_2();  ///< v2.7.3 — add cc_fee_cents to tickets.
     void migrate_to_3();  ///< v2.8.0 — add report accounting fields.
     void migrate_to_4();  ///< v2.9.0 — add group_id to ticket_item_modifiers
+    void migrate_to_5();  ///< v2.10.0 — add receipt_printed to tickets
     void exec(const char* sql);
     int get_user_version();
     void set_user_version(int v);

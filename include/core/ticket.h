@@ -47,6 +47,7 @@ struct Ticket {
     int32_t amount_paid_cents = 0;  // sum of all payment legs
     int32_t change_due_cents = 0;   // overpayment returned
     int32_t cc_fee_cents = 0;       // credit card fee applied
+    bool receipt_printed = false;  // whether a receipt has been printed for this ticket (persisted)
 
     /// Recalculate subtotal, tax, total.
     /// @param tax_rate_bps  Tax rate in basis points (e.g. 825 = 8.25%)

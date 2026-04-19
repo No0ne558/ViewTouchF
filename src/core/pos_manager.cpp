@@ -463,6 +463,18 @@ bool PosManager::void_ticket(const std::string& ticket_id) {
     return true;
 }
 
+void PosManager::mark_ticket_printed(const std::string& ticket_id, bool printed) {
+    std::lock_guard lock(mu_);
+    auto it = tickets_.find(ticket_id);
+    if (it != tickets_.end()) {
+        it->second.receipt_printed = printed;
+        if (db_) db_->save_ticket(it->second);
+    } else {
+        // Not in-memory; update persisted row directly if possible.
+        if (db_) db_->set_ticket_printed(ticket_id, printed);
+    }
+}
+
 std::optional<Ticket> PosManager::comp_ticket(const std::string& ticket_id) {
     std::lock_guard lock(mu_);
     auto it = tickets_.find(ticket_id);
@@ -490,32 +502,39 @@ std::vector<Ticket> PosManager::list_tickets(const std::string& date,
     std::lock_guard lock(mu_);
     std::string target = date.empty() ? const_cast<PosManager*>(this)->today_str() : date;
     std::vector<Ticket> result;
+    // If the caller specifically requested OPEN tickets, ignore the date
+    // filter and return all OPEN tickets (useful for recovery / admin flows).
+    const bool want_open_only = (status_filter == "OPEN");
     for (const auto& [_, ticket] : tickets_) {
-        if (ticket.closed_date != target && ticket.status != TicketStatus::OPEN) continue;
-        // For OPEN tickets, include them if target is today.
-        if (ticket.status == TicketStatus::OPEN) {
-            if (target != const_cast<PosManager*>(this)->today_str()) continue;
-        }
-        if (!status_filter.empty()) {
-            std::string ts;
-            switch (ticket.status) {
-                case TicketStatus::OPEN:
-                    ts = "OPEN";
-                    break;
-                case TicketStatus::CLOSED:
-                    ts = "CLOSED";
-                    break;
-                case TicketStatus::VOIDED:
-                    ts = "VOIDED";
-                    break;
-                case TicketStatus::COMPED:
-                    ts = "COMPED";
-                    break;
-                case TicketStatus::REFUNDED:
-                    ts = "REFUNDED";
-                    break;
+        if (want_open_only) {
+            if (ticket.status != TicketStatus::OPEN) continue;
+        } else {
+            if (ticket.closed_date != target && ticket.status != TicketStatus::OPEN) continue;
+            // For OPEN tickets, include them only when target is today.
+            if (ticket.status == TicketStatus::OPEN) {
+                if (target != const_cast<PosManager*>(this)->today_str()) continue;
             }
-            if (ts != status_filter) continue;
+            if (!status_filter.empty()) {
+                std::string ts;
+                switch (ticket.status) {
+                    case TicketStatus::OPEN:
+                        ts = "OPEN";
+                        break;
+                    case TicketStatus::CLOSED:
+                        ts = "CLOSED";
+                        break;
+                    case TicketStatus::VOIDED:
+                        ts = "VOIDED";
+                        break;
+                    case TicketStatus::COMPED:
+                        ts = "COMPED";
+                        break;
+                    case TicketStatus::REFUNDED:
+                        ts = "REFUNDED";
+                        break;
+                }
+                if (ts != status_filter) continue;
+            }
         }
         result.push_back(ticket);
     }

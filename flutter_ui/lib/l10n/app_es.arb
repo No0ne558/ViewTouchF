@@ -131,6 +131,10 @@
   ,
   "reasonOptional": "Razón (opcional)",
   "all": "Todos",
+  "open": "Abiertos",
+  "restore": "Restaurar",
+  "show": "Mostrar",
+  "replace": "Reemplazar",
   "closed": "Cerrados",
   "voided": "Anulados",
   "comped": "Cortesía",
@@ -140,6 +144,7 @@
   "cancelOrder": "Cancelar pedido",
   "editOrder": "Editar pedido"
   ,
+  "skipPrinting": "Omitir impresión",
   "selectReportDate": "Seleccionar fecha del informe",
   "daily": "Diario",
   "weekly": "Semanal",

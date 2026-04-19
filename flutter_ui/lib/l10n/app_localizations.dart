@@ -95,7 +95,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('es'),
+    Locale('es')
   ];
 
   /// No description provided for @appTitle.
@@ -541,6 +541,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{action} failed'**
   String operationFailed(Object action);
+
+  /// No description provided for @noActiveTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'No active ticket'**
+  String get noActiveTicket;
+
+  /// No description provided for @enterQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Quantity'**
+  String get enterQuantity;
+
+  /// No description provided for @removeItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Item'**
+  String get removeItemTitle;
+
+  /// No description provided for @removeItemConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} (qty {qty}) from the order?'**
+  String removeItemConfirm(Object name, Object qty);
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @subtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotal;
+
+  /// No description provided for @tax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get tax;
+
+  /// No description provided for @enterText.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Text'**
+  String get enterText;
+
+  /// No description provided for @spaceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SPACE'**
+  String get spaceLabel;
+
+  /// No description provided for @menuItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu Items'**
+  String get menuItems;
+
+  /// No description provided for @addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get addItem;
+
+  /// No description provided for @noMenuItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No menu items. Add one above.'**
+  String get noMenuItems;
+
+  /// No description provided for @deleteMenuItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Menu Item'**
+  String get deleteMenuItemTitle;
+
+  /// No description provided for @deleteMenuItemConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from the menu?'**
+  String deleteMenuItemConfirm(Object name);
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @itemAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Item added'**
+  String get itemAdded;
+
+  /// No description provided for @itemUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Item updated'**
+  String get itemUpdated;
+
+  /// No description provided for @itemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted'**
+  String get itemDeleted;
+
+  /// No description provided for @editMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Menu Item'**
+  String get editMenuItem;
+
+  /// No description provided for @newMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'New Menu Item'**
+  String get newMenuItem;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @itemDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Details'**
+  String get itemDetails;
+
+  /// No description provided for @itemIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Item ID'**
+  String get itemIdLabel;
+
+  /// No description provided for @itemNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Name'**
+  String get itemNameLabel;
+
+  /// No description provided for @priceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (\$)'**
+  String get priceLabel;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @sendToKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Kitchen'**
+  String get sendToKitchen;
+
+  /// No description provided for @sendToKitchenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Print this item on kitchen tickets'**
+  String get sendToKitchenSubtitle;
+
+  /// No description provided for @modifierGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Modifier Groups'**
+  String get modifierGroups;
+
+  /// No description provided for @addGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Group'**
+  String get addGroup;
+
+  /// No description provided for @noModifierGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No modifier groups. Items will be added as-is.'**
+  String get noModifierGroups;
+
+  /// No description provided for @groupIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group ID'**
+  String get groupIdLabel;
+
+  /// No description provided for @groupNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Name'**
+  String get groupNameLabel;
+
+  /// No description provided for @minSelectLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Min Select'**
+  String get minSelectLabel;
+
+  /// No description provided for @maxSelectLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Select'**
+  String get maxSelectLabel;
+
+  /// No description provided for @removeGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove group'**
+  String get removeGroup;
+
+  /// No description provided for @noModifiersInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No modifiers in this group.'**
+  String get noModifiersInGroup;
+
+  /// No description provided for @addModifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Modifier'**
+  String get addModifier;
+
+  /// No description provided for @modifierIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Modifier ID'**
+  String get modifierIdLabel;
+
+  /// No description provided for @modifierNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Modifier Name'**
+  String get modifierNameLabel;
+
+  /// No description provided for @modifierPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Modifier Price'**
+  String get modifierPriceLabel;
+
+  /// No description provided for @priceShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get priceShort;
+
+  /// No description provided for @loadMenuFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load menu'**
+  String get loadMenuFailed;
+
+  /// No description provided for @reasonOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get reasonOptional;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @show.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get show;
+
+  /// No description provided for @replace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
+
+  /// No description provided for @closed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get closed;
+
+  /// No description provided for @voided.
+  ///
+  /// In en, this message translates to:
+  /// **'Voided'**
+  String get voided;
+
+  /// No description provided for @comped.
+  ///
+  /// In en, this message translates to:
+  /// **'Comped'**
+  String get comped;
+
+  /// No description provided for @refunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get refunded;
+
+  /// No description provided for @commentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get commentLabel;
+
+  /// No description provided for @noteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note:'**
+  String get noteLabel;
+
+  /// No description provided for @cancelOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Order'**
+  String get cancelOrder;
+
+  /// No description provided for @editOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Order'**
+  String get editOrder;
+
+  /// No description provided for @skipPrinting.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip printing'**
+  String get skipPrinting;
+
+  /// No description provided for @selectReportDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Report Date'**
+  String get selectReportDate;
+
+  /// No description provided for @daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
+  /// No description provided for @printLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get printLabel;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get noData;
+
+  /// No description provided for @reportForDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Report — {date}'**
+  String reportForDate(Object date);
+
+  /// No description provided for @dailyBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Breakdown'**
+  String get dailyBreakdown;
+
+  /// No description provided for @tickets.
+  ///
+  /// In en, this message translates to:
+  /// **'tickets'**
+  String get tickets;
+
+  /// No description provided for @grossRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross Revenue'**
+  String get grossRevenue;
+
+  /// No description provided for @netRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Revenue'**
+  String get netRevenue;
+
+  /// No description provided for @totalCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Collected'**
+  String get totalCollected;
 }
 
 class _AppLocalizationsDelegate
@@ -570,9 +1008,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

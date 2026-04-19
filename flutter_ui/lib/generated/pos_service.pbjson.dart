@@ -203,6 +203,7 @@ const Ticket$json = {
     {'1': 'amount_paid', '3': 9, '4': 1, '5': 5, '10': 'amountPaid'},
     {'1': 'change_due', '3': 10, '4': 1, '5': 5, '10': 'changeDue'},
     {'1': 'cc_fee', '3': 11, '4': 1, '5': 5, '10': 'ccFee'},
+    {'1': 'receipt_printed', '3': 12, '4': 1, '5': 8, '10': 'receiptPrinted'},
   ],
 };
 
@@ -213,7 +214,8 @@ final $typed_data.Uint8List ticketDescriptor = $convert.base64Decode(
     'dGF4EhQKBXRvdGFsGAUgASgFUgV0b3RhbBIWCgZzdGF0dXMYBiABKAlSBnN0YXR1cxIdCgpjcm'
     'VhdGVkX2F0GAcgASgDUgljcmVhdGVkQXQSLQoIcGF5bWVudHMYCCADKAsyES52dF9wcm90by5Q'
     'YXltZW50UghwYXltZW50cxIfCgthbW91bnRfcGFpZBgJIAEoBVIKYW1vdW50UGFpZBIdCgpjaG'
-    'FuZ2VfZHVlGAogASgFUgljaGFuZ2VEdWUSFQoGY2NfZmVlGAsgASgFUgVjY0ZlZQ==');
+    'FuZ2VfZHVlGAogASgFUgljaGFuZ2VEdWUSFQoGY2NfZmVlGAsgASgFUgVjY0ZlZRInCg9yZWNl'
+    'aXB0X3ByaW50ZWQYDCABKAhSDnJlY2VpcHRQcmludGVk');
 
 @$core.Deprecated('Use paymentDescriptor instead')
 const Payment$json = {

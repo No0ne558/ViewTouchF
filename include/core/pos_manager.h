@@ -117,6 +117,10 @@ class PosManager {
     std::vector<Ticket> list_tickets(const std::string& date,
                                      const std::string& status_filter = "") const;
 
+    /// Mark the persisted ticket as having had its receipt printed.
+    /// If the ticket is present in-memory, update and persist it; otherwise update DB row directly.
+    void mark_ticket_printed(const std::string& ticket_id, bool printed = true);
+
     // ── Reporting ────────────────────────────────────────────
     /// Generate a report for a specific date ("YYYY-MM-DD"). Empty = today.
     DailyReport get_daily_report(const std::string& date) const;

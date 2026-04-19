@@ -70,6 +70,7 @@ message Ticket {
     int32               amount_paid = 9;  // total paid so far (cents)
     int32               change_due  = 10; // change returned to customer (cents)
     int32               cc_fee      = 11; // credit card fee applied (cents)
+    bool                receipt_printed = 12; // true if a receipt was already printed for this ticket
 }
 
 message Payment {

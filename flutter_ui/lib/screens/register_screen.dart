@@ -70,6 +70,73 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
       _ticketNotifier.value = ticketResp.ticket;
       _updateCategories();
+
+      // After the initial ticket is created, check for any OPEN tickets
+      // and offer a recovery prompt. This runs after the first frame so the
+      // UI is ready to show dialogs.
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          final openResp = await PosClient.instance.stub.listTickets(
+            ListTicketsRequest()
+              ..date = ''
+              ..status = 'OPEN',
+          );
+          if (!mounted) return;
+          final openTickets =
+              openResp.tickets.where((t) => t.items.isNotEmpty).toList();
+          if (openTickets.isEmpty) return;
+
+          if (openTickets.length == 1) {
+            final t = openTickets.first;
+            final choice = await showDialog<String>(
+              context: context,
+              barrierDismissible: false,
+              builder: (ctx) => AlertDialog(
+                title: Text(AppLocalizations.of(ctx)!.open),
+                content: Text('Found open ticket #${t.id}. Restore it?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop('DISMISS'),
+                    child: Text(AppLocalizations.of(ctx)!.cancel),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop('SHOW'),
+                    child: const Text('Show'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop('RESTORE'),
+                    child: const Text('Restore'),
+                  ),
+                ],
+              ),
+            );
+
+            if (choice == 'RESTORE') {
+              try {
+                final ticketResp2 = await PosClient.instance.stub.getTicket(
+                  GetTicketRequest()..ticketId = t.id,
+                );
+                if (!mounted) return;
+                await _confirmReplaceIfNeededAndLoadTicket(ticketResp2.ticket);
+              } catch (_) {}
+            } else if (choice == 'SHOW') {
+              // Open Past Orders pre-filtered to OPEN
+              if (!mounted) return;
+              await showDialog<void>(
+                context: context,
+                builder: (ctx) => _PastOrdersDialog(initialStatus: 'OPEN'),
+              );
+            }
+          } else {
+            // Multiple open tickets — show the Past Orders dialog filtered to OPEN.
+            if (!mounted) return;
+            await showDialog<void>(
+              context: context,
+              builder: (ctx) => _PastOrdersDialog(initialStatus: 'OPEN'),
+            );
+          }
+        } catch (_) {}
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -378,7 +445,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       }
-      if (!skipPrint) {
+      final finalSkipPrint =
+          skipPrint || result.skipPrint || resp.ticket.receiptPrinted;
+      if (!finalSkipPrint) {
         // Print receipt
         _printReceipt(resp.ticket);
         // Print kitchen ticket (if enabled)
@@ -439,11 +508,100 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  /// If there is a non-empty current ticket, prompt the user before
+  /// replacing it. Returns true if the new ticket was loaded.
+  Future<bool> _confirmReplaceIfNeededAndLoadTicket(Ticket newTicket) async {
+    final current = _ticketNotifier.value;
+    // If there's no current ticket or it's empty, load without prompting.
+    if (current == null || current.items.isEmpty) {
+      _ticketNotifier.value = newTicket;
+      return true;
+    }
+
+    final shouldReplace = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Replace current ticket?'),
+        content: const Text(
+          'There is an active ticket with items. Restoring will replace it and discard current changes. Do you want to replace it?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(AppLocalizations.of(ctx)!.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(AppLocalizations.of(ctx)!.replace),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldReplace == true) {
+      _ticketNotifier.value = newTicket;
+      return true;
+    }
+    return false;
+  }
+
   Future<void> _showPastOrders() async {
-    await showDialog(
+    final result = await showDialog<_PastOrdersResult>(
       context: context,
       builder: (ctx) => const _PastOrdersDialog(),
     );
+    if (result == null) return;
+
+    if (result.action == 'CHECKOUT') {
+      // Load the ticket and run checkout flow (do not assume a receipt was
+      // already printed for past orders).
+      try {
+        final ticketResp = await PosClient.instance.stub.getTicket(
+          GetTicketRequest()..ticketId = result.ticketId,
+        );
+        if (!mounted) return;
+        // Prompt before replacing an in-progress ticket.
+        final loaded =
+            await _confirmReplaceIfNeededAndLoadTicket(ticketResp.ticket);
+        if (!loaded) return;
+        await _checkout();
+      } catch (e) {
+        if (!mounted) return;
+        _showError(AppLocalizations.of(context)!.loadPhoneOrderFailed,
+            error: true);
+        // ignore: avoid_print
+        print('loadTicket error: $e');
+      }
+    } else if (result.action == 'EDIT') {
+      // Load the ticket into the register for editing.
+      try {
+        final ticketResp = await PosClient.instance.stub.getTicket(
+          GetTicketRequest()..ticketId = result.ticketId,
+        );
+        if (!mounted) return;
+        final loaded =
+            await _confirmReplaceIfNeededAndLoadTicket(ticketResp.ticket);
+        if (!loaded) return;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.phoneOrderLoadedForEditing,
+              ),
+              backgroundColor: Colors.blue.shade700,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        _showError(AppLocalizations.of(context)!.loadPhoneOrderFailed,
+            error: true);
+        // ignore: avoid_print
+        print('loadTicket error: $e');
+      }
+    }
   }
 
   Future<void> _showPhoneOrderDialog() async {
@@ -504,7 +662,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GetTicketRequest()..ticketId = result.ticketId,
         );
         if (!mounted) return;
-        _ticketNotifier.value = ticketResp.ticket;
+        final loaded =
+            await _confirmReplaceIfNeededAndLoadTicket(ticketResp.ticket);
+        if (!loaded) return;
         // Skip printing — receipt was already printed when the phone order was created.
         await _checkout(skipPrint: true);
         await _refreshPhoneOrderCount();
@@ -524,7 +684,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GetTicketRequest()..ticketId = result.ticketId,
         );
         if (!mounted) return;
-        _ticketNotifier.value = ticketResp.ticket;
+        final loaded =
+            await _confirmReplaceIfNeededAndLoadTicket(ticketResp.ticket);
+        if (!loaded) return;
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1379,7 +1541,9 @@ class _PaymentLeg {
 class _CheckoutResult {
   final List<_PaymentLeg> payments;
   final int ccFeeAmount;
-  _CheckoutResult(this.payments, {this.ccFeeAmount = 0});
+  final bool skipPrint;
+  _CheckoutResult(this.payments,
+      {this.ccFeeAmount = 0, this.skipPrint = false});
 }
 
 class _CheckoutDialog extends StatefulWidget {
@@ -1394,6 +1558,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   String _input = '';
   final List<_PaymentLeg> _payments = [];
   bool _ccFeeApplied = false;
+  bool _skipPrint = false;
   int _ccFeeCents = 0; // flat amount
   int _ccFeeBps = 0; // percentage in basis points
   int _taxRateBps = 0; // tax rate to apply to CC fee
@@ -1491,7 +1656,11 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     if (_paidSoFar >= _totalDue) {
       Navigator.pop(
         context,
-        _CheckoutResult(_payments, ccFeeAmount: _ccFeeAmount),
+        _CheckoutResult(
+          _payments,
+          ccFeeAmount: _ccFeeAmount,
+          skipPrint: _skipPrint,
+        ),
       );
     }
   }
@@ -1687,6 +1856,18 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
               // Keypad
               Expanded(child: _buildKeypad()),
               const SizedBox(height: 8),
+              // Option to skip printing for restored/open tickets
+              if (widget.ticket.status == 'OPEN')
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: CheckboxListTile(
+                    value: _skipPrint,
+                    onChanged: (v) => setState(() => _skipPrint = v ?? false),
+                    title: Text(AppLocalizations.of(context)!.skipPrinting),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
               // Pay buttons
               if (_hasCcFee && !_ccFeeApplied)
                 Padding(
@@ -1837,10 +2018,17 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
 // ── Past Orders Dialog ────────────────────────────────────────
 
 class _PastOrdersDialog extends StatefulWidget {
-  const _PastOrdersDialog();
+  final String initialStatus;
+  const _PastOrdersDialog({this.initialStatus = ''});
 
   @override
   State<_PastOrdersDialog> createState() => _PastOrdersDialogState();
+}
+
+class _PastOrdersResult {
+  final String action; // 'CHECKOUT' or 'EDIT'
+  final String ticketId;
+  _PastOrdersResult(this.action, this.ticketId);
 }
 
 class _PastOrdersDialogState extends State<_PastOrdersDialog> {
@@ -1852,6 +2040,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
   @override
   void initState() {
     super.initState();
+    _statusFilter = widget.initialStatus;
     _loadTickets();
   }
 
@@ -2009,6 +2198,7 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                 spacing: 8,
                 children: [
                   _filterChip(AppLocalizations.of(context)!.all, ''),
+                  _filterChip(AppLocalizations.of(context)!.open, 'OPEN'),
                   _filterChip(AppLocalizations.of(context)!.closed, 'CLOSED'),
                   _filterChip(AppLocalizations.of(context)!.voided, 'VOIDED'),
                   _filterChip(AppLocalizations.of(context)!.comped, 'COMPED'),
@@ -2211,6 +2401,39 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                       foregroundColor: Colors.purple,
                     ),
                     child: Text(AppLocalizations.of(context)!.refund),
+                  ),
+                ] else if (t.status == 'OPEN') ...[
+                  // For open tickets we expose explicit actions so staff can
+                  // recover and continue processing a ticket left open by
+                  // a crash or a closed UI session: Edit loads the ticket
+                  // into the register for modification; Checkout loads and
+                  // runs the checkout flow.
+                  SizedBox(
+                    height: 40,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        if (mounted) {
+                          Navigator.pop(
+                              context, _PastOrdersResult('EDIT', t.id));
+                        }
+                      },
+                      child: Text(AppLocalizations.of(context)!.editOrder),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 40,
+                    child: FilledButton(
+                      onPressed: () {
+                        if (mounted) {
+                          Navigator.pop(
+                              context, _PastOrdersResult('CHECKOUT', t.id));
+                        }
+                      },
+                      style: FilledButton.styleFrom(
+                          backgroundColor: Colors.green.shade700),
+                      child: Text(AppLocalizations.of(context)!.checkout),
+                    ),
                   ),
                 ],
               ],

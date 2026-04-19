@@ -532,6 +532,7 @@ class Ticket extends $pb.GeneratedMessage {
     $core.int? amountPaid,
     $core.int? changeDue,
     $core.int? ccFee,
+    $core.bool? receiptPrinted,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -545,6 +546,7 @@ class Ticket extends $pb.GeneratedMessage {
     if (amountPaid != null) result.amountPaid = amountPaid;
     if (changeDue != null) result.changeDue = changeDue;
     if (ccFee != null) result.ccFee = ccFee;
+    if (receiptPrinted != null) result.receiptPrinted = receiptPrinted;
     return result;
   }
 
@@ -574,6 +576,7 @@ class Ticket extends $pb.GeneratedMessage {
     ..aI(9, _omitFieldNames ? '' : 'amountPaid')
     ..aI(10, _omitFieldNames ? '' : 'changeDue')
     ..aI(11, _omitFieldNames ? '' : 'ccFee')
+    ..aOB(12, _omitFieldNames ? '' : 'receiptPrinted')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -680,6 +683,15 @@ class Ticket extends $pb.GeneratedMessage {
   $core.bool hasCcFee() => $_has(10);
   @$pb.TagNumber(11)
   void clearCcFee() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get receiptPrinted => $_getBF(11);
+  @$pb.TagNumber(12)
+  set receiptPrinted($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasReceiptPrinted() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearReceiptPrinted() => $_clearField(12);
 }
 
 class Payment extends $pb.GeneratedMessage {

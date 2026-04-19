@@ -239,4 +239,230 @@ class AppLocalizationsEn extends AppLocalizations {
   String operationFailed(Object action) {
     return '$action failed';
   }
+
+  @override
+  String get noActiveTicket => 'No active ticket';
+
+  @override
+  String get enterQuantity => 'Enter Quantity';
+
+  @override
+  String get removeItemTitle => 'Remove Item';
+
+  @override
+  String removeItemConfirm(Object name, Object qty) {
+    return 'Remove $name (qty $qty) from the order?';
+  }
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get subtotal => 'Subtotal';
+
+  @override
+  String get tax => 'Tax';
+
+  @override
+  String get enterText => 'Enter Text';
+
+  @override
+  String get spaceLabel => 'SPACE';
+
+  @override
+  String get menuItems => 'Menu Items';
+
+  @override
+  String get addItem => 'Add Item';
+
+  @override
+  String get noMenuItems => 'No menu items. Add one above.';
+
+  @override
+  String get deleteMenuItemTitle => 'Delete Menu Item';
+
+  @override
+  String deleteMenuItemConfirm(Object name) {
+    return 'Remove \"$name\" from the menu?';
+  }
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get itemAdded => 'Item added';
+
+  @override
+  String get itemUpdated => 'Item updated';
+
+  @override
+  String get itemDeleted => 'Item deleted';
+
+  @override
+  String get editMenuItem => 'Edit Menu Item';
+
+  @override
+  String get newMenuItem => 'New Menu Item';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get itemDetails => 'Item Details';
+
+  @override
+  String get itemIdLabel => 'Item ID';
+
+  @override
+  String get itemNameLabel => 'Item Name';
+
+  @override
+  String get priceLabel => 'Price (\$)';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get sendToKitchen => 'Send to Kitchen';
+
+  @override
+  String get sendToKitchenSubtitle => 'Print this item on kitchen tickets';
+
+  @override
+  String get modifierGroups => 'Modifier Groups';
+
+  @override
+  String get addGroup => 'Add Group';
+
+  @override
+  String get noModifierGroups =>
+      'No modifier groups. Items will be added as-is.';
+
+  @override
+  String get groupIdLabel => 'Group ID';
+
+  @override
+  String get groupNameLabel => 'Group Name';
+
+  @override
+  String get minSelectLabel => 'Min Select';
+
+  @override
+  String get maxSelectLabel => 'Max Select';
+
+  @override
+  String get removeGroup => 'Remove group';
+
+  @override
+  String get noModifiersInGroup => 'No modifiers in this group.';
+
+  @override
+  String get addModifier => 'Add Modifier';
+
+  @override
+  String get modifierIdLabel => 'Modifier ID';
+
+  @override
+  String get modifierNameLabel => 'Modifier Name';
+
+  @override
+  String get modifierPriceLabel => 'Modifier Price';
+
+  @override
+  String get priceShort => 'Price';
+
+  @override
+  String get loadMenuFailed => 'Failed to load menu';
+
+  @override
+  String get reasonOptional => 'Reason (optional)';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get show => 'Show';
+
+  @override
+  String get replace => 'Replace';
+
+  @override
+  String get closed => 'Closed';
+
+  @override
+  String get voided => 'Voided';
+
+  @override
+  String get comped => 'Comped';
+
+  @override
+  String get refunded => 'Refunded';
+
+  @override
+  String get commentLabel => 'Comment';
+
+  @override
+  String get noteLabel => 'Note:';
+
+  @override
+  String get cancelOrder => 'Cancel Order';
+
+  @override
+  String get editOrder => 'Edit Order';
+
+  @override
+  String get skipPrinting => 'Skip printing';
+
+  @override
+  String get selectReportDate => 'Select Report Date';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get yearly => 'Yearly';
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String get printLabel => 'Print';
+
+  @override
+  String get noData => 'No data';
+
+  @override
+  String reportForDate(Object date) {
+    return 'Report — $date';
+  }
+
+  @override
+  String get dailyBreakdown => 'Daily Breakdown';
+
+  @override
+  String get tickets => 'tickets';
+
+  @override
+  String get grossRevenue => 'Gross Revenue';
+
+  @override
+  String get netRevenue => 'Net Revenue';
+
+  @override
+  String get totalCollected => 'Total Collected';
 }

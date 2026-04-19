@@ -132,6 +132,10 @@
   ,
   "reasonOptional": "Reason (optional)",
   "all": "All",
+  "open": "Open",
+  "restore": "Restore",
+  "show": "Show",
+  "replace": "Replace",
   "closed": "Closed",
   "voided": "Voided",
   "comped": "Comped",
@@ -141,6 +145,7 @@
   "cancelOrder": "Cancel Order",
   "editOrder": "Edit Order"
   ,
+  "skipPrinting": "Skip printing",
   "selectReportDate": "Select Report Date",
   "daily": "Daily",
   "weekly": "Weekly",
