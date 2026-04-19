@@ -865,39 +865,39 @@ class _ModifierDialogState extends State<_ModifierDialog> {
               // target is Material-aware and shows ink ripple. This
               // also gives a larger, more consistent hit area on
               // touchscreens.
-               InkWell(
-                 onTap: () => _setCurrentGroupIndex(gi),
-                 borderRadius: BorderRadius.circular(48),
-                 child: Column(
-                   mainAxisSize: MainAxisSize.min,
-                   children: [
-                     // Ensure the circular stepper indicator has a minimum
-                     // 48x48 hit target for comfortable finger tapping on
-                     // small touchscreens while preserving the visual size
-                     // of the inner CircleAvatar (radius 18).
-                     Container(
-                       margin: const EdgeInsets.symmetric(horizontal: 6),
-                       width: 48,
-                       height: 48,
-                       child: Center(
-                         child: CircleAvatar(
-                           radius: 18,
-                           backgroundColor: gi == _currentGroupIndex
-                               ? Theme.of(context).colorScheme.primary
-                               : (_isGroupValid(gi)
-                                   ? Colors.green.shade600
-                                   : Colors.grey.shade300),
-                           child: Text(
-                             '${gi + 1}',
-                             style: TextStyle(
-                               color: gi == _currentGroupIndex
-                                   ? Colors.white
-                                   : Colors.black,
-                             ),
-                           ),
-                         ),
-                       ),
-                     ),
+              InkWell(
+                onTap: () => _setCurrentGroupIndex(gi),
+                borderRadius: BorderRadius.circular(48),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Ensure the circular stepper indicator has a minimum
+                    // 48x48 hit target for comfortable finger tapping on
+                    // small touchscreens while preserving the visual size
+                    // of the inner CircleAvatar (radius 18).
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: gi == _currentGroupIndex
+                              ? Theme.of(context).colorScheme.primary
+                              : (_isGroupValid(gi)
+                                  ? Colors.green.shade600
+                                  : Colors.grey.shade300),
+                          child: Text(
+                            '${gi + 1}',
+                            style: TextStyle(
+                              color: gi == _currentGroupIndex
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     SizedBox(
                       width: 120,
@@ -1572,8 +1572,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                             // Small inline icon: keep 48x48 hit target but use
                             // slightly tighter padding and a 20dp icon size so
                             // the button is comfortable for finger tapping.
-                            constraints:
-                                const BoxConstraints(minWidth: 48, minHeight: 48),
+                            constraints: const BoxConstraints(
+                                minWidth: 48, minHeight: 48),
                             padding: const EdgeInsets.all(8),
                             iconSize: 20,
                             icon: const Icon(
