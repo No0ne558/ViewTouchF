@@ -313,7 +313,9 @@ void Database::migrate_to_3() {
 void Database::migrate_to_4() {
     exec("ALTER TABLE ticket_item_modifiers ADD COLUMN group_id TEXT NOT NULL DEFAULT ''");
     // Backfill group_id for existing ticket modifiers when the modifier still exists in the menu
-    exec("UPDATE ticket_item_modifiers SET group_id = (SELECT group_id FROM modifiers WHERE modifiers.id = ticket_item_modifiers.modifier_id) WHERE group_id = ''");
+    exec(
+        "UPDATE ticket_item_modifiers SET group_id = (SELECT group_id FROM modifiers WHERE "
+        "modifiers.id = ticket_item_modifiers.modifier_id) WHERE group_id = ''");
 }
 
 // ── Sequences ────────────────────────────────────────────────
@@ -539,12 +541,12 @@ void Database::save_ticket(const Ticket& t) {
         -1, &ins_item, nullptr);
 
     sqlite3_stmt* ins_mod = nullptr;
-    sqlite3_prepare_v2(
-        db_,
-        "INSERT INTO "
-        "ticket_item_modifiers(ticket_id,line_key,modifier_id,modifier_name,group_id,action,price_adj) "
-        "VALUES(?,?,?,?,?,?,?)",
-        -1, &ins_mod, nullptr);
+    sqlite3_prepare_v2(db_,
+                       "INSERT INTO "
+                       "ticket_item_modifiers(ticket_id,line_key,modifier_id,modifier_name,group_"
+                       "id,action,price_adj) "
+                       "VALUES(?,?,?,?,?,?,?)",
+                       -1, &ins_mod, nullptr);
 
     for (const auto& ti : t.items) {
         sqlite3_reset(ins_item);

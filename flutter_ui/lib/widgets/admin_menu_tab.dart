@@ -89,12 +89,14 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(ctx)!.deleteMenuItemTitle),
-        content:
-            Text(AppLocalizations.of(ctx)!.deleteMenuItemConfirm(item.name)),
+        content: Text(
+          AppLocalizations.of(ctx)!.deleteMenuItemConfirm(item.name),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(AppLocalizations.of(ctx)!.cancel)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(ctx)!.cancel),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -140,8 +142,9 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
           child: Row(
             children: [
               Text(
-                  '${AppLocalizations.of(context)!.menuItems} (${_items.length})',
-                  style: Theme.of(context).textTheme.titleLarge),
+                '${AppLocalizations.of(context)!.menuItems} (${_items.length})',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const Spacer(),
               FilledButton.icon(
                 onPressed: _addItem,
@@ -160,26 +163,36 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                     behavior: HitTestBehavior.opaque,
                     onVerticalDragUpdate: (details) {
                       if (!_listController.hasClients) return;
-                      final newOffset = _listController.offset - details.delta.dy;
+                      final newOffset =
+                          _listController.offset - details.delta.dy;
                       final max = _listController.position.hasContentDimensions
                           ? _listController.position.maxScrollExtent
                           : 0.0;
-                      final target = (newOffset).clamp(0.0, max) as double;
+                      final target = (newOffset).clamp(0.0, max).toDouble();
                       _listController.jumpTo(target);
                     },
                     onVerticalDragEnd: (details) {
                       if (!_listController.hasClients) return;
                       final v = details.velocity.pixelsPerSecond.dy;
                       if (v.abs() < 50) return;
-                      final multiplier = _listPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
+                      final multiplier =
+                          _listPointerKind == PointerDeviceKind.mouse
+                              ? 0.2
+                              : 0.6;
                       final projected = v * multiplier;
                       final max = _listController.position.hasContentDimensions
                           ? _listController.position.maxScrollExtent
                           : 0.0;
-                      final target = (_listController.offset - projected).clamp(0.0, max) as double;
+                      final target = (_listController.offset - projected)
+                          .clamp(0.0, max)
+                          .toDouble();
                       int durationMs = (v.abs() * 0.2).round();
                       durationMs = math.max(200, math.min(1000, durationMs));
-                      _listController.animateTo(target, duration: Duration(milliseconds: durationMs), curve: Curves.decelerate);
+                      _listController.animateTo(
+                        target,
+                        duration: Duration(milliseconds: durationMs),
+                        curve: Curves.decelerate,
+                      );
                     },
                     child: ListView.separated(
                       controller: _listController,
@@ -191,8 +204,12 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                         final modCount = item.modifierGroups.length;
                         return ListTile(
                           leading: CircleAvatar(
-                            child: Text(item.id.substring(
-                                0, item.id.length > 3 ? 3 : item.id.length)),
+                            child: Text(
+                              item.id.substring(
+                                0,
+                                item.id.length > 3 ? 3 : item.id.length,
+                              ),
+                            ),
                           ),
                           title: Text(item.name),
                           subtitle: Text(
@@ -207,7 +224,10 @@ class _AdminMenuTabState extends State<AdminMenuTab> {
                                 onPressed: () => _editItem(item),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () => _deleteItem(item),
                               ),
                             ],
@@ -317,13 +337,15 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
 
   void _addGroup() {
     setState(() {
-      _groups.add(_EditableModifierGroup(
-        idCtrl: TextEditingController(text: _uniqueId('MG')),
-        nameCtrl: TextEditingController(),
-        minSelectCtrl: TextEditingController(text: '0'),
-        maxSelectCtrl: TextEditingController(text: '0'),
-        modifiers: [],
-      ));
+      _groups.add(
+        _EditableModifierGroup(
+          idCtrl: TextEditingController(text: _uniqueId('MG')),
+          nameCtrl: TextEditingController(),
+          minSelectCtrl: TextEditingController(text: '0'),
+          maxSelectCtrl: TextEditingController(text: '0'),
+          modifiers: [],
+        ),
+      );
     });
   }
 
@@ -344,12 +366,14 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
 
   void _addModifier(int groupIndex) {
     setState(() {
-      _groups[groupIndex].modifiers.add(_EditableModifier(
-            idCtrl: TextEditingController(text: _uniqueId('MOD')),
-            nameCtrl: TextEditingController(),
-            priceCtrl: TextEditingController(),
-            isDefault: false,
-          ));
+      _groups[groupIndex].modifiers.add(
+            _EditableModifier(
+              idCtrl: TextEditingController(text: _uniqueId('MOD')),
+              nameCtrl: TextEditingController(),
+              priceCtrl: TextEditingController(),
+              isDefault: false,
+            ),
+          );
     });
   }
 
@@ -379,11 +403,13 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
         ..maxSelect = int.tryParse(g.maxSelectCtrl.text) ?? 0;
       for (final m in g.modifiers) {
         final modPrice = double.tryParse(m.priceCtrl.text) ?? 0;
-        group.modifiers.add(Modifier()
-          ..id = m.idCtrl.text.trim()
-          ..name = m.nameCtrl.text.trim()
-          ..priceCents = (modPrice * 100).round()
-          ..isDefault = m.isDefault);
+        group.modifiers.add(
+          Modifier()
+            ..id = m.idCtrl.text.trim()
+            ..name = m.nameCtrl.text.trim()
+            ..priceCents = (modPrice * 100).round()
+            ..isDefault = m.isDefault,
+        );
       }
       item.modifierGroups.add(group);
     }
@@ -435,16 +461,20 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit
-            ? AppLocalizations.of(context)!.editMenuItem
-            : AppLocalizations.of(context)!.newMenuItem),
+        title: Text(
+          _isEdit
+              ? AppLocalizations.of(context)!.editMenuItem
+              : AppLocalizations.of(context)!.newMenuItem,
+        ),
         actions: [
           FilledButton.icon(
             onPressed: _saveAndClose,
             icon: const Icon(Icons.save),
-            label: Text(_isEdit
-                ? AppLocalizations.of(context)!.save
-                : AppLocalizations.of(context)!.add),
+            label: Text(
+              _isEdit
+                  ? AppLocalizations.of(context)!.save
+                  : AppLocalizations.of(context)!.add,
+            ),
           ),
           const SizedBox(width: 12),
         ],
@@ -459,153 +489,174 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             final max = _editorScrollController.position.hasContentDimensions
                 ? _editorScrollController.position.maxScrollExtent
                 : 0.0;
-            final target = (newOffset).clamp(0.0, max) as double;
+            final target = (newOffset).clamp(0.0, max).toDouble();
             _editorScrollController.jumpTo(target);
           },
           onVerticalDragEnd: (details) {
             if (!_editorScrollController.hasClients) return;
             final v = details.velocity.pixelsPerSecond.dy;
             if (v.abs() < 50) return;
-            final multiplier = _editorPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
+            final multiplier =
+                _editorPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
             final projected = v * multiplier;
             final max = _editorScrollController.position.hasContentDimensions
                 ? _editorScrollController.position.maxScrollExtent
                 : 0.0;
-            final target = (_editorScrollController.offset - projected).clamp(0.0, max) as double;
+            final target = (_editorScrollController.offset - projected)
+                .clamp(0.0, max)
+                .toDouble();
             int durationMs = (v.abs() * 0.2).round();
             durationMs = math.max(200, math.min(1000, durationMs));
-            _editorScrollController.animateTo(target, duration: Duration(milliseconds: durationMs), curve: Curves.decelerate);
+            _editorScrollController.animateTo(
+              target,
+              duration: Duration(milliseconds: durationMs),
+              curve: Curves.decelerate,
+            );
           },
           child: ListView(
             controller: _editorScrollController,
             padding: const EdgeInsets.all(16),
             children: [
-          // ── Basic fields ─────────────────────────────────
-          Text(AppLocalizations.of(context)!.itemDetails,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TouchTextField(
-                  controller: _idCtrl,
-                  enabled: !_isEdit,
-                  dialogTitle: AppLocalizations.of(context)!.itemIdLabel,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.itemIdLabel,
-                    border: const OutlineInputBorder(),
-                    hintText: 'e.g. BUR03',
-                  ),
-                ),
+              // ── Basic fields ─────────────────────────────────
+              Text(
+                AppLocalizations.of(context)!.itemDetails,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: TouchTextField(
-                  controller: _nameCtrl,
-                  dialogTitle: AppLocalizations.of(context)!.itemNameLabel,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.itemNameLabel,
-                    border: const OutlineInputBorder(),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TouchTextField(
+                      controller: _idCtrl,
+                      enabled: !_isEdit,
+                      dialogTitle: AppLocalizations.of(context)!.itemIdLabel,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.itemIdLabel,
+                        border: const OutlineInputBorder(),
+                        hintText: 'e.g. BUR03',
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TouchTextField(
-                  controller: _priceCtrl,
-                  dialogTitle: AppLocalizations.of(context)!.priceLabel,
-                  numericOnly: true,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.priceLabel,
-                    border: const OutlineInputBorder(),
-                    hintText: '12.99',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: TouchTextField(
+                      controller: _nameCtrl,
+                      dialogTitle: AppLocalizations.of(context)!.itemNameLabel,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.itemNameLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TouchTextField(
-                  controller: _catCtrl,
-                  dialogTitle: AppLocalizations.of(context)!.categoryLabel,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.categoryLabel,
-                    border: const OutlineInputBorder(),
-                    hintText: 'e.g. Entrees',
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TouchTextField(
+                      controller: _priceCtrl,
+                      dialogTitle: AppLocalizations.of(context)!.priceLabel,
+                      numericOnly: true,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.priceLabel,
+                        border: const OutlineInputBorder(),
+                        hintText: '12.99',
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TouchTextField(
+                      controller: _catCtrl,
+                      dialogTitle: AppLocalizations.of(context)!.categoryLabel,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.categoryLabel,
+                        border: const OutlineInputBorder(),
+                        hintText: 'e.g. Entrees',
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
 
-          const SizedBox(height: 12),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(AppLocalizations.of(context)!.sendToKitchen),
-            subtitle: Text(AppLocalizations.of(context)!.sendToKitchenSubtitle),
-            value: _sendToKitchen,
-            onChanged: (v) => setState(() => _sendToKitchen = v),
-          ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(AppLocalizations.of(context)!.sendToKitchen),
+                subtitle: Text(
+                  AppLocalizations.of(context)!.sendToKitchenSubtitle,
+                ),
+                value: _sendToKitchen,
+                onChanged: (v) => setState(() => _sendToKitchen = v),
+              ),
 
-          // ── Modifier Groups ──────────────────────────────
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Text(AppLocalizations.of(context)!.modifierGroups,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const Spacer(),
-              OutlinedButton.icon(
-                onPressed: _addGroup,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(AppLocalizations.of(context)!.addGroup),
+              // ── Modifier Groups ──────────────────────────────
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.modifierGroups,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const Spacer(),
+                  OutlinedButton.icon(
+                    onPressed: _addGroup,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(AppLocalizations.of(context)!.addGroup),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      // Quick-add a named "Choice N" group
+                      final next = _groups.length + 1;
+                      setState(() {
+                        _groups.add(
+                          _EditableModifierGroup(
+                            idCtrl: TextEditingController(
+                              text: _uniqueId('MG'),
+                            ),
+                            nameCtrl: TextEditingController(
+                              text: 'Choice $next',
+                            ),
+                            minSelectCtrl: TextEditingController(text: '0'),
+                            maxSelectCtrl: TextEditingController(text: '1'),
+                            modifiers: [
+                              _EditableModifier(
+                                idCtrl: TextEditingController(
+                                  text: _uniqueId('MOD'),
+                                ),
+                                nameCtrl: TextEditingController(),
+                                priceCtrl: TextEditingController(),
+                                isDefault: false,
+                              ),
+                            ],
+                          ),
+                        );
+                      });
+                    },
+                    icon: const Icon(Icons.playlist_add, size: 18),
+                    label: const Text('Add Choice'),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Quick-add a named "Choice N" group
-                  final next = _groups.length + 1;
-                  setState(() {
-                    _groups.add(_EditableModifierGroup(
-                      idCtrl: TextEditingController(text: _uniqueId('MG')),
-                      nameCtrl: TextEditingController(text: 'Choice $next'),
-                      minSelectCtrl: TextEditingController(text: '0'),
-                      maxSelectCtrl: TextEditingController(text: '1'),
-                      modifiers: [
-                        _EditableModifier(
-                          idCtrl: TextEditingController(text: _uniqueId('MOD')),
-                          nameCtrl: TextEditingController(),
-                          priceCtrl: TextEditingController(),
-                          isDefault: false,
-                        )
-                      ],
-                    ));
-                  });
-                },
-                icon: const Icon(Icons.playlist_add, size: 18),
-                label: const Text('Add Choice'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (_groups.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: Text(AppLocalizations.of(context)!.noModifierGroups,
-                    style: const TextStyle(color: Colors.grey)),
-              ),
-            ),
-          for (int gi = 0; gi < _groups.length; gi++) _buildGroupCard(gi),
+              const SizedBox(height: 8),
+              if (_groups.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.noModifierGroups,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+              for (int gi = 0; gi < _groups.length; gi++) _buildGroupCard(gi),
             ],
           ),
         ),
@@ -694,8 +745,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             if (g.modifiers.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(AppLocalizations.of(context)!.noModifiersInGroup,
-                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                child: Text(
+                  AppLocalizations.of(context)!.noModifiersInGroup,
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
               ),
             for (int mi = 0; mi < g.modifiers.length; mi++)
               _buildModifierRow(gi, mi),
@@ -706,8 +759,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
               child: TextButton.icon(
                 onPressed: () => _addModifier(gi),
                 icon: const Icon(Icons.add, size: 16),
-                label: Text(AppLocalizations.of(context)!.addModifier,
-                    style: const TextStyle(fontSize: 13)),
+                label: Text(
+                  AppLocalizations.of(context)!.addModifier,
+                  style: const TextStyle(fontSize: 13),
+                ),
               ),
             ),
           ],
@@ -768,8 +823,10 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
           const SizedBox(width: 6),
           Column(
             children: [
-              Text(AppLocalizations.of(context)!.defaultLabel,
-                  style: const TextStyle(fontSize: 10)),
+              Text(
+                AppLocalizations.of(context)!.defaultLabel,
+                style: const TextStyle(fontSize: 10),
+              ),
               Switch(
                 value: m.isDefault,
                 onChanged: (v) => setState(() => m.isDefault = v),
@@ -778,8 +835,11 @@ class _MenuItemEditorState extends State<_MenuItemEditor> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.remove_circle_outline,
-                color: Colors.red, size: 18),
+            icon: const Icon(
+              Icons.remove_circle_outline,
+              color: Colors.red,
+              size: 18,
+            ),
             tooltip: AppLocalizations.of(context)!.remove,
             visualDensity: VisualDensity.compact,
             onPressed: () => _removeModifier(gi, mi),

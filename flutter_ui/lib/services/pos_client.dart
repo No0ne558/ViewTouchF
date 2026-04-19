@@ -16,9 +16,7 @@ class PosClient {
     _channel = ClientChannel(
       InternetAddress(socketPath, type: InternetAddressType.unix),
       port: 0,
-      options: const ChannelOptions(
-        credentials: ChannelCredentials.insecure(),
-      ),
+      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
     stub = PosServiceClient(_channel);
@@ -32,7 +30,9 @@ class PosClient {
   /// Access the singleton.
   static PosClient get instance {
     assert(
-        _instance != null, 'Call PosClient.init() before accessing instance');
+      _instance != null,
+      'Call PosClient.init() before accessing instance',
+    );
     return _instance!;
   }
 

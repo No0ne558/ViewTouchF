@@ -61,11 +61,9 @@ class ViewTouchApp extends StatelessWidget {
 
         // Uniform scale — pick the smaller axis so nothing overflows.
         final scale = math.max(
-            1.0,
-            math.min(
-              screenW / _baseWidth,
-              screenH / _baseHeight,
-            ));
+          1.0,
+          math.min(screenW / _baseWidth, screenH / _baseHeight),
+        );
 
         // At 1920×1080 or below, render 1:1 — no scaling needed.
         if (scale <= 1.0) return child!;
@@ -79,11 +77,7 @@ class ViewTouchApp extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.fill,
             alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: logicalW,
-              height: logicalH,
-              child: child,
-            ),
+            child: SizedBox(width: logicalW, height: logicalH, child: child),
           ),
         );
       },

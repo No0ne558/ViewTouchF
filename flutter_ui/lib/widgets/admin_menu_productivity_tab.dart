@@ -124,9 +124,9 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
 
   void _msg(String msg, Color color) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   @override
@@ -142,13 +142,21 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
                 segments: const [
                   ButtonSegment(value: _ProdRange.daily, label: Text('Daily')),
                   ButtonSegment(
-                      value: _ProdRange.weekly, label: Text('Weekly')),
+                    value: _ProdRange.weekly,
+                    label: Text('Weekly'),
+                  ),
                   ButtonSegment(
-                      value: _ProdRange.monthly, label: Text('Monthly')),
+                    value: _ProdRange.monthly,
+                    label: Text('Monthly'),
+                  ),
                   ButtonSegment(
-                      value: _ProdRange.yearly, label: Text('Yearly')),
+                    value: _ProdRange.yearly,
+                    label: Text('Yearly'),
+                  ),
                   ButtonSegment(
-                      value: _ProdRange.custom, label: Text('Custom')),
+                    value: _ProdRange.custom,
+                    label: Text('Custom'),
+                  ),
                 ],
                 selected: {_range},
                 onSelectionChanged: (sel) {
@@ -172,7 +180,8 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
                   onPressed: _pickCustomRange,
                   icon: const Icon(Icons.date_range, size: 16),
                   label: Text(
-                      '${_fmt(_customRange!.start)} — ${_fmt(_customRange!.end)}'),
+                    '${_fmt(_customRange!.start)} — ${_fmt(_customRange!.end)}',
+                  ),
                 ),
               const Spacer(),
               IconButton(
@@ -190,8 +199,11 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
               ? const Center(child: CircularProgressIndicator())
               : _items.isEmpty
                   ? const Center(
-                      child: Text('No item sales data for this period',
-                          style: TextStyle(fontSize: 16, color: Colors.grey)))
+                      child: Text(
+                        'No item sales data for this period',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    )
                   : _buildTable(),
         ),
       ],
@@ -206,11 +218,15 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
         children: [
           Row(
             children: [
-              Text('Menu Productivity',
-                  style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Menu Productivity',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(width: 16),
-              Text('${_items.length} items',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14)),
+              Text(
+                '${_items.length} items',
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
+              ),
               const Spacer(),
               SegmentedButton<bool>(
                 segments: const [
@@ -239,13 +255,19 @@ class _AdminMenuProductivityTabState extends State<AdminMenuProductivityTab> {
               ],
               rows: List.generate(_items.length, (i) {
                 final e = _items[i];
-                return DataRow(cells: [
-                  DataCell(Text('${i + 1}',
-                      style: const TextStyle(fontWeight: FontWeight.bold))),
-                  DataCell(Text(e.itemName)),
-                  DataCell(Text('${e.quantitySold}')),
-                  DataCell(Text(_money(e.revenueCents))),
-                ]);
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        '${i + 1}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataCell(Text(e.itemName)),
+                    DataCell(Text('${e.quantitySold}')),
+                    DataCell(Text(_money(e.revenueCents))),
+                  ],
+                );
               }),
             ),
           ),

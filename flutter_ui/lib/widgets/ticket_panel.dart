@@ -116,8 +116,10 @@ class _TicketPanelState extends State<TicketPanel> {
         Expanded(
           child: t.items.isEmpty
               ? Center(
-                  child: Text(AppLocalizations.of(context)!.tapMenuToBegin,
-                      style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                  child: Text(
+                    AppLocalizations.of(context)!.tapMenuToBegin,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
                 )
               : ScrollConfiguration(
                   behavior: ScrollConfiguration.of(context).copyWith(
@@ -154,10 +156,13 @@ class _TicketPanelState extends State<TicketPanel> {
                               onTap: widget.onItemTap != null
                                   ? () => widget.onItemTap!(ti)
                                   : null,
-                              child: Text(ti.item.name,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15)),
+                              child: Text(
+                                ti.item.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
                             ),
                             // ── Modifiers + special instructions ──
                             if (ti.modifiers.isNotEmpty)
@@ -204,13 +209,15 @@ class _TicketPanelState extends State<TicketPanel> {
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                          color: Colors.grey.shade400),
+                                        color: Colors.grey.shade400,
+                                      ),
                                     ),
                                     child: Text(
                                       '${ti.quantity}',
                                       style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -232,8 +239,9 @@ class _TicketPanelState extends State<TicketPanel> {
                                 Text(
                                   _money(adjLineTotal),
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             ),
@@ -251,11 +259,13 @@ class _TicketPanelState extends State<TicketPanel> {
           child: Column(
             children: [
               _TotalRow(
-                  label: AppLocalizations.of(context)!.subtotal,
-                  value: _money(t.subtotal)),
+                label: AppLocalizations.of(context)!.subtotal,
+                value: _money(t.subtotal),
+              ),
               _TotalRow(
-                  label: AppLocalizations.of(context)!.tax,
-                  value: _money(t.tax)),
+                label: AppLocalizations.of(context)!.tax,
+                value: _money(t.tax),
+              ),
               const Divider(),
               _TotalRow(
                 label: 'TOTAL',
@@ -272,10 +282,13 @@ class _TicketPanelState extends State<TicketPanel> {
                       child: FilledButton.icon(
                         onPressed: t.items.isEmpty ? null : widget.onPhoneOrder,
                         icon: const Icon(Icons.phone),
-                        label: Text(AppLocalizations.of(context)!.phoneOrder,
-                            style: const TextStyle(fontSize: 16)),
+                        label: Text(
+                          AppLocalizations.of(context)!.phoneOrder,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                         style: FilledButton.styleFrom(
-                            backgroundColor: Colors.orange.shade700),
+                          backgroundColor: Colors.orange.shade700,
+                        ),
                       ),
                     ),
                   ),
@@ -286,8 +299,10 @@ class _TicketPanelState extends State<TicketPanel> {
                       child: FilledButton.icon(
                         onPressed: t.items.isEmpty ? null : widget.onCheckout,
                         icon: const Icon(Icons.payment),
-                        label: Text(AppLocalizations.of(context)!.checkout,
-                            style: const TextStyle(fontSize: 18)),
+                        label: Text(
+                          AppLocalizations.of(context)!.checkout,
+                          style: const TextStyle(fontSize: 18),
+                        ),
                       ),
                     ),
                   ),
@@ -325,8 +340,12 @@ class _TicketPanelState extends State<TicketPanel> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(AppLocalizations.of(context)!.removeItemTitle),
-          content: Text(AppLocalizations.of(context)!
-              .removeItemConfirm(ti.item.name, ti.quantity)),
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!
+                .removeItemConfirm(ti.item.name, ti.quantity),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),

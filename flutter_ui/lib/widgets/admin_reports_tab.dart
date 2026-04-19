@@ -110,9 +110,7 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
   Future<void> _pickCustomRange() async {
     final r = await showDialog<DateTimeRange>(
       context: context,
-      builder: (ctx) => _DateRangePickerDialog(
-        initialRange: _customRange,
-      ),
+      builder: (ctx) => _DateRangePickerDialog(initialRange: _customRange),
     );
     if (r != null) {
       _customRange = r;
@@ -169,9 +167,9 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
 
   void _msg(String msg, Color color) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   @override
@@ -186,20 +184,25 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
               SegmentedButton<_ReportRange>(
                 segments: [
                   ButtonSegment(
-                      value: _ReportRange.daily,
-                      label: Text(AppLocalizations.of(context)!.daily)),
+                    value: _ReportRange.daily,
+                    label: Text(AppLocalizations.of(context)!.daily),
+                  ),
                   ButtonSegment(
-                      value: _ReportRange.weekly,
-                      label: Text(AppLocalizations.of(context)!.weekly)),
+                    value: _ReportRange.weekly,
+                    label: Text(AppLocalizations.of(context)!.weekly),
+                  ),
                   ButtonSegment(
-                      value: _ReportRange.monthly,
-                      label: Text(AppLocalizations.of(context)!.monthly)),
+                    value: _ReportRange.monthly,
+                    label: Text(AppLocalizations.of(context)!.monthly),
+                  ),
                   ButtonSegment(
-                      value: _ReportRange.yearly,
-                      label: Text(AppLocalizations.of(context)!.yearly)),
+                    value: _ReportRange.yearly,
+                    label: Text(AppLocalizations.of(context)!.yearly),
+                  ),
                   ButtonSegment(
-                      value: _ReportRange.custom,
-                      label: Text(AppLocalizations.of(context)!.custom)),
+                    value: _ReportRange.custom,
+                    label: Text(AppLocalizations.of(context)!.custom),
+                  ),
                 ],
                 selected: {_range},
                 onSelectionChanged: (sel) {
@@ -223,7 +226,8 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                   onPressed: _pickCustomRange,
                   icon: const Icon(Icons.date_range, size: 16),
                   label: Text(
-                      '${_fmt(_customRange!.start)} — ${_fmt(_customRange!.end)}'),
+                    '${_fmt(_customRange!.start)} — ${_fmt(_customRange!.end)}',
+                  ),
                 ),
               const Spacer(),
               IconButton(
@@ -261,8 +265,10 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(AppLocalizations.of(context)!.reportForDate(r.date),
-              style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            AppLocalizations.of(context)!.reportForDate(r.date),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 20),
           _buildSummaryCards(r),
         ],
@@ -281,8 +287,10 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(AppLocalizations.of(context)!.dailyBreakdown,
-                    style: Theme.of(context).textTheme.titleMedium),
+                child: Text(
+                  AppLocalizations.of(context)!.dailyBreakdown,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               Expanded(
                 child: _dailyBreakdown.isEmpty
@@ -296,7 +304,8 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                             selected: isSel,
                             title: Text(r.date),
                             subtitle: Text(
-                                '${r.totalTickets} ${AppLocalizations.of(context)!.tickets} • ${_money(r.netRevenueCents)}'),
+                              '${r.totalTickets} ${AppLocalizations.of(context)!.tickets} • ${_money(r.netRevenueCents)}',
+                            ),
                             dense: true,
                             onTap: () => setState(() => _detailReport = r),
                           );
@@ -323,57 +332,69 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       runSpacing: 14,
       children: [
         _SummaryCard(
-            label: AppLocalizations.of(context)!.subtotal,
-            value: _money(r.subtotalCents),
-            icon: Icons.receipt),
+          label: AppLocalizations.of(context)!.subtotal,
+          value: _money(r.subtotalCents),
+          icon: Icons.receipt,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.tax,
-            value: _money(r.totalTaxCents),
-            icon: Icons.receipt_long),
+          label: AppLocalizations.of(context)!.tax,
+          value: _money(r.totalTaxCents),
+          icon: Icons.receipt_long,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.grossRevenue,
-            value: _money(r.totalRevenueCents),
-            icon: Icons.monetization_on_outlined),
+          label: AppLocalizations.of(context)!.grossRevenue,
+          value: _money(r.totalRevenueCents),
+          icon: Icons.monetization_on_outlined,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.ccFee,
-            value: _money(r.ccFeeTotalCents),
-            icon: Icons.credit_score,
-            color: r.ccFeeTotalCents > 0 ? Colors.blue : null),
+          label: AppLocalizations.of(context)!.ccFee,
+          value: _money(r.ccFeeTotalCents),
+          icon: Icons.credit_score,
+          color: r.ccFeeTotalCents > 0 ? Colors.blue : null,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.netRevenue,
-            value: _money(r.netRevenueCents),
-            icon: Icons.attach_money),
+          label: AppLocalizations.of(context)!.netRevenue,
+          value: _money(r.netRevenueCents),
+          icon: Icons.attach_money,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.totalCollected,
-            value: _money(r.totalCollectedCents),
-            icon: Icons.account_balance_wallet),
+          label: AppLocalizations.of(context)!.totalCollected,
+          value: _money(r.totalCollectedCents),
+          icon: Icons.account_balance_wallet,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.cash,
-            value: _money(r.cashTotalCents),
-            icon: Icons.payments),
+          label: AppLocalizations.of(context)!.cash,
+          value: _money(r.cashTotalCents),
+          icon: Icons.payments,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.card,
-            value: _money(r.cardTotalCents),
-            icon: Icons.credit_card),
+          label: AppLocalizations.of(context)!.card,
+          value: _money(r.cardTotalCents),
+          icon: Icons.credit_card,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.tickets,
-            value: '${r.totalTickets}',
-            icon: Icons.confirmation_number),
+          label: AppLocalizations.of(context)!.tickets,
+          value: '${r.totalTickets}',
+          icon: Icons.confirmation_number,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.voided,
-            value: '${r.voidedCount}',
-            icon: Icons.cancel,
-            color: r.voidedCount > 0 ? Colors.red : null),
+          label: AppLocalizations.of(context)!.voided,
+          value: '${r.voidedCount}',
+          icon: Icons.cancel,
+          color: r.voidedCount > 0 ? Colors.red : null,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.comped,
-            value: '${r.compedCount} (${_money(r.compedTotalCents)})',
-            icon: Icons.card_giftcard,
-            color: r.compedCount > 0 ? Colors.orange : null),
+          label: AppLocalizations.of(context)!.comped,
+          value: '${r.compedCount} (${_money(r.compedTotalCents)})',
+          icon: Icons.card_giftcard,
+          color: r.compedCount > 0 ? Colors.orange : null,
+        ),
         _SummaryCard(
-            label: AppLocalizations.of(context)!.refunded,
-            value: '${r.refundedCount} (${_money(r.refundedTotalCents)})',
-            icon: Icons.undo,
-            color: r.refundedCount > 0 ? Colors.purple : null),
+          label: AppLocalizations.of(context)!.refunded,
+          value: '${r.refundedCount} (${_money(r.refundedTotalCents)})',
+          icon: Icons.undo,
+          color: r.refundedCount > 0 ? Colors.purple : null,
+        ),
       ],
     );
   }
@@ -410,18 +431,21 @@ class _SummaryCard extends StatelessWidget {
                   Icon(icon, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(label,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
               const Spacer(),
-              Text(value,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
             ],
           ),
         ),
@@ -470,7 +494,7 @@ class _CalendarGridState extends State<_CalendarGrid> {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
 
   @override
@@ -494,8 +518,11 @@ class _CalendarGridState extends State<_CalendarGrid> {
     final now = DateTime.now();
     final nextMonth = _month == 12 ? 1 : _month + 1;
     final nextYear = _month == 12 ? _year + 1 : _year;
-    if (DateTime(nextYear, nextMonth, 1)
-        .isAfter(DateTime(now.year, now.month + 1, 0))) {
+    if (DateTime(
+      nextYear,
+      nextMonth,
+      1,
+    ).isAfter(DateTime(now.year, now.month + 1, 0))) {
       return;
     }
     setState(() {
@@ -513,8 +540,9 @@ class _CalendarGridState extends State<_CalendarGrid> {
         widget.selectedEnd == null) {
       return false;
     }
-    return day
-            .isAfter(widget.selectedStart!.subtract(const Duration(days: 1))) &&
+    return day.isAfter(
+          widget.selectedStart!.subtract(const Duration(days: 1)),
+        ) &&
         day.isBefore(widget.selectedEnd!.add(const Duration(days: 1)));
   }
 
@@ -566,7 +594,9 @@ class _CalendarGridState extends State<_CalendarGrid> {
               items: List.generate(
                 _year == now.year ? now.month : 12,
                 (i) => DropdownMenuItem(
-                    value: i + 1, child: Text(_monthNames[i + 1])),
+                  value: i + 1,
+                  child: Text(_monthNames[i + 1]),
+                ),
               ),
               onChanged: (m) {
                 if (m != null) setState(() => _month = m);
@@ -583,13 +613,19 @@ class _CalendarGridState extends State<_CalendarGrid> {
         // Weekday headers
         Row(
           children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-              .map((d) => Expanded(
-                    child: Center(
-                      child: Text(d,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 13)),
+              .map(
+                (d) => Expanded(
+                  child: Center(
+                    child: Text(
+                      d,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
         ),
         const SizedBox(height: 4),
@@ -622,10 +658,9 @@ class _CalendarGridState extends State<_CalendarGrid> {
                 bg = Theme.of(context).colorScheme.primary;
                 fg = Theme.of(context).colorScheme.onPrimary;
               } else if (inRange) {
-                bg = Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withAlpha((0.15 * 255).round());
+                bg = Theme.of(
+                  context,
+                ).colorScheme.primary.withAlpha((0.15 * 255).round());
               }
 
               return Material(
@@ -668,8 +703,10 @@ class _CalendarGridState extends State<_CalendarGrid> {
 class _SingleDatePickerDialog extends StatefulWidget {
   final DateTime initialDate;
   final String title;
-  const _SingleDatePickerDialog(
-      {required this.initialDate, required this.title});
+  const _SingleDatePickerDialog({
+    required this.initialDate,
+    required this.title,
+  });
   @override
   State<_SingleDatePickerDialog> createState() =>
       _SingleDatePickerDialogState();
@@ -766,13 +803,17 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Text('Select Date Range',
-                  style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Select Date Range',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 12),
               // Show selected range
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
@@ -780,23 +821,33 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(_fmtShort(_start),
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600)),
+                    Text(
+                      _fmtShort(_start),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Icon(Icons.arrow_forward, size: 20),
                     ),
-                    Text(_fmtShort(_end),
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600)),
+                    Text(
+                      _fmtShort(_end),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 4),
               if (_start != null && _end == null)
-                const Text('Tap the end date',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+                const Text(
+                  'Tap the end date',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
               const SizedBox(height: 8),
               Expanded(
                 child: _CalendarGrid(
