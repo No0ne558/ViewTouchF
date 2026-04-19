@@ -48,43 +48,46 @@ class _MenuGridState extends State<MenuGrid> {
       categories.putIfAbsent(item.category, () => []).add(item);
     }
 
-    final children = <Widget>[];
+    // Build slivers — a SliverToBoxAdapter header followed by a SliverGrid
+    // for each category. This keeps the list virtualized: only visible
+    // children and the nearby ones are instantiated, which reduces memory
+    // pressure on small devices.
+    final slivers = <Widget>[];
     categories.forEach((cat, items) {
-      children.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+      slivers.add(SliverPadding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        sliver: SliverToBoxAdapter(
           child: Text(
             cat,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
-      );
-      children.add(
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+      ));
+
+      slivers.add(SliverPadding(
+        padding: const EdgeInsets.only(bottom: 12),
+        sliver: SliverGrid(
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) {
+              final item = items[i];
+              return _MenuButton(item: item, onTap: () => widget.onItemTap(item));
+            },
+            childCount: items.length,
+          ),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 220,
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
             childAspectRatio: 1.15,
           ),
-          itemCount: items.length,
-          itemBuilder: (ctx, i) {
-            final item = items[i];
-            return _MenuButton(item: item, onTap: () => widget.onItemTap(item));
-          },
         ),
-      );
+      ));
     });
 
-    // Let ListView handle pointer interactions and momentum scrolling.
-    return ListView(
+    return CustomScrollView(
       controller: _controller,
-      padding: const EdgeInsets.all(12),
-      children: children,
+      slivers: slivers,
     );
   }
 }
