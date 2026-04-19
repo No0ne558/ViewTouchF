@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' show PointerDeviceKind;
 import 'dart:math' as math;
 import '../generated/pos_service.pb.dart';
 import '../utils/money.dart';
@@ -24,7 +23,9 @@ class MenuGrid extends StatefulWidget {
 class _MenuGridState extends State<MenuGrid> {
   late final ScrollController _controller;
   late final bool _ownController;
-  PointerDeviceKind? _lastPointerKind;
+  // Using the native scrolling behavior provided by ListView is more
+  // efficient on low-powered devices than handling pointer drag events
+  // manually. Keep a single ScrollController (optionally provided).
 
   @override
   void initState() {
@@ -79,45 +80,11 @@ class _MenuGridState extends State<MenuGrid> {
       );
     });
 
-    return Listener(
-      onPointerDown: (e) => _lastPointerKind = e.kind,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onVerticalDragUpdate: (details) {
-          if (!_controller.hasClients) return;
-          final newOffset = _controller.offset - details.delta.dy;
-          final max = _controller.position.hasContentDimensions
-              ? _controller.position.maxScrollExtent
-              : 0.0;
-          final target = (newOffset).clamp(0.0, max).toDouble();
-          _controller.jumpTo(target);
-        },
-        onVerticalDragEnd: (details) {
-          if (!_controller.hasClients) return;
-          final v = details.velocity.pixelsPerSecond.dy;
-          if (v.abs() < 50) return;
-          final multiplier =
-              _lastPointerKind == PointerDeviceKind.mouse ? 0.2 : 0.6;
-          final projected = v * multiplier;
-          final max = _controller.position.hasContentDimensions
-              ? _controller.position.maxScrollExtent
-              : 0.0;
-          final target =
-              (_controller.offset - projected).clamp(0.0, max).toDouble();
-          int durationMs = (v.abs() * 0.2).round();
-          durationMs = math.max(200, math.min(1000, durationMs));
-          _controller.animateTo(
-            target,
-            duration: Duration(milliseconds: durationMs),
-            curve: Curves.decelerate,
-          );
-        },
-        child: ListView(
-          controller: _controller,
-          padding: const EdgeInsets.all(12),
-          children: children,
-        ),
-      ),
+    // Let ListView handle pointer interactions and momentum scrolling.
+    return ListView(
+      controller: _controller,
+      padding: const EdgeInsets.all(12),
+      children: children,
     );
   }
 }
