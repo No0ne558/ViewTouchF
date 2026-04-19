@@ -8,6 +8,7 @@ import '../generated/pos_service.pbgrpc.dart';
 import '../services/pos_client.dart';
 import '../services/locale_provider.dart';
 import 'touchscreen_keyboard.dart';
+import '../services/touch_mode_provider.dart';
 
 class AdminSettingsTab extends StatefulWidget {
   const AdminSettingsTab({super.key});
@@ -283,6 +284,16 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 prefixIcon: Icon(Icons.store),
               ),
             ),
+            const SizedBox(height: 16),
+            // Touch mode toggle: increases touch targets across the app.
+            Consumer<TouchModeProvider>(builder: (ctx, tm, _) {
+              return SwitchListTile(
+                title: const Text('Touch Mode'),
+                value: tm.enabled,
+                onChanged: (v) => tm.setEnabled(v),
+                subtitle: const Text('Increase touch targets and spacing'),
+              );
+            }),
             const SizedBox(height: 16),
             TouchTextField(
               controller: _taxCtrl,

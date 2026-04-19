@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../generated/pos_service.pb.dart';
 import '../utils/money.dart';
+import 'package:provider/provider.dart';
+import '../services/touch_mode_provider.dart';
 
 /// A responsive grid of tappable menu item buttons.
 class MenuGrid extends StatefulWidget {
@@ -104,6 +106,12 @@ class _MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final touchMode = Provider.of<TouchModeProvider>(context).enabled;
+    final pad = touchMode ? 18.0 : 12.0;
+    final nameStyle = Theme.of(context)
+        .textTheme
+        .bodyLarge
+        ?.copyWith(fontWeight: FontWeight.w600, fontSize: touchMode ? 18 : null);
     return Material(
       color: Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(12),
@@ -111,7 +119,7 @@ class _MenuButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(pad),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -121,9 +129,7 @@ class _MenuButton extends StatelessWidget {
                 softWrap: true,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                style: nameStyle,
               ),
               const SizedBox(height: 4),
               Text(

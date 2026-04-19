@@ -7,6 +7,8 @@ import 'package:viewtouch_ui/generated/app_localizations.dart';
 
 import 'services/pos_client.dart';
 import 'services/locale_provider.dart';
+import 'services/touch_mode_provider.dart';
+import 'package:provider/provider.dart';
 import 'screens/register_screen.dart';
 
 Future<void> main() async {
@@ -14,6 +16,8 @@ Future<void> main() async {
 
   final localeProvider = LocaleProvider();
   await localeProvider.loadLocale();
+  final touchMode = TouchModeProvider();
+  await touchMode.load();
 
   // Allow override via env var; default to /opt/viewtouchf install path.
   final socketPath =
@@ -21,8 +25,11 @@ Future<void> main() async {
   PosClient.init(socketPath: socketPath);
 
   runApp(
-    ChangeNotifierProvider.value(
-      value: localeProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: localeProvider),
+        ChangeNotifierProvider.value(value: touchMode),
+      ],
       child: const ViewTouchApp(),
     ),
   );
