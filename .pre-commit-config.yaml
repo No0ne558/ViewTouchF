@@ -30,8 +30,7 @@ repos:
 
       - id: dart-format
         name: dart format (flutter_ui)
-        # Ensure the dart formatter runs with the user's Flutter/Dart and PUB_CACHE
-        # Use absolute HOME to avoid environment sanitization issues when hooks run
-        entry: bash -c "export PUB_CACHE=\"/home/ariel/.pub-cache\" && export PATH=\"/home/ariel/flutter/bin:/home/ariel/flutter/bin/cache/dart-sdk/bin:/home/ariel/.pub-cache/bin:$PATH\" && cd flutter_ui && /home/ariel/flutter/bin/cache/dart-sdk/bin/dart format ."
+        # Run dart format using either dart on PATH or the Flutter SDK's dart in CI
+        entry: bash -c "cd flutter_ui && if command -v dart >/dev/null 2>&1; then dart format .; elif [ -n \"\$FLUTTER_ROOT\" ] && [ -x \"\$FLUTTER_ROOT/bin/cache/dart-sdk/bin/dart\" ]; then \"\$FLUTTER_ROOT/bin/cache/dart-sdk/bin/dart\" format .; else echo 'No Dart found (install Dart or set FLUTTER_ROOT)'; exit 1; fi"
         language: system
         files: '\.dart$'
