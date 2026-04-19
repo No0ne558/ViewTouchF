@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// provider is not used in this file; remove the import to satisfy analyzer.
+// import 'package:provider/provider.dart';
 import 'dart:ui' show PointerDeviceKind;
 import 'package:viewtouch_ui/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -1560,13 +1561,15 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         const SizedBox(width: 4),
                         if (_payments.isEmpty)
                           IconButton(
-                            constraints: const BoxConstraints(
-                                minWidth: 48, minHeight: 48),
-                            padding: const EdgeInsets.all(12),
-                            iconSize: 16,
+                            // Small inline icon: keep 48x48 hit target but use
+                            // slightly tighter padding and a 20dp icon size so
+                            // the button is comfortable for finger tapping.
+                            constraints:
+                                const BoxConstraints(minWidth: 48, minHeight: 48),
+                            padding: const EdgeInsets.all(8),
+                            iconSize: 20,
                             icon: const Icon(
                               Icons.close,
-                              size: 16,
                               color: Colors.red,
                             ),
                             onPressed: _removeCcFee,
