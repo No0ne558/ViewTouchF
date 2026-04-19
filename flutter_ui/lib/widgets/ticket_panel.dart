@@ -402,7 +402,7 @@ class _QuantityButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: onTap,
-          child: Icon(icon, color: color, size: 24),
+          child: Center(child: Icon(icon, color: color, size: 24)),
         ),
       ),
     );
