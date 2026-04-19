@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix ticket ID off-by-one: `PosManager::generate_ticket_id` previously used `ticket_seq_ + 1` while `ticket_seq_` is incremented by `new_ticket()`, causing ticket IDs to skip. Now uses `ticket_seq_` directly. (src/core/pos_manager.cpp)
+ - Suppress noisy XDG desktop portal warnings on Linux: installed a GLib log filter in `flutter_ui/linux/runner/main.cc` to ignore repeated "Failed to read XDG desktop portal settings: GDBus.Error:org.freedesktop.portal.Error.NotFound" messages which are benign on some systems. This reduces console spam during UI startup.
 
 ## [2.8.0] — 2026-04-06
 
