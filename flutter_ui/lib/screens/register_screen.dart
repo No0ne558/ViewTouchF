@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/touch_mode_provider.dart';
 import 'dart:ui' show PointerDeviceKind;
 import 'package:viewtouch_ui/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -703,48 +702,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: Row(
                           children: [
-                            Builder(builder: (ctx) {
-                              final touch =
-                                  Provider.of<TouchModeProvider>(ctx).enabled;
-                              return Padding(
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: const Text('All'),
+                                selected: _selectedCategoryIndex == 0,
+                                labelStyle: const TextStyle(fontSize: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                onSelected: (_) =>
+                                    setState(() => _selectedCategoryIndex = 0),
+                              ),
+                            ),
+                            for (var ci = 0; ci < _categories.length; ci++) ...[
+                              Padding(
                                 padding: const EdgeInsets.only(right: 8),
                                 child: ChoiceChip(
-                                  label: const Text('All'),
-                                  selected: _selectedCategoryIndex == 0,
-                                  labelStyle: TextStyle(
-                                      fontSize: touch ? 16 : null),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: touch ? 16 : 8,
-                                    vertical: touch ? 8 : 4,
+                                  label: Text(_categories[ci]),
+                                  selected: _selectedCategoryIndex == ci + 1,
+                                  labelStyle: const TextStyle(fontSize: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
                                   ),
-                                  onSelected: (_) => setState(
-                                      () => _selectedCategoryIndex = 0),
+                                  onSelected: (v) => setState(
+                                    () =>
+                                        _selectedCategoryIndex = v ? ci + 1 : 0,
+                                  ),
                                 ),
-                              );
-                            }),
-                            for (var ci = 0; ci < _categories.length; ci++) ...[
-                              Builder(builder: (ctx) {
-                                final touch =
-                                    Provider.of<TouchModeProvider>(ctx)
-                                        .enabled;
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ChoiceChip(
-                                    label: Text(_categories[ci]),
-                                    selected: _selectedCategoryIndex == ci + 1,
-                                    labelStyle: TextStyle(
-                                        fontSize: touch ? 16 : null),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: touch ? 16 : 8,
-                                      vertical: touch ? 8 : 4,
-                                    ),
-                                    onSelected: (v) => setState(
-                                      () =>
-                                          _selectedCategoryIndex = v ? ci + 1 : 0,
-                                    ),
-                                  ),
-                                );
-                              }),
+                              ),
                             ],
                           ],
                         ),

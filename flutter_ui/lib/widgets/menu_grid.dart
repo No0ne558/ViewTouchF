@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../generated/pos_service.pb.dart';
 import '../utils/money.dart';
-import 'package:provider/provider.dart';
-import '../services/touch_mode_provider.dart';
+// Touch-friendly by default: no provider required.
 
 /// A responsive grid of tappable menu item buttons.
 class MenuGrid extends StatefulWidget {
@@ -106,12 +105,13 @@ class _MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final touchMode = Provider.of<TouchModeProvider>(context).enabled;
-    final pad = touchMode ? 18.0 : 12.0;
+    // Touch-first: use larger padding and slightly larger text for readability
+    // on a capacitive touchscreen by default.
+    final pad = 18.0;
     final nameStyle = Theme.of(context)
         .textTheme
         .bodyLarge
-        ?.copyWith(fontWeight: FontWeight.w600, fontSize: touchMode ? 18 : null);
+        ?.copyWith(fontWeight: FontWeight.w600, fontSize: 18);
     return Material(
       color: Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(12),

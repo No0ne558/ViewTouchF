@@ -16,8 +16,6 @@ Future<void> main() async {
 
   final localeProvider = LocaleProvider();
   await localeProvider.loadLocale();
-  final touchMode = TouchModeProvider();
-  await touchMode.load();
 
   // Allow override via env var; default to /opt/viewtouchf install path.
   final socketPath =
@@ -25,11 +23,8 @@ Future<void> main() async {
   PosClient.init(socketPath: socketPath);
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: localeProvider),
-        ChangeNotifierProvider.value(value: touchMode),
-      ],
+    ChangeNotifierProvider.value(
+      value: localeProvider,
       child: const ViewTouchApp(),
     ),
   );
