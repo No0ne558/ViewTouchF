@@ -21,7 +21,10 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   List<MenuItem> _menu = [];
-  Ticket? _ticket;
+  // Use a ValueNotifier for the ticket so we can update only the ticket
+  // subtree when it changes, avoiding full-screen rebuilds on every update.
+  final ValueNotifier<Ticket?> _ticketNotifier = ValueNotifier<Ticket?>(null);
+  Ticket? get _ticket => _ticketNotifier.value;
   bool _loading = true;
   String? _error;
   String _restaurantName = '';
@@ -53,15 +56,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         PhoneOrderCountRequest(),
       );
       if (!mounted) return;
+      // Update menu and ticket separately; ticket is assigned to the
+      // ValueNotifier so only widgets listening to it rebuild.
       setState(() {
         _menu = menuResp.items;
-        _ticket = ticketResp.ticket;
         _restaurantName = settingsResp.settings.restaurantName.isNotEmpty
             ? settingsResp.settings.restaurantName
             : (mounted ? AppLocalizations.of(context)!.appTitle : '');
         _phoneOrderCount = phoneCountResp.count;
         _loading = false;
       });
+      _ticketNotifier.value = ticketResp.ticket;
       _updateCategories();
     } catch (e) {
       if (!mounted) return;
@@ -132,6 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _categoryController.dispose();
+    _ticketNotifier.dispose();
     super.dispose();
   }
 
@@ -156,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..specialInstructions = specialInstructions;
       req.modifiers.addAll(mods);
       final resp = await PosClient.instance.stub.addItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.addItemFailed, error: true);
@@ -176,7 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Pass same modifiers so it matches the same line_key.
       req.modifiers.addAll(ti.modifiers);
       final resp = await PosClient.instance.stub.addItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.increaseItemFailed, error: true);
@@ -243,7 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..specialInstructions = result.specialInstructions;
       req.modifiers.addAll(result.modifiers);
       final resp = await PosClient.instance.stub.updateItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.updateItemFailed, error: true);
@@ -260,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..menuItemId = ti.item.id
         ..lineKey = ti.lineKey;
       final resp = await PosClient.instance.stub.decreaseItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.decreaseItemFailed, error: true);
@@ -277,7 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ..menuItemId = ti.item.id
         ..lineKey = ti.lineKey;
       final resp = await PosClient.instance.stub.removeItem(req);
-      setState(() => _ticket = resp.ticket);
+      _ticketNotifier.value = resp.ticket;
     } catch (e) {
       if (!mounted) return;
       _showError(AppLocalizations.of(context)!.removeItemFailed, error: true);
@@ -304,7 +310,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ..specialInstructions = ti.specialInstructions;
         req.modifiers.addAll(ti.modifiers);
         final resp = await PosClient.instance.stub.addItem(req);
-        setState(() => _ticket = resp.ticket);
+        _ticketNotifier.value = resp.ticket;
       } else {
         // Remove then re-add with the new quantity.
         final removeReq = RemoveItemRequest()
@@ -319,7 +325,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ..specialInstructions = ti.specialInstructions;
         addReq.modifiers.addAll(ti.modifiers);
         final resp = await PosClient.instance.stub.addItem(addReq);
-        setState(() => _ticket = resp.ticket);
+        _ticketNotifier.value = resp.ticket;
       }
     } catch (e) {
       if (!mounted) return;
@@ -331,10 +337,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _checkout({bool skipPrint = false}) async {
     if (_ticket == null || _ticket!.items.isEmpty) return;
+    final currentTicket = _ticketNotifier.value;
+    if (currentTicket == null) return;
     final result = await showDialog<_CheckoutResult>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _CheckoutDialog(ticket: _ticket!),
+      builder: (ctx) => _CheckoutDialog(ticket: currentTicket),
     );
     if (result == null) return; // cancelled
 
@@ -377,7 +385,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Open a new ticket for the next customer.
       final newT = await PosClient.instance.stub.newTicket(NewTicketRequest());
       if (!mounted) return;
-      setState(() => _ticket = newT.ticket);
+      _ticketNotifier.value = newT.ticket;
       await _refreshPhoneOrderCount();
     } catch (e) {
       if (!mounted) return;
@@ -469,7 +477,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Open a new ticket for the next customer.
       final newT = await PosClient.instance.stub.newTicket(NewTicketRequest());
       if (!mounted) return;
-      setState(() => _ticket = newT.ticket);
+      _ticketNotifier.value = newT.ticket;
       _refreshPhoneOrderCount();
     } catch (e) {
       if (!mounted) return;
@@ -494,7 +502,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GetTicketRequest()..ticketId = result.ticketId,
         );
         if (!mounted) return;
-        setState(() => _ticket = ticketResp.ticket);
+        _ticketNotifier.value = ticketResp.ticket;
         // Skip printing — receipt was already printed when the phone order was created.
         await _checkout(skipPrint: true);
         await _refreshPhoneOrderCount();
@@ -514,7 +522,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GetTicketRequest()..ticketId = result.ticketId,
         );
         if (!mounted) return;
-        setState(() => _ticket = ticketResp.ticket);
+        _ticketNotifier.value = ticketResp.ticket;
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -597,9 +605,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         centerTitle: false,
         actions: [
-          Text(
-            '${AppLocalizations.of(context)!.ticketLabel} ${_ticket?.id ?? "—"}',
-            style: const TextStyle(fontSize: 16),
+          ValueListenableBuilder<Ticket?>(
+            valueListenable: _ticketNotifier,
+            builder: (ctx, ticket, _) => Text(
+              '${AppLocalizations.of(context)!.ticketLabel} ${ticket?.id ?? "—"}',
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
           const SizedBox(width: 16),
           IconButton(
@@ -740,15 +751,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // ── Right: Current ticket (≈35% width) ────────────
           Expanded(
             flex: 35,
-            child: TicketPanel(
-              ticket: _ticket,
-              onCheckout: _checkout,
-              onPhoneOrder: _showPhoneOrderDialog,
-              onDecreaseItem: _decreaseItem,
-              onIncreaseItem: _increaseItem,
-              onRemoveItem: _removeItem,
-              onSetQuantity: _setItemQuantity,
-              onItemTap: _editItem,
+            child: ValueListenableBuilder<Ticket?>(
+              valueListenable: _ticketNotifier,
+              builder: (ctx, ticket, _) => RepaintBoundary(
+                child: TicketPanel(
+                  ticket: ticket,
+                  onCheckout: _checkout,
+                  onPhoneOrder: _showPhoneOrderDialog,
+                  onDecreaseItem: _decreaseItem,
+                  onIncreaseItem: _increaseItem,
+                  onRemoveItem: _removeItem,
+                  onSetQuantity: _setItemQuantity,
+                  onItemTap: _editItem,
+                ),
+              ),
             ),
           ),
         ],
