@@ -60,7 +60,9 @@ class _MenuGridState extends State<MenuGrid> {
         sliver: SliverToBoxAdapter(
           child: Text(
             cat,
-            style: Theme.of(context).textTheme.titleMedium
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
@@ -72,7 +74,8 @@ class _MenuGridState extends State<MenuGrid> {
           delegate: SliverChildBuilderDelegate(
             (ctx, i) {
               final item = items[i];
-              return _MenuButton(item: item, onTap: () => widget.onItemTap(item));
+              return _MenuButton(
+                  item: item, onTap: () => widget.onItemTap(item));
             },
             childCount: items.length,
           ),

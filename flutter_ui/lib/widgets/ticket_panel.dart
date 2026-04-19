@@ -160,7 +160,8 @@ class _TicketPanelState extends State<TicketPanel> {
                                   : null,
                               borderRadius: BorderRadius.circular(4),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 4),
                                 child: Text(
                                   ti.item.name,
                                   style: const TextStyle(

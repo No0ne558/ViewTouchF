@@ -230,14 +230,14 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                   ),
                 ),
               const Spacer(),
-               IconButton(
-                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                 padding: const EdgeInsets.all(12),
-                 iconSize: 24,
-                 icon: const Icon(Icons.refresh),
-                 tooltip: AppLocalizations.of(context)!.refresh,
-                 onPressed: _loadReport,
-               ),
+              IconButton(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                padding: const EdgeInsets.all(12),
+                iconSize: 24,
+                icon: const Icon(Icons.refresh),
+                tooltip: AppLocalizations.of(context)!.refresh,
+                onPressed: _loadReport,
+              ),
               const SizedBox(width: 4),
               FilledButton.icon(
                 onPressed: _report != null ? _printReport : null,
@@ -609,13 +609,13 @@ class _CalendarGridState extends State<_CalendarGrid> {
               },
             ),
             const SizedBox(width: 4),
-               IconButton(
-                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                 padding: const EdgeInsets.all(12),
-                 iconSize: 28,
-                 icon: const Icon(Icons.chevron_right, size: 28),
-                 onPressed: canGoNext ? _next : null,
-               ),
+            IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: const EdgeInsets.all(12),
+              iconSize: 28,
+              icon: const Icon(Icons.chevron_right, size: 28),
+              onPressed: canGoNext ? _next : null,
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -840,7 +840,8 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: IconButton(
-                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints:
+                            const BoxConstraints(minWidth: 48, minHeight: 48),
                         padding: const EdgeInsets.all(8),
                         iconSize: 20,
                         icon: const Icon(Icons.arrow_forward, size: 20),

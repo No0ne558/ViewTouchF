@@ -629,14 +629,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.orange,
-              child: IconButton(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                padding: const EdgeInsets.all(12),
-                iconSize: 24,
-                icon: const Icon(Icons.phone),
-                tooltip: AppLocalizations.of(context)!.phoneOrders,
-                onPressed: _showPhoneOrderList,
-              ),
+            child: IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: const EdgeInsets.all(12),
+              iconSize: 24,
+              icon: const Icon(Icons.phone),
+              tooltip: AppLocalizations.of(context)!.phoneOrders,
+              onPressed: _showPhoneOrderList,
+            ),
           ),
           IconButton(
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
@@ -661,10 +661,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 64,
                   child: Listener(
                     onPointerDown: (e) => _categoryPointerKind = e.kind,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onHorizontalDragUpdate: (details) {
-                      if (!_categoryController.hasClients) return;
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onHorizontalDragUpdate: (details) {
+                        if (!_categoryController.hasClients) return;
                         final newOffset =
                             _categoryController.offset - details.delta.dx;
                         final max =
@@ -860,14 +860,14 @@ class _ModifierDialogState extends State<_ModifierDialog> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             for (var gi = 0; gi < groups.length; gi++) ...[
-                // Use InkWell instead of GestureDetector so the touch
-                // target is Material-aware and shows ink ripple. This
-                // also gives a larger, more consistent hit area on
-                // touchscreens.
-                InkWell(
-                  onTap: () => _setCurrentGroupIndex(gi),
-                  borderRadius: BorderRadius.circular(48),
-                  child: Column(
+              // Use InkWell instead of GestureDetector so the touch
+              // target is Material-aware and shows ink ripple. This
+              // also gives a larger, more consistent hit area on
+              // touchscreens.
+              InkWell(
+                onTap: () => _setCurrentGroupIndex(gi),
+                borderRadius: BorderRadius.circular(48),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
@@ -1188,7 +1188,8 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                     ),
                   ),
                 IconButton(
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
                   padding: const EdgeInsets.all(8),
                   iconSize: 20,
                   icon: Icon(
@@ -1559,8 +1560,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         const SizedBox(width: 4),
                         if (_payments.isEmpty)
                           IconButton(
-                            constraints:
-                                const BoxConstraints(minWidth: 48, minHeight: 48),
+                            constraints: const BoxConstraints(
+                                minWidth: 48, minHeight: 48),
                             padding: const EdgeInsets.all(12),
                             iconSize: 16,
                             icon: const Icon(
@@ -1974,14 +1975,16 @@ class _PastOrdersDialogState extends State<_PastOrdersDialog> {
                   ),
                   const Spacer(),
                   IconButton(
-                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
                     padding: const EdgeInsets.all(12),
                     iconSize: 24,
                     icon: const Icon(Icons.refresh),
                     onPressed: _loadTickets,
                   ),
                   IconButton(
-                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
                     padding: const EdgeInsets.all(12),
                     iconSize: 24,
                     icon: const Icon(Icons.close),
@@ -2479,20 +2482,22 @@ class _PhoneOrderListDialogState extends State<_PhoneOrderListDialog> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const Spacer(),
-                   IconButton(
-                     constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                     padding: const EdgeInsets.all(12),
-                     iconSize: 24,
-                     icon: const Icon(Icons.refresh),
-                     onPressed: _loadOrders,
-                   ),
-                   IconButton(
-                     constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                     padding: const EdgeInsets.all(12),
-                     iconSize: 24,
-                     icon: const Icon(Icons.close),
-                     onPressed: () => Navigator.pop(context),
-                   ),
+                  IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _loadOrders,
+                  ),
+                  IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    padding: const EdgeInsets.all(12),
+                    iconSize: 24,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
