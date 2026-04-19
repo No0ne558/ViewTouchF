@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+// 'dart:math' is unused in this file; leave it commented to keep the
+// possibility of using it for responsive calculations without failing
+// analyzer in CI.
+// import 'dart:math' as math;
 import '../generated/pos_service.pb.dart';
 import '../utils/money.dart';
 // Touch-friendly by default: no provider required.
