@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 // provider is not used in this file; remove the import to satisfy analyzer.
 // import 'package:provider/provider.dart';
 import 'dart:ui' show PointerDeviceKind;
-import 'package:viewtouch_ui/generated/app_localizations.dart';
+import 'package:viewtouch_ui/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';

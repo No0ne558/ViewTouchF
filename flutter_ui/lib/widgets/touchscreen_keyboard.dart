@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:viewtouch_ui/generated/app_localizations.dart';
+import 'package:viewtouch_ui/l10n/app_localizations.dart';
 
 /// A QWERTY on-screen keyboard widget for touchscreen-only POS terminals.
 /// Sends key taps to the provided [controller].

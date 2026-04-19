@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:viewtouch_ui/generated/app_localizations.dart';
+import 'package:viewtouch_ui/l10n/app_localizations.dart';
 
 import 'services/pos_client.dart';
 import 'services/locale_provider.dart';

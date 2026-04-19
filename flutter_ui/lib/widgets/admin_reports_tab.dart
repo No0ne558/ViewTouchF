@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:viewtouch_ui/generated/app_localizations.dart';
+import 'package:viewtouch_ui/l10n/app_localizations.dart';
 import '../generated/pos_service.pb.dart';
 import '../services/pos_client.dart';
 
