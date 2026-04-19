@@ -207,16 +207,20 @@ class _TicketPanelState extends State<TicketPanel> {
                                   onTap: () => widget.onDecreaseItem(ti),
                                 ),
                                 // Quantity counter (tappable for custom input)
-                                GestureDetector(
+                                // Make quantity counter at least 48x48 so it's
+                                // comfortable to tap on small touchscreens.
+                                InkWell(
                                   onTap: () => _showQuantityPad(ctx, ti),
+                                  borderRadius: BorderRadius.circular(6),
                                   child: Container(
-                                    width: 44,
-                                    height: 36,
+                                    width: 48,
+                                    height: 48,
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       border: Border.all(
                                         color: Colors.grey.shade400,
                                       ),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       '${ti.quantity}',
